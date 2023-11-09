@@ -7,9 +7,6 @@ areaName - area name (state, county, etc.)
     """
 
 
-from tkinter import W
-
-
 class Area:
     def __init__(self, areaRef, areaName):
         self.areaRef = areaRef
@@ -25,7 +22,8 @@ Trail Area class containing all area info for the trail system
                     _type_: _description_
             """
 
-
+# TODO: This needs to be updated to output object to dict/json format to 
+# store in the MongoDB
 class TrailArea:
     def __init__(self):
         self.trailKeys = {

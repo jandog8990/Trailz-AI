@@ -38,7 +38,6 @@ trailArea = TrailArea()
 trailMap = trailArea.parse_area_list(areaList)
 trailArea.trail_map_contents()
 
-
 # header
 trailTitle = soup.find(id="trail-title")
 trailTitle = trailTitle.text.strip()
