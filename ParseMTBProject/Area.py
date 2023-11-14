@@ -29,7 +29,7 @@ class TrailArea:
         self.trailKeys = {
             1: "state",
             2: "county",
-            3: "trailSystem"
+            3: "trail_system"
         }
         self.trailMap = {}
 
@@ -45,10 +45,3 @@ class TrailArea:
             self.trailMap[key] = areaObj
 
         return self.trailMap
-
-    def trail_map_contents(self):
-        for key, val in self.trailMap.items():
-            print(f"Key = {key}")
-            print("val:")
-            val.show_contents()
-            print("\n")
