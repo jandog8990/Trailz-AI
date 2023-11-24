@@ -31,6 +31,12 @@ class TrailArea:
             2: "county",
             3: "trail_system"
         }
+        self.extendedTrailKeys = {
+            1: "state",
+            2: "county",
+            3: "city",
+            4: "trail_system"
+        }
         self.trailMap = {}
 
     def show_contents(self):
@@ -38,8 +44,12 @@ class TrailArea:
 
     def parse_area_list(self, areaList):
         # create the area obj
+        print(f"Trail area list len = {len(areaList)}") 
+        print(areaList)
+        print("\n")
+        trailKeys = self.extendedTrailKeys if len(areaList) > len(self.trailKeys) else self.trailKeys 
         for i in range(1, len(areaList)):
-            key = self.trailKeys[i]
+            key = trailKeys[i]
             areaJson = areaList[i]
             areaObj = Area(areaJson["name"], areaJson["item"]) 
             self.trailMap[key] = areaObj

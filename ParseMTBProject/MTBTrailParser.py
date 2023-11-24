@@ -3,9 +3,10 @@ import json
 
 from Area import TrailArea
 
-# -----------------------------------------------------
-# ------- Parsing Methods for MTB Trail Data -------
-# -----------------------------------------------------
+# -------------------------------------------------------
+# ------- Parsing Methods for MTB Trail Page Data -------
+# -------------------------------------------------------
+
 class MTBTrailParser:
     def __init__(self, soup):
         self.soup = soup
