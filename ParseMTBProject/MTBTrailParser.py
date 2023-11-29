@@ -43,7 +43,8 @@ class MTBTrailParser:
 
         # split the trail name so we can set the id
         trailTokens = trailTitle.split()
-        trail_id = trailTokens[0].lower()
+        #trail_id = trailTokens[0].lower()
+        trail_id = trailTitle.lower()
 
         # difficulty
         diffbanner = self.soup.find("div", class_="title")
@@ -115,18 +116,14 @@ class MTBTrailParser:
             mainTextMap[header] = text
 
         mtb_trail_route_descriptions = []
-        print("Main map size = " + str(len(mainTextMap)))
         for key in mainTextMap:
             description = mainTextMap[key]
-            print("Key = {0}".format(key))
-            print("Value = {0}".format(mainTextMap[key]))
-            print("\n")
             
+            # "mtb_trail_route_id": trailId 
             descObj = {
-                "_id": key.lower(),
+                "_id": trailId, 
                 "key": key,
-                "description": description,
-                "mtb_trail_route_id": trailId 
+                "description": description
             }
             mtb_trail_route_descriptions.append(descObj)  
         return mtb_trail_route_descriptions

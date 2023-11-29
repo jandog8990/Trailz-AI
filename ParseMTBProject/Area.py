@@ -44,9 +44,6 @@ class TrailArea:
 
     def parse_area_list(self, areaList):
         # create the area obj
-        print(f"Trail area list len = {len(areaList)}") 
-        print(areaList)
-        print("\n")
         trailKeys = self.extendedTrailKeys if len(areaList) > len(self.trailKeys) else self.trailKeys 
         for i in range(1, len(areaList)):
             key = trailKeys[i]

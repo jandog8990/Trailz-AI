@@ -27,36 +27,25 @@ class MTBTrailUrlParser:
 		trailTitle = soup.find(id="trail-title")
 		mtbTrailRoute = mtbTrailParser.createMTBTrailRoute(trailTitle) 
 		mtbTrailRoute["trail_area"] = trailMap
-		print("MTB Trail Route:")
-		print(mtbTrailRoute)
-		print("\n")
 
 		# main text for trail descriptions 
 		trailText = soup.find(id="trail-text")
 
 		# create main section headers for trail text
 		mainSectionHeaders = mtbTrailParser.createMainSectionHeaders(trailText)
-		print(mainSectionHeaders)
-		print("\n")
 
 		# get the mtb body text from trail text element
 		bodyText = mtbTrailParser.parseMainText(trailText)
-		print(bodyText)
-		print("\n")
 
 		# create the mtb trail route descriptions
 		trailTitle = trailTitle.text.strip()
-		print("Trail title = " + trailTitle)
 
 		# split the trail name so we can set the id
 		trailTokens = trailTitle.split()
-		trailId = trailTokens[0].lower()
-		print("Trail id = " + trailId)
+		# trailId = trailTokens[0].lower()
+		trailId = trailTitle.lower()
 
-		mtbTrailRouteDescriptions = mtbTrailParser.createMTBTrailRouteDescriptions(
-		trailId, mainSectionHeaders, bodyText)
-		print("Number of descriptions = " + str(len(mtbTrailRouteDescriptions)))
-		print(mtbTrailRouteDescriptions)
-		print("\n")
+		mtbTrailRouteDescriptions = mtbTrailParser.createMTBTrailRouteDescriptions(trailId,
+            mainSectionHeaders, bodyText)
   
 		return (mtbTrailRoute, mtbTrailRouteDescriptions)
