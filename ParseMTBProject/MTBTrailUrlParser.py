@@ -21,7 +21,11 @@ class MTBTrailUrlParser:
 
 		# create the trail map and print
 		trailMap = mtbTrailParser.createTrailMap()
-		# mtbTrailParser.printTrailMapContents(trailMap)
+		print("---- TRAIL MAP ----")
+		print(trailMap)
+		print("\n")
+  	
+  		# mtbTrailParser.printTrailMapContents(trailMap)
 
 		# create the main MTB trail route 
 		trailTitle = soup.find(id="trail-title")

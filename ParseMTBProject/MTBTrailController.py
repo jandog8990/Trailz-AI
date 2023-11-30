@@ -44,7 +44,7 @@ print(f"Trail urls len = {len(trail_urls)}")
 # loop through the json lines and parse each individual URL
 trailUrlParser = MTBTrailUrlParser()
 trailDataTuples = []
-for i in range(5):
+for i in range(10):
     url = trail_urls[i]
     trailDataTuples.append(trailUrlParser.parseTrail(url))
 
@@ -86,13 +86,13 @@ print(mtbTrailRouteDescriptions[0])
 print("\n")
 
 # let's delete all records from the DB tables
-#trailMongoDB.delete_mtb_trail_route_data(db)
+trailMongoDB.delete_mtb_trail_route_data(db)
 
 # insert the mtb trail routes to the mongoDB
-trailMongoDB.insert_mtb_trail_routes(db, newMTBTrailRoutes)
+# trailMongoDB.insert_mtb_trail_routes(db, newMTBTrailRoutes)
 
 # insert the mtb trail route descriptions to the mongoDB
-trailMongoDB.insert_mtb_trail_route_descriptions(db, mtbTrailRouteDescriptions)
+# trailMongoDB.insert_mtb_trail_route_descriptions(db, mtbTrailRouteDescriptions)
 
 # play around with data
 #find_mtb_trail_data(db)
