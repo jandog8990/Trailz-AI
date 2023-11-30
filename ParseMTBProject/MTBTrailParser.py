@@ -118,12 +118,15 @@ class MTBTrailParser:
         mtb_trail_route_descriptions = []
         for key in mainTextMap:
             description = mainTextMap[key]
-            
-            # "mtb_trail_route_id": trailId 
+           
+            # trail id and the key from the text type gives the PK 
+            # the FK used in this table is what relates it to the route 
+            primaryKey = trailId + " " + key.lower() 
             descObj = {
-                "_id": trailId, 
+                "_id": primaryKey, 
                 "key": key,
-                "description": description
+                "text": description,
+                "mtb_trail_route_id": trailId 
             }
             mtb_trail_route_descriptions.append(descObj)  
         return mtb_trail_route_descriptions

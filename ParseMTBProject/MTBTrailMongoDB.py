@@ -1,5 +1,6 @@
 from pymongo import MongoClient
 from pymongo import TEXT
+from pymongo.errors import BulkWriteError
 from pymongo.server_api import ServerApi
 from dotenv import dotenv_values
 from pandas import DataFrame
@@ -84,32 +85,32 @@ class MTBTrailMongoDB:
         """
         MTB Trails Insertion into the PyMongo DB
         """
-        # let's insert sample mtb trail route 
-        db.mtb_trail_routes.insert_many(mtbTrailRoutes)
+        # TODO: Surround with try catch so that we can't skip dup errors 
+        try: 
+            db.mtb_trail_routes.insert_many(mtbTrailRoutes)
+        except BulkWriteError as e:
+            print(e.details['writeErrors'])
 
     def insert_mtb_trail_route_descriptions(self, db, mtbTrailRouteDescriptions):
         # # insert the sample mtb trail descriptions
         # loop through list of lists and insert 
-        description_collection = db["mtb_trail_route_descriptions"]
-        description_collection.insert_many(mtbTrailRouteDescriptions) 
+        for trailRouteDescriptions in mtbTrailRouteDescriptions: 
+            # TODO: Surround with try catch so that we can't skip dup errors 
+            try: 
+                db.mtb_trail_route_descriptions.insert_many(trailRouteDescriptions)
+            except BulkWriteError as e:
+                print(e.details['writeErrors'])
 
-    def find_mtb_data(self, db):
-        # get the tables 
-        trail_routes = db["mtb_trail_routes"]
-        # trail_descriptions = db["mtb_trail_route_descriptions"]
+    def delete_mtb_trail_route_data(self, db):
+        db.mtb_trail_routes.drop()
+        db.mtb_trail_route_descriptions.drop()
+        
+    def find_mtb_trail_descriptions(self, db, trailIds):
+        # retrieve documents for all trailIds
+        data = db.mtb_trail_route_descriptions.find({'mtb_trail_route_id': {'$in': trailIds}})
+        return DataFrame(data)
 
-        # query the table info
-        routeItems = trail_routes.find()
-        # descItems = trail_descriptions.find()
-
-        # convert the collections to data frames
-        routeDF = DataFrame(routeItems)
-        # descDF = DataFrame(descItems)
-
-        print("--- Route DF ---")
-        print(routeDF)
-        print("\n")
-
-        # print("--- Desc DF ---")
-        # print(descDF)
-        # print("\n")
+    def find_mtb_trail_data(self, db):
+        # retrieve data from both the routes/descriptions tables 
+        data = db.mtb_trail_routes.find() 
+        return DataFrame(data)  
