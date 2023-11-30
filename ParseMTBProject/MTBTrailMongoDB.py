@@ -5,12 +5,15 @@ from pymongo.server_api import ServerApi
 from dotenv import dotenv_values
 from pandas import DataFrame
 import json
+import logging
 
 # -----------------------------------------------------
 # ---- PyMongo DB INSERT/GET/DELETE ----
 # -----------------------------------------------------
 class MTBTrailMongoDB:
-
+    logging.basicConfig(filename='mtbtrailz.log', filemode='w',
+        level=logging.DEBUG)
+    
     # -----------------------------------------------------
     # --------- PyMongo DB Connection -----------
     # -----------------------------------------------------
@@ -89,7 +92,7 @@ class MTBTrailMongoDB:
         try: 
             db.mtb_trail_routes.insert_many(mtbTrailRoutes)
         except BulkWriteError as e:
-            print(e.details['writeErrors'])
+            logging.error(e.details['writeErrors'])
 
     def insert_mtb_trail_route_descriptions(self, db, mtbTrailRouteDescriptions):
         # # insert the sample mtb trail descriptions
@@ -99,7 +102,7 @@ class MTBTrailMongoDB:
             try: 
                 db.mtb_trail_route_descriptions.insert_many(trailRouteDescriptions)
             except BulkWriteError as e:
-                print(e.details['writeErrors'])
+                logging.error(e.details['writeErrors'])
 
     def delete_mtb_trail_route_data(self, db):
         db.mtb_trail_routes.drop()
