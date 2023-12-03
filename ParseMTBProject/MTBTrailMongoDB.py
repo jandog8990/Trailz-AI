@@ -39,21 +39,11 @@ class MTBTrailMongoDB:
     # ----- CREATE INDEXES MTB Trail Route/Descs -----
     # ------------------------------------------------
     def create_indexes(self, db):
-        print("--- OLD ROUTE INDEX ---") 
-        #db.mtb_trail_routes.drop_index('_id') 
-        print(db.mtb_trail_routes.index_information())
         db.mtb_trail_routes.drop_indexes() 
-        # db.mtb_trail_routes.create_index('route_name')
-        print("--- NEW ROUTE INDEX ---") 
-        print(db.mtb_trail_routes.index_information())
+        db.mtb_trail_routes.create_index('_id')
         
-        print("--- OLD DESC INDEX ---") 
-        #db.mtb_trail_route_descriptions.drop_index('_id') 
-        print(db.mtb_trail_route_descriptions.index_information())
-        print(db.mtb_trail_route_descriptions.drop_indexes())
-        # db.mtb_trail_route_descriptions.create_index('mtb_trail_route_id')
-        print("--- NEW DESC INDEX ---") 
-        print(db.mtb_trail_route_descriptions.index_information())
+        db.mtb_trail_route_descriptions.drop_indexes()
+        db.mtb_trail_route_descriptions.create_index('_id')
 
     # -----------------------------------------------------
     # ---------- INSERT MTB Trail Route Tables ------------ 
@@ -72,15 +62,18 @@ class MTBTrailMongoDB:
         # loop through the mtb trail routes and serialize the trail area 
         for mtbTrailRoute in mtbTrailRoutes: 
             trailAreaDict = mtbTrailRoute["trail_area"]
-            '''
-            for k,v in trailAreaDict.items():
-                print(f"{k} : {v}")
-            print("\n")
-            ''' 
-            serializedTrailArea = dict((k, json.dumps(v.__dict__)) for k, v in trailAreaDict.items())
-
-            # TODO: Need to figure out how to serialize the json strings back to object space
+ 
+            # nested loop for the serialized data
+            serializedTrailArea = {} 
+            for k, v in trailAreaDict.items():
+                serializedList = [] 
+                for val in v:
+                    serializedArea = json.dumps(val.__dict__)
+                    serializedList.append(serializedArea)
+                serializedTrailArea[k] = serializedList 
+            
             mtbTrailRoute["trail_area"] = serializedTrailArea
+ 
         return mtbTrailRoutes        
     
     def insert_mtb_trail_routes(self, db, mtbTrailRoutes):

@@ -37,6 +37,7 @@ def find_mtb_trail_data(db):
 # TODO: Need to loop through the json lines file and start parsing url pages
 # let's parse the json lines file to get all trail routes
 jlFile = "../mtb-project-crawler/crawler/spiders/mtbproject.jl"
+#jlFile = "test.jl" 
 jsonLineParser = MTBJsonLineParser()
 trail_urls = jsonLineParser.parse(jlFile)
 print(f"Trail urls len = {len(trail_urls)}")
@@ -44,9 +45,11 @@ print(f"Trail urls len = {len(trail_urls)}")
 # loop through the json lines and parse each individual URL
 trailUrlParser = MTBTrailUrlParser()
 trailDataTuples = []
-for i in range(10):
+for i in range(len(trail_urls)):
     url = trail_urls[i]
-    trailDataTuples.append(trailUrlParser.parseTrail(url))
+    # TODO: Need to handle empty tuples 
+    if (v := trailUrlParser.parseTrail(url)) is not None:
+        trailDataTuples.append(v)
 
 # TODO: Need to go through the tuples, the first element is stored as the 
 # MTBTrailRoute (insertOne), and the second element is array of 
@@ -89,10 +92,10 @@ print("\n")
 trailMongoDB.delete_mtb_trail_route_data(db)
 
 # insert the mtb trail routes to the mongoDB
-# trailMongoDB.insert_mtb_trail_routes(db, newMTBTrailRoutes)
+trailMongoDB.insert_mtb_trail_routes(db, newMTBTrailRoutes)
 
 # insert the mtb trail route descriptions to the mongoDB
-# trailMongoDB.insert_mtb_trail_route_descriptions(db, mtbTrailRouteDescriptions)
+trailMongoDB.insert_mtb_trail_route_descriptions(db, mtbTrailRouteDescriptions)
 
 # play around with data
-#find_mtb_trail_data(db)
+find_mtb_trail_data(db)

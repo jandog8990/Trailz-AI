@@ -12,9 +12,13 @@ class MTBTrailParser:
         self.soup = soup
          
     def createTrailMap(self):
-        # titlebar
+        # titlebar can be none so make sure and check
         titlebar = self.soup.find(id="title-bar")
 
+        # titlebar can be None -> go to next
+        if titlebar is None:
+            return None
+        
         # TODO: Within the title bar lies the areas - areas needed for DB
         # storage to recommend trailz based on location of user
         # within the script tags lives the item list for area bread
@@ -94,8 +98,10 @@ class MTBTrailParser:
         end = len(mainText)
         count = 0
         mainBody = []
-        for idx in range(start, end-1):
+         
+        for idx in range(start, end):
             elem = mainText[idx]
+            # strippedText = elem.text 
             strippedText = elem.text.strip()
             newText = re.sub(' +', ' ', strippedText)
             newText = re.sub('\n', '\n', newText)
@@ -107,14 +113,33 @@ class MTBTrailParser:
     # create the mtb trail route descriptions from body text and headers
     def createMTBTrailRouteDescriptions(self, trailId, mainSectionHeaders, bodyText):
         # Let's create the dictionary of section headers to main text
-        mainTextMap = {}
+       
+        # need to remove sub section headers that do not match to descriptions 
+        race = "race"
+        contacts = "contacts"
+        mainSectionHeaders = [header for header in mainSectionHeaders 
+            if (race not in header.lower()) and (contacts not in header.lower())]
+        headersLen = len(mainSectionHeaders)
         start = 0
-        end = len(mainSectionHeaders)-1
-        for i in range(start, end):
-            header = mainSectionHeaders[i]
-            text = bodyText[i]
-            mainTextMap[header] = text
+        end = headersLen - 1 
 
+        mainTextMap = {}
+        for i in range(start, end):
+            try: 
+                header = mainSectionHeaders[i]
+                text = bodyText[i]
+                mainTextMap[header] = text
+            except IndexError as e:
+                print(f"--- Index exception = {e} ---")
+                print(f"Trail ID = {trailId}") 
+                print(f"Index = {i}")
+                print(f"Header = {header}") 
+                print(f"Main section headers len = {headersLen}") 
+                print(f"Body text length = {len(bodyText)}") 
+                print("Main section headers:")
+                print(mainSectionHeaders) 
+                print("\n")
+ 
         mtb_trail_route_descriptions = []
         for key in mainTextMap:
             description = mainTextMap[key]

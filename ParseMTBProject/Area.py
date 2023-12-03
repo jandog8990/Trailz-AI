@@ -53,6 +53,7 @@ class TrailArea:
       
         # TODO: Let's make each value in the map an array of Area objects, the
         # first will be the state object and the last will be trail system obj 
+        areaList.pop(0) 
         stateJson = areaList.pop(0)
         trailJson= areaList.pop(-1)
         stateArea = Area(stateJson["name"], stateJson["item"]) 
@@ -68,18 +69,5 @@ class TrailArea:
             subArea = Area(areaJson["name"], areaJson["item"])
             subAreaList.append(subArea)
         self.trailMap[self.SUB_AREA_KEY] = subAreaList 
-        
-        """
-        trailKeys = self.extendedTrailKeys if len(areaList) > len(self.trailKeys) else self.trailKeys 
-        print(f"Area List len = {len(areaList)}:") 
-        print(areaList) 
-        print("\n") 
-        
-        for i in range(1, len(areaList)):
-            key = trailKeys[i]
-            areaJson = areaList[i]
-            areaObj = Area(areaJson["name"], areaJson["item"]) 
-            self.trailMap[key] = areaObj
-        """ 
         
         return self.trailMap
