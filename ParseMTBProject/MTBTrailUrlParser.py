@@ -21,7 +21,6 @@ class MTBTrailUrlParser:
         mtbTrailParser = MTBTrailParser(soup)
 
         # create the trail map and print
-        print(f"Trail URL = {url}")
         trailMap = mtbTrailParser.createTrailMap()
         if trailMap is None:
             return None 
@@ -32,6 +31,9 @@ class MTBTrailUrlParser:
         if trailTitle is None:
             return None
         mtbTrailRoute = mtbTrailParser.createMTBTrailRoute(trailTitle)
+        if mtbTrailRoute is None:
+            return None
+
         mtbTrailRoute["trail_area"] = trailMap
 
         # main text for trail descriptions
@@ -56,4 +58,5 @@ class MTBTrailUrlParser:
         mtbTrailRouteDescriptions = mtbTrailParser.createMTBTrailRouteDescriptions(trailId,
             mainSectionHeaders, bodyText)
 
+        print(".", end="", flush=True)
         return (mtbTrailRoute, mtbTrailRouteDescriptions)

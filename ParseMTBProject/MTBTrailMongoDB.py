@@ -13,7 +13,10 @@ import logging
 class MTBTrailMongoDB:
     logging.basicConfig(filename='mtbtrailz.log', filemode='w',
         level=logging.DEBUG)
-    
+  
+    def __init__(self, soup):
+        self.DB = self.get_database()
+
     # -----------------------------------------------------
     # --------- PyMongo DB Connection -----------
     # -----------------------------------------------------
@@ -38,12 +41,12 @@ class MTBTrailMongoDB:
     # ------------------------------------------------
     # ----- CREATE INDEXES MTB Trail Route/Descs -----
     # ------------------------------------------------
-    def create_indexes(self, db):
-        db.mtb_trail_routes.drop_indexes() 
-        db.mtb_trail_routes.create_index('_id')
+    def create_indexes(self):
+        self.DB.mtb_trail_routes.drop_indexes() 
+        self.DB.mtb_trail_routes.create_index('_id')
         
-        db.mtb_trail_route_descriptions.drop_indexes()
-        db.mtb_trail_route_descriptions.create_index('_id')
+        self.DB.mtb_trail_route_descriptions.drop_indexes()
+        self.DB.mtb_trail_route_descriptions.create_index('_id')
 
     # -----------------------------------------------------
     # ---------- INSERT MTB Trail Route Tables ------------ 
@@ -76,37 +79,64 @@ class MTBTrailMongoDB:
  
         return mtbTrailRoutes        
     
-    def insert_mtb_trail_routes(self, db, mtbTrailRoutes):
+    def insert_mtb_trail_routes(self, mtbTrailRoutes):
 
         """
         MTB Trails Insertion into the PyMongo DB
         """
         # TODO: Surround with try catch so that we can't skip dup errors 
         try: 
-            db.mtb_trail_routes.insert_many(mtbTrailRoutes)
+            self.DB.mtb_trail_routes.insert_many(mtbTrailRoutes)
         except BulkWriteError as e:
             logging.error(e.details['writeErrors'])
 
-    def insert_mtb_trail_route_descriptions(self, db, mtbTrailRouteDescriptions):
+    def insert_mtb_trail_route_descriptions(self, mtbTrailRouteDescriptions):
         # # insert the sample mtb trail descriptions
         # loop through list of lists and insert 
         for trailRouteDescriptions in mtbTrailRouteDescriptions: 
             # TODO: Surround with try catch so that we can't skip dup errors 
             try: 
-                db.mtb_trail_route_descriptions.insert_many(trailRouteDescriptions)
+                self.DB.mtb_trail_route_descriptions.insert_many(trailRouteDescriptions)
             except BulkWriteError as e:
                 logging.error(e.details['writeErrors'])
 
-    def delete_mtb_trail_route_data(self, db):
-        db.mtb_trail_routes.drop()
-        db.mtb_trail_route_descriptions.drop()
+    def delete_mtb_trail_route_data(self):
+        self.DB.mtb_trail_routes.drop()
+        self.DB.mtb_trail_route_descriptions.drop()
         
-    def find_mtb_trail_descriptions(self, db, trailIds):
+    def find_mtb_trail_descriptions(self, trailIds):
         # retrieve documents for all trailIds
-        data = db.mtb_trail_route_descriptions.find({'mtb_trail_route_id': {'$in': trailIds}})
+        data = self.DB.mtb_trail_route_descriptions.find({'mtb_trail_route_id': {'$in': trailIds}})
         return DataFrame(data)
 
-    def find_mtb_trail_data(self, db):
+    def find_mtb_trail_routes(self):
         # retrieve data from both the routes/descriptions tables 
-        data = db.mtb_trail_routes.find() 
+        data = self.DB.mtb_trail_routes.find() 
         return DataFrame(data)  
+
+    # method for playing with data frame data between trail route and descriptions
+    def find_mtb_trail_data(self):
+        # let's pull tables and collections using the route ids 
+        routeDataFrame = self.find_mtb_trail_routes()
+        print(f"Trail route data len = {len(routeDataFrame)}")
+        print(routeDataFrame)
+        print("\n")
+
+        # let's pull all of the trail route ids from the route data 
+        trailIds = routeDataFrame.loc[:, '_id'].tolist()
+        print("Trail ids from routes:")
+        print(trailIds)
+        print("\n")
+
+        # let's get the descriptions using the list of trail ids
+        descDataFrame = self.find_mtb_trail_descriptions(trailIds) 
+        print(descDataFrame)
+        print("\n")
+
+        # let's play around and get df rows based on ids
+        for id in trailIds:
+            descData = descDataFrame.loc[descDataFrame['mtb_trail_route_id'] == id]
+            print(f"Description data for id = {id}:")
+            print(f"Description data len = {len(descData)}") 
+            print(descData) 
+        print("\n")

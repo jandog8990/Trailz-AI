@@ -23,6 +23,8 @@ class MTBTrailParser:
         # storage to recommend trailz based on location of user
         # within the script tags lives the item list for area bread
         script_obj = titlebar.find('script')
+        if script_obj is None:
+            return None
         json_obj = json.loads(script_obj.text)
 
         # lets get each of the area items and store them as
@@ -53,11 +55,19 @@ class MTBTrailParser:
         # difficulty
         diffbanner = self.soup.find("div", class_="title")
         difficulty = self.soup.find("span", class_="difficulty-text")
+        if difficulty is None:
+            return None
         difficulty = difficulty.text.strip()
 
         # trail subheader containing reviews
         metaWrapper = self.soup.find("div", class_="stars-container")
+        if metaWrapper is None:
+            return None
         topRatings = metaWrapper.find("span", class_="small")
+        
+        # strip the top ratings if they exist
+        if topRatings is None:
+            return None 
         totalRatings = topRatings.text.strip()
 
         # separate trail ratings and num ratings
