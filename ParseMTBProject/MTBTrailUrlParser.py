@@ -57,6 +57,6 @@ class MTBTrailUrlParser:
 
         mtbTrailRouteDescriptions = mtbTrailParser.createMTBTrailRouteDescriptions(trailId,
             mainSectionHeaders, bodyText)
-
-        print(".", end="", flush=True)
+       
+        print(".", end="", flush=True) 
         return (mtbTrailRoute, mtbTrailRouteDescriptions)

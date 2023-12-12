@@ -42,7 +42,13 @@ def test_map_async():
     pool = Pool(processes=cpu_count)
     result_f = pool.map_async(mul, lst, chunksize=2, callback=collect_result)
     pool.close()
-    print(result_f.get(timeout=10))
+    main_result = result_f.get(timeout=10)
+    print(f"Main result (len = {len(main_result)})")
+    print(main_result) 
+    print("\n")
+    print(f"Collabck result (len = {len(result)})")
+    print(result) 
+    print("\n")
 
 if __name__ == '__main__':
     start = datetime.now()

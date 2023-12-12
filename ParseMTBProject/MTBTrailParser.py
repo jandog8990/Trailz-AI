@@ -130,8 +130,9 @@ class MTBTrailParser:
         mainSectionHeaders = [header for header in mainSectionHeaders 
             if (race not in header.lower()) and (contacts not in header.lower())]
         headersLen = len(mainSectionHeaders)
+         
         start = 0
-        end = headersLen - 1 
+        end = headersLen
 
         mainTextMap = {}
         for i in range(start, end):

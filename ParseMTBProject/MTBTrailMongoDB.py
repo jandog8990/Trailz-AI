@@ -6,6 +6,7 @@ from dotenv import dotenv_values
 from pandas import DataFrame
 import json
 import logging
+import sys
 
 # -----------------------------------------------------
 # ---- PyMongo DB INSERT/GET/DELETE ----
@@ -14,7 +15,7 @@ class MTBTrailMongoDB:
     logging.basicConfig(filename='mtbtrailz.log', filemode='w',
         level=logging.DEBUG)
   
-    def __init__(self, soup):
+    def __init__(self):
         self.DB = self.get_database()
 
     # -----------------------------------------------------
@@ -54,7 +55,6 @@ class MTBTrailMongoDB:
     
     def serialize_mtb_trail_route_data(self, mtbTrailRoutes):
         
-        print("MTB Trail Route:")
         '''
         stateArea = mtbTrailRoute["trail_area"]["state"]
         stateAreaJson = json.dumps(stateArea.__dict__)
@@ -65,7 +65,7 @@ class MTBTrailMongoDB:
         # loop through the mtb trail routes and serialize the trail area 
         for mtbTrailRoute in mtbTrailRoutes: 
             trailAreaDict = mtbTrailRoute["trail_area"]
- 
+            
             # nested loop for the serialized data
             serializedTrailArea = {} 
             for k, v in trailAreaDict.items():
@@ -97,7 +97,7 @@ class MTBTrailMongoDB:
             # TODO: Surround with try catch so that we can't skip dup errors 
             try: 
                 self.DB.mtb_trail_route_descriptions.insert_many(trailRouteDescriptions)
-            except BulkWriteError as e:
+            except BulkWriteError as e: 
                 logging.error(e.details['writeErrors'])
 
     def delete_mtb_trail_route_data(self):
