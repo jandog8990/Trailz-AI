@@ -1,6 +1,5 @@
 import re
 import json
-
 from Area import TrailArea
 
 # -------------------------------------------------------
@@ -164,5 +163,6 @@ class MTBTrailParser:
                 "text": description,
                 "mtb_trail_route_id": trailId 
             }
+           
             mtb_trail_route_descriptions.append(descObj)  
         return mtb_trail_route_descriptions

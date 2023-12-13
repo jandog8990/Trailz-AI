@@ -90,16 +90,29 @@ class MTBTrailMongoDB:
         except BulkWriteError as e:
             logging.error(e.details['writeErrors'])
 
-    def insert_mtb_trail_route_descriptions(self, mtbTrailRouteDescriptions):
+    def insert_mtb_trail_route_descriptions(self, mtbTrailRoutes, mtbTrailRouteDescriptions):
         # # insert the sample mtb trail descriptions
         # loop through list of lists and insert 
+        index = 0 
         for trailRouteDescriptions in mtbTrailRouteDescriptions: 
+            # if (len(trailRouteDescriptions) == 1): 
+            #    print(trailRouteDescriptions[0]) 
+            
             # TODO: Surround with try catch so that we can't skip dup errors 
             try: 
                 self.DB.mtb_trail_route_descriptions.insert_many(trailRouteDescriptions)
             except BulkWriteError as e: 
                 logging.error(e.details['writeErrors'])
-
+            except TypeError as e:
+                logging.error("New Type error:")
+                logging.error(f"Inserting trail route descriptions len = {len(trailRouteDescriptions)}") 
+                logging.error(f"Index = {index}") 
+                trailRoute = mtbTrailRoutes[index]
+                logging.error(f"Trail route = {trailRoute['route_name']}") 
+                # logging.error(e) 
+                # logging.error(e)
+            index = index + 1 
+    
     def delete_mtb_trail_route_data(self):
         self.DB.mtb_trail_routes.drop()
         self.DB.mtb_trail_route_descriptions.drop()

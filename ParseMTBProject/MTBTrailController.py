@@ -3,6 +3,7 @@ from MTBJsonLineParser import MTBJsonLineParser
 from MTBTrailMongoDB import MTBTrailMongoDB
 import multiprocessing
 from multiprocessing import Pool
+import numpy as np
 import time
 import os
 
@@ -23,8 +24,15 @@ et = time.time()
 elapsed = et - st
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
-trail_urls = trail_urls[1:10000]
+trail_urls = trail_urls[1:100]
 print("\n")
+
+# ----------------------------------------------------
+# Parse trail url function for parsing trail data
+# ----------------------------------------------------
+trailUrlParser = MTBTrailUrlParser()
+def parse_trail_url(trail_url):
+    return trailUrlParser.parseTrail(trail_url) 
 
 # ----------------------------------------------------
 # POOL Layer for splitting the data across multiple
@@ -33,12 +41,34 @@ print("\n")
 # ----------------------------------------------------
 
 # loop through the json lines and parse each individual URL
+"""
 trailUrlParser = MTBTrailUrlParser()
 trailDataTuples = []
 for i in range(len(trail_urls)):
     url = trail_urls[i]
     if (v := trailUrlParser.parseTrail(url)) is not None:
         trailDataTuples.append(v)
+"""
+
+# multiprocessing pool that takes trail urls and batches
+cpu_count = os.cpu_count()
+CHUNK_LEN = 25 
+pool = Pool(processes=cpu_count)
+st = time.time()
+result = pool.map_async(parse_trail_url, trail_urls,
+        chunksize=CHUNK_LEN)
+pool.close()
+res = result.get()
+et = time.time()
+elapsed = et - st
+print(f"CPU count = {cpu_count}")
+print(f"Execution time (pooling): {elapsed} sec")
+print(f"Result len = {len(res)}")
+print("\n")
+
+trailDataTuples = [t for t in res if t]
+print(f"Trail tuples len = {len(trailDataTuples)}")
+print("\n")
 
 # --------------------------------------------------------
 # Collect the data from multiprocessing into lists after
@@ -48,6 +78,29 @@ for i in range(len(trail_urls)):
 # let's get individual lists of the metadata and the descriptions separately
 mtbTrailRoutes = list(zip(*trailDataTuples))[0] # list of objs
 mtbTrailRouteDescriptions = list(zip(*trailDataTuples))[1] # list of lists of objs
+print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
+print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
+print("\n")
+
+# MTB trail route descriptions
+missingIndices = [i for i in range(len(mtbTrailRouteDescriptions))
+    if len(mtbTrailRouteDescriptions[i]) == 0]
+print(f"Missing Descriptions len = {len(missingIndices)}") 
+print(missingIndices)
+print("\n")
+missingTrailRoutes = np.take(mtbTrailRoutes, missingIndices)
+print("Missing Trail Routes")
+print(missingTrailRoutes)
+print("\n")
+
+# remove the missing elements
+mtbTrailRouteDescriptions = [mtbTrailRouteDescriptions[i] for i in range(len(mtbTrailRouteDescriptions))
+    if i not in missingIndices]
+mtbTrailRoutes = [mtbTrailRoutes[i] for i in range(len(mtbTrailRoutes))
+    if i not in missingIndices]
+print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
+print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
+print("\n")
 
 # --------------------------------------------
 # MongoDB Operations for deleting/inserting
@@ -70,7 +123,7 @@ trailMongoDB.delete_mtb_trail_route_data()
 trailMongoDB.insert_mtb_trail_routes(newMTBTrailRoutes)
 
 # insert the mtb trail route descriptions to the mongoDB
-trailMongoDB.insert_mtb_trail_route_descriptions(mtbTrailRouteDescriptions)
+trailMongoDB.insert_mtb_trail_route_descriptions(newMTBTrailRoutes, mtbTrailRouteDescriptions)
 
 """
 # play around with data
