@@ -109,8 +109,6 @@ class MTBTrailMongoDB:
                 logging.error(f"Index = {index}") 
                 trailRoute = mtbTrailRoutes[index]
                 logging.error(f"Trail route = {trailRoute['route_name']}") 
-                # logging.error(e) 
-                # logging.error(e)
             index = index + 1 
     
     def delete_mtb_trail_route_data(self):
@@ -131,25 +129,40 @@ class MTBTrailMongoDB:
     def find_mtb_trail_data(self):
         # let's pull tables and collections using the route ids 
         routeDataFrame = self.find_mtb_trail_routes()
+        '''
         print(f"Trail route data len = {len(routeDataFrame)}")
         print(routeDataFrame)
         print("\n")
-
+        ''' 
         # let's pull all of the trail route ids from the route data 
         trailIds = routeDataFrame.loc[:, '_id'].tolist()
+        ''' 
         print("Trail ids from routes:")
         print(trailIds)
         print("\n")
+        ''' 
 
         # let's get the descriptions using the list of trail ids
         descDataFrame = self.find_mtb_trail_descriptions(trailIds) 
-        print(descDataFrame)
+        print("Description Data Frame:") 
+        print(descDataFrame.info())
         print("\n")
 
+        '''
+        df_text = descDataFrame[['text']]
+        print("DF Trail Text:")
+        print(df_text)
+        print("\n")
+        '''
+        
         # let's play around and get df rows based on ids
+        """
         for id in trailIds:
             descData = descDataFrame.loc[descDataFrame['mtb_trail_route_id'] == id]
             print(f"Description data for id = {id}:")
             print(f"Description data len = {len(descData)}") 
             print(descData) 
         print("\n")
+        """ 
+
+        return descDataFrame
