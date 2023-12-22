@@ -1,0 +1,48 @@
+# Filtering in Vector Search
+
+# SQUAD - Stanford Question-Answering Dataset
+
+# for recommendation we want filters:
+# ex: Google category (news/shopping), date, language, region
+# ex: Netflix compares users in similar geographies
+
+# metdata filtering
+
+First way of achieving the filtering problem:
+* Issue a query to the vectordb using provided indices (ie our sample data)
+* From this we can return based on user text 
+    * if user specifices "Blue" then we will search for all trails
+        that contain the metadata field of that request
+    * to ensure that we get the proper trailz let's introduce a 
+        a field that prompts the user for "type of trails" and
+        if they don't know "types" then ask "Beginner/intermediate/etc"
+    * the user will then specify what type of trail by using descriptions
+        and questions such as "I want a flowy trail with no rocks"
+    * if the user does not know:
+        * I don't know what types of trails
+        * Are you a beginner? YES
+        * Here are trails in your area that relate to beginner
+
+Second way of filtering based on metadata (Pinecone):
+* top-k resuls where dpt == 'engineering'
+* top-k where date >= 14 days ago and dpt == 'engineering'
+* these are compound WHERE clauses
+* We need two indices
+    * Main indexes of text
+    * Metadata indexes 
+
+1. Post-filtering - filter based on metadata after the top-k search
+    a. NOTE: This can uses K-nearest neighbors (faster/more efficient)
+    b. Usually reduces less than top-k (sometimes zero)
+    c. Unreliable on accuracy
+2. Pre-filtering - filter based on metadata then perform the top-k search  
+    a. NOTE: This uses exhaustive search after filtering  
+    b. Filter out the metadata indexes then filter out corresponding
+        text data indexes
+    c. Not manageable with huge datasets
+3. Single-stage filtering - built by PineCone
+    a. merges vector and metadata indexec
+    b. allows filtering and ANN search
+    c. single-stage filter opposed to two-stage filter/search methods
+
+
