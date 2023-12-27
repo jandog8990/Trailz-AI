@@ -1,9 +1,13 @@
 from scrapy.spiders import CrawlSpider, Rule
 from scrapy.linkextractors import LinkExtractor
 from w3lib.url import url_query_cleaner
-from JsonLineParser import JsonLineParser 
 import re
 import extruct
+from sys import path
+
+PATH='/home/jandogonzales/Development/Machine Learning/MTB-Trailz/mtb-project-crawler/crawler/spiders' 
+path.append(PATH)
+from JsonLineParser import JsonLineParser 
 
 # clean the links that contain the same url with different query params
 def process_links(links):
@@ -18,7 +22,7 @@ class MtbProjectCrawler(CrawlSpider):
     allowed_domains = ['www.mtbproject.com']
     start_urls = ['https://www.mtbproject.com/directory/8009314/albuquerque']
     trail_urls = []
-    jlFile = "mtbproject.jl"
+    jlFile = PATH + "/mtbproject.jl"
 
     # initialize method to open current jsonlines file and find
     # previously crawled urls, that way we don't save twice

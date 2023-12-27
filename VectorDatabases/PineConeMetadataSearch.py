@@ -7,7 +7,7 @@ import pickle
 
 # PineCone keys for connecting 
 env_key = "gcp-starter"
-api_key = "1f85ec08-ebe8-4f10-a27a-6c10a4385d57"
+api_key = "8eb013da-12f4-4017-8efc-a6b2715337d9" 
 pinecone.init(
     api_key=api_key,
     environment=env_key
