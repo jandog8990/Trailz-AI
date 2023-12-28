@@ -21,7 +21,7 @@ class MTBTrailUrlParser:
         mtbTrailParser = MTBTrailParser(soup)
 
         # create the trail map and print
-        trailMap = mtbTrailParser.createTrailMap()
+        trailMap = mtbTrailParser.createTrailMap(url)
         if trailMap is None:
             return None 
         # mtbTrailParser.printTrailMapContents(trailMap)

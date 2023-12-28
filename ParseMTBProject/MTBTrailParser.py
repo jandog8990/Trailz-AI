@@ -10,7 +10,7 @@ class MTBTrailParser:
     def __init__(self, soup):
         self.soup = soup
          
-    def createTrailMap(self):
+    def createTrailMap(self, url):
         # titlebar can be none so make sure and check
         titlebar = self.soup.find(id="title-bar")
 
@@ -32,6 +32,11 @@ class MTBTrailParser:
         # 3. TrailSystem
         areaList = json_obj['itemListElement']
         trailArea = TrailArea()
+       
+        # first check that the area list is greater than 0
+        if len(areaList) == 0:
+            print(f"Area list EMPTY for url = {url}")
+            return None 
         return trailArea.parse_area_list(areaList)
 
     def printTrailMapContents(self, trailMap):

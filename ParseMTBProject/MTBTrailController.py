@@ -24,7 +24,7 @@ et = time.time()
 elapsed = et - st
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
-trail_urls = trail_urls[1:100]
+#trail_urls = trail_urls[1:100]
 print("\n")
 
 # ----------------------------------------------------
@@ -61,6 +61,7 @@ pool.close()
 res = result.get()
 et = time.time()
 elapsed = et - st
+print("\n")
 print(f"CPU count = {cpu_count}")
 print(f"Execution time (pooling): {elapsed} sec")
 print(f"Result len = {len(res)}")
@@ -89,9 +90,9 @@ print(f"Missing Descriptions len = {len(missingIndices)}")
 print(missingIndices)
 print("\n")
 missingTrailRoutes = np.take(mtbTrailRoutes, missingIndices)
-print("Missing Trail Routes")
-print(missingTrailRoutes)
-print("\n")
+#print("Missing Trail Routes")
+#print(missingTrailRoutes)
+#print("\n")
 
 # remove the missing elements
 mtbTrailRouteDescriptions = [mtbTrailRouteDescriptions[i] for i in range(len(mtbTrailRouteDescriptions))

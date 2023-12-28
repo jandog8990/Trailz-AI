@@ -50,7 +50,7 @@ class TrailArea:
         # create the area obj
         # this entire logic will be replaced with
         # the trail list keys directly 
-      
+
         # TODO: Let's make each value in the map an array of Area objects, the
         # first will be the state object and the last will be trail system obj 
         areaList.pop(0) 
