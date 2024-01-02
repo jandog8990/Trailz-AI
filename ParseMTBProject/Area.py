@@ -46,7 +46,7 @@ class TrailArea:
     def show_contents(self):
         print(f"Area: {self.areaName} - {self.areaRef}")
 
-    def parse_area_list(self, areaList):
+    def parse_area_list(self, areaList, url):
         # create the area obj
         # this entire logic will be replaced with
         # the trail list keys directly 
@@ -55,19 +55,31 @@ class TrailArea:
         # first will be the state object and the last will be trail system obj 
         areaList.pop(0) 
         stateJson = areaList.pop(0)
-        trailJson= areaList.pop(-1)
+        
+        # state should always be present
         stateArea = Area(stateJson["name"], stateJson["item"]) 
-        trailArea = Area(trailJson["name"], trailJson["item"])
-      
-        # let's start creating the trail map of Area object arrays
         self.trailMap[self.STATE_KEY] = [stateArea]
-        self.trailMap[self.TRAIL_SYSTEM_KEY] = [trailArea] 
-      
-        # let's loop through the rest of the area list and create the sub area
-        subAreaList = [] 
-        for areaJson in areaList:
-            subArea = Area(areaJson["name"], areaJson["item"])
-            subAreaList.append(subArea)
-        self.trailMap[self.SUB_AREA_KEY] = subAreaList 
+       
+        # the area list 
+        if len(areaList) == 0:
+            print("Area list has zero elements:")
+            print(f"Area list url = {url}") 
+            print(f"State json = {stateJson}")
+            print(f"Area list len = {len(areaList)}") 
+            print(f"=> Return trailMap")  
+            print("\n")
+        else: 
+            trailJson = areaList.pop(-1)
+            trailArea = Area(trailJson["name"], trailJson["item"])
+          
+            # let's start creating the trail map of Area object arrays
+            self.trailMap[self.TRAIL_SYSTEM_KEY] = [trailArea] 
+          
+            # let's loop through the rest of the area list and create the sub area
+            subAreaList = [] 
+            for areaJson in areaList:
+                subArea = Area(areaJson["name"], areaJson["item"])
+                subAreaList.append(subArea)
+            self.trailMap[self.SUB_AREA_KEY] = subAreaList 
         
         return self.trailMap

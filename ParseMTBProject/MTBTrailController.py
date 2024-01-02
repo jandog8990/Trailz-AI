@@ -22,9 +22,9 @@ jsonLineParser = MTBJsonLineParser()
 trail_urls = jsonLineParser.parse(jlFile)
 et = time.time()
 elapsed = et - st
+#trail_urls = trail_urls[1:100]
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
-#trail_urls = trail_urls[1:100]
 print("\n")
 
 # ----------------------------------------------------
@@ -68,8 +68,6 @@ print(f"Result len = {len(res)}")
 print("\n")
 
 trailDataTuples = [t for t in res if t]
-print(f"Trail tuples len = {len(trailDataTuples)}")
-print("\n")
 
 # --------------------------------------------------------
 # Collect the data from multiprocessing into lists after
@@ -81,7 +79,6 @@ mtbTrailRoutes = list(zip(*trailDataTuples))[0] # list of objs
 mtbTrailRouteDescriptions = list(zip(*trailDataTuples))[1] # list of lists of objs
 print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
 print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
-print("\n")
 
 # MTB trail route descriptions
 missingIndices = [i for i in range(len(mtbTrailRouteDescriptions))
@@ -95,13 +92,13 @@ missingTrailRoutes = np.take(mtbTrailRoutes, missingIndices)
 #print("\n")
 
 # remove the missing elements
-mtbTrailRouteDescriptions = [mtbTrailRouteDescriptions[i] for i in range(len(mtbTrailRouteDescriptions))
-    if i not in missingIndices]
-mtbTrailRoutes = [mtbTrailRoutes[i] for i in range(len(mtbTrailRoutes))
-    if i not in missingIndices]
+mtbTrailRouteDescriptions = [mtbTrailRouteDescriptions[i] for i in 
+    range(len(mtbTrailRouteDescriptions)) if i not in missingIndices]
+mtbTrailRoutes = [mtbTrailRoutes[i] for i in
+    range(len(mtbTrailRoutes)) if i not in missingIndices]
 print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
 print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
-print("\n")
+
 
 # --------------------------------------------
 # MongoDB Operations for deleting/inserting
@@ -112,21 +109,20 @@ trailMongoDB = MTBTrailMongoDB()
 #db = trailMongoDB.get_database()
 
 # This is needed when we need new INDEXES for the collections
-trailMongoDB.create_indexes()
+#trailMongoDB.create_indexes()
 
 # let's first serialize the mtb trail route data so that it can be inserted
 newMTBTrailRoutes = trailMongoDB.serialize_mtb_trail_route_data(mtbTrailRoutes)
+print(f"New MTB Trail Routes len = {len(newMTBTrailRoutes)}")
+print("\n")
 
 # let's delete all records from the DB tables
 trailMongoDB.delete_mtb_trail_route_data()
 
 # insert the mtb trail routes to the mongoDB
+print("Insert mtb trail routes...")
 trailMongoDB.insert_mtb_trail_routes(newMTBTrailRoutes)
 
 # insert the mtb trail route descriptions to the mongoDB
+print("Insert mtb trail route descriptions...")
 trailMongoDB.insert_mtb_trail_route_descriptions(newMTBTrailRoutes, mtbTrailRouteDescriptions)
-
-"""
-# play around with data
-find_mtb_trail_data(db)
-"""

@@ -5,8 +5,9 @@
 
 
 class TrailRoute:
-    def __init__(self, trailId, trailTitle, trailArea, difficulty, avgRating, numRatings):
+    def __init__(self, trailId, trailUrl, trailTitle, trailArea, difficulty, avgRating, numRatings):
         self._id = trailId
+        self.trail_url = trailUrl 
         self.route_name = trailTitle
         self.trail_area = trailArea
         self.difficulty = difficulty

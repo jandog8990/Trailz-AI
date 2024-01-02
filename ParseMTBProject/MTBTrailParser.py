@@ -37,7 +37,7 @@ class MTBTrailParser:
         if len(areaList) == 0:
             print(f"Area list EMPTY for url = {url}")
             return None 
-        return trailArea.parse_area_list(areaList)
+        return trailArea.parse_area_list(areaList, url)
 
     def printTrailMapContents(self, trailMap):
         for key, val in trailMap.items():
@@ -47,7 +47,7 @@ class MTBTrailParser:
             print("\n")
 
     # create the main mtb trail route data
-    def createMTBTrailRoute(self, trailTitle):
+    def createMTBTrailRoute(self, trailTitle, url):
         # header
         trailTitle = trailTitle.text.strip()
 
@@ -83,6 +83,7 @@ class MTBTrailParser:
         # Let's now create the main table for the trailz route
         return {
             "_id": trail_id,
+            "trail_url": url, 
             "route_name": trailTitle,
             "difficulty": difficulty,
             "average_rating": avgRating,

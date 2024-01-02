@@ -1,4 +1,5 @@
 import requests
+from requests.adapters import HTTPAdapter, Retry
 from bs4 import BeautifulSoup
 from MTBTrailParser import MTBTrailParser
 
@@ -9,12 +10,16 @@ from MTBTrailParser import MTBTrailParser
 
 
 class MTBTrailUrlParser:
+    def __init__(self):
+        self.session = requests.Session()
+        retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500,502,503,504])
+        self.session.mount('https://www.mtbproject.com', HTTPAdapter(max_retries=retries))
+    
     # this parses the trail url and creates tuple of dicts
     def parseTrail(self, url):
 
         # URL parsing for MTB articles
-        # URL = "https://www.mtbproject.com/trail/4939737/hangover-loop"
-        page = requests.get(url)
+        page = self.session.get(url) 
         soup = BeautifulSoup(page.content, "html.parser")
 
         # initialize the mtb trail parser obj
@@ -24,15 +29,15 @@ class MTBTrailUrlParser:
         trailMap = mtbTrailParser.createTrailMap(url)
         if trailMap is None:
             return None 
-        # mtbTrailParser.printTrailMapContents(trailMap)
 
         # create the main MTB trail route
         trailTitle = soup.find(id="trail-title")
         if trailTitle is None:
             return None
-        mtbTrailRoute = mtbTrailParser.createMTBTrailRoute(trailTitle)
+        mtbTrailRoute = mtbTrailParser.createMTBTrailRoute(trailTitle, url)
         if mtbTrailRoute is None:
             return None
+        trailId = mtbTrailRoute["_id"] 
 
         mtbTrailRoute["trail_area"] = trailMap
 
@@ -46,17 +51,7 @@ class MTBTrailUrlParser:
 
         # get the mtb body text from trail text element
         bodyText = mtbTrailParser.parseMainText(trailText)
-
-        # create the mtb trail route descriptions
-        trailTitle = trailTitle.text.strip()
-
-        # split the trail name so we can set the id
-        trailTokens = trailTitle.split()
-        # trailId = trailTokens[0].lower()
-        trailId = trailTitle.lower()
-
-        mtbTrailRouteDescriptions = mtbTrailParser.createMTBTrailRouteDescriptions(trailId,
-            mainSectionHeaders, bodyText)
+        mtbTrailRouteDescriptions = mtbTrailParser.createMTBTrailRouteDescriptions(trailId, mainSectionHeaders, bodyText)
        
         print(".", end="", flush=True) 
         return (mtbTrailRoute, mtbTrailRouteDescriptions)
