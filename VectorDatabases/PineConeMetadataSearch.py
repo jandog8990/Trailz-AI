@@ -1,5 +1,4 @@
 from sentence_transformers import SentenceTransformer
-import pandas as pd
 import pinecone
 from tqdm.auto import tqdm
 import time
