@@ -1,8 +1,5 @@
 from sentence_transformers import SentenceTransformer
 from SquadDataset import SquadDataset
-import pandas as pd
-from datasets import Dataset
-from datasets import load_dataset
 import pinecone
 from tqdm.auto import tqdm
 import os
@@ -10,7 +7,7 @@ import os
 # Load the SQUAD dataset
 squadData = SquadDataset()
 dataset = squadData.loadSQUAD()
-print(f"Dataset size = {len(dataset)}")
+print(f"Dataset:") 
 print(dataset[0])
 print("\n")
 
