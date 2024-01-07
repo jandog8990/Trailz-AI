@@ -13,6 +13,7 @@ with open('mtb_route_dataset.pkl', 'rb') as f:
 def update_id(objId): 
     newId = re.sub(r'[^a-zA-Z0-9\s]+', '', objId)
     newId = re.sub(' +', ' ', newId)
+    newId = newId.replace(u'\xa0', u' ') 
     return newId
 
 new_dataset = dataset.map(
@@ -25,12 +26,6 @@ print("Example dataset:")
 print(new_dataset[10])
 print("\n")
 
-for data in new_dataset:
-    if "247" in data["_id"]:
-        print(data)
-print("\n")
-
-"""
 # connect to the pine cone api
 config = dotenv_values(".env")
 env_key = config["PINE_CONE_ENV_KEY"]
@@ -57,6 +52,8 @@ print("\n")
 
 # upset the data in batches of 100
 batch_size = 100
+print(f"New dataset len = {len(new_dataset)}")
+print(f"Batch size = {batch_size}")
 for i in tqdm(range(0, len(new_dataset), batch_size)):
     # set the end of the current batch
     i_end = i + batch_size
@@ -65,9 +62,6 @@ for i in tqdm(range(0, len(new_dataset), batch_size)):
         i_end = len(new_dataset)
     batch = new_dataset[i:i_end]
     #print(f"Batch id type = {type(batch['_id'])}")
-    print(f"Batch vector type = {type(batch['vector'])}")
-    print(f"Batch metadata type = {type(batch['metadata'])}")
 
     # upsert the batch of mtb route data to pinecone
     index.upsert(vectors=zip(batch['_id'], batch['vector'], batch['metadata']))
-"""
