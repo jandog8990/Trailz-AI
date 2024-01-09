@@ -1,6 +1,5 @@
 from sentence_transformers import SentenceTransformer
 import pinecone
-from tqdm.auto import tqdm
 import time
 import pickle
 
@@ -18,7 +17,7 @@ with open('squad.pkl', 'rb') as f:
 print(f"Dataset len from pickle = {len(dataset)}")
 print("\n")
 
-# create ids fromt the results
+# create ids from the results
 def create_ids(results):
     # get the ids from the results
     ids = [obj['id'] for obj in results['matches']]
