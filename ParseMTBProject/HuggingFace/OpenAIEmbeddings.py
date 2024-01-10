@@ -1,8 +1,8 @@
-import os
 import streamlit as st
 import pickle
 import time
 import langchain
+from dotenv import dotenv_values
 from langchain.llms import OpenAI 
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.chains.qa_with_sources.loading import load_qa_with_sources_chain
@@ -12,11 +12,11 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import FAISS
 
 # example of streamlining chunks (summary chunks from filtered chunks)
-apikey = "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"
-os.environ['OPENAI_API_KEY'] = apikey
+config = dotenv_values(".env")
+api_key = config['OPENAI_API_KEY']
 
 # init the LLM
-llm = OpenAI(temperature=0.9, max_tokens=500)
+llm = OpenAI(api_key=api_key, temperature=0.9, max_tokens=500)
 
 loaders = UnstructuredURLLoader(urls=[
     "https://www.reuters.com/markets/us/futures-advance-after-dull-week-gains-tesla-2023-09-11/",
