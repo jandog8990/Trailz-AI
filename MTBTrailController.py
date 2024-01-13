@@ -16,7 +16,6 @@ import os
 
 # let's parse the json lines file to get all trail routes
 jlFile = "../mtb-project-crawler/crawler/spiders/mtbproject.jl"
-#jlFile = "test.jl" 
 st = time.time()
 jsonLineParser = MTBJsonLineParser()
 trail_urls = jsonLineParser.parse(jlFile)

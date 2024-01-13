@@ -1,11 +1,12 @@
-# MTB Trailz App 
-The beginning of an MTB Trail app. This part is to start scraping
-and organizing data so that it can be sorted and learned from.
+# Trailz AI App 
+MTB Trail Recommendation app that uses HuggingFace and PineCone
+VectorDB to embed text descriptions of trail data and upload
+to a backend PineCone DB that allows NLP searching. 
 
 ###Steps
 
-#1. Need to get data from MTB sites
-#2. Store data to a mongo db.
-#2. Research different recommendation techniques 
-#3. Train model
-#4. Map APIs for showing the user maps/directions
+#1. First we run the mtb-project-crawler to crawl and scrape mtb data 
+#2. Run the MTBTrailController to store data to a mongo db 
+#3. Run PineConeDatasetUpload that takes text data, embeds and uploads to PineCone 
+#3. Run PineConeSearch that searches for trails using NLP 
+#4. MapBox API for showing the trail route data 
