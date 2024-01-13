@@ -6,7 +6,7 @@ import pickle
 import re
 
 # open the dataset from pkl to get results
-with open('mtb_route_dataset.pkl', 'rb') as f:
+with open('pkl_data/mtb_route_dataset.pkl', 'rb') as f:
     dataset = pickle.load(f)
 
 # dataset map updating the _id 
@@ -72,17 +72,27 @@ print(index)
 print("\n")
 
 # create the embedder for the query
-search_query = "Difficult trails in Albuquerque, NM" 
+search_query = "Intermediate and difficult trails in Albuquerque and Denver" 
 model = SentenceTransformer("stsb-xlm-r-multilingual")
 query = model.encode(search_query)
 
 # run the query for the trail
 start = time.time()
-results = index.query(vector=[query.tolist()], top_k=10)
+results = index.query(vector=[query.tolist()], top_k=5)
 end = time.time()
 total = end - start
 
 # load the query squad dataset
-print("Results from regular query:")
+print("Results from top 5 regular query:")
 show_results(results)
+print("\n")
+
+# filter using conditions for metadata
+#    "average_rating": {"$gte": 4.0} 
+conditions = {
+    "areaNames": {"$in": ["New Mexico", "Colorado"]},
+}
+meta_results = index.query(vector=[query.tolist()], top_k=5, filter=conditions)
+print("Results from top 5 conditional query:")
+show_results(meta_results)
 print("\n")

@@ -1,10 +1,5 @@
-scrap_crawler/spiders/imbd.jl
-scrap_crawler/spiders/imbd.log
-mtb-project-crawler/crawler/spiders/mtbproject.jl
-mtb-project-crawler/crawler/spiders/mtbproject.log
 **/*.env
 **/*.jl
 **/*.swp
-ParseMTBProject/__pycache__
-ParseMTBProject/mtbtrailz.log
-ParseMTBProject/mtb_route_dataset.pkl
+pkl_data/
+jl_data/
