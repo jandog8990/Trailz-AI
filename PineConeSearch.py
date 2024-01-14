@@ -5,47 +5,11 @@ from dotenv import dotenv_values
 import pickle
 import re
 
-# open the dataset from pkl to get results
-with open('pkl_data/mtb_route_dataset.pkl', 'rb') as f:
-    dataset = pickle.load(f)
+from MTBLoadDataset import MTBLoadDataset
 
-# dataset map updating the _id 
-def update_id(objId): 
-    newId = re.sub(r'[^a-zA-Z0-9\s]+', '', objId)
-    newId = re.sub(' +', ' ', newId)
-    newId = newId.replace(u'\xa0', u' ') 
-    return newId
-
-# create ids from the pinecone results
-def create_ids(results):
-    ids = [obj['id'] for obj in results['matches']]
-    print(f"Ids len = {len(ids)}")
-    print(ids)
-    print("\n")
-    return ids
-
-# get samples from the main dataset
-def get_samples(dataset):
-    return {
-        data['_id']: {
-            'mainText': data['mainText'],
-            'metadata': data['metadata']
-        } for data in dataset}
-
-# update the dataset ids
-new_dataset = dataset.map(
-    lambda x: {
-        '_id': update_id(x['_id'])
-    })
-
-# show results from query
-dataset_samples = get_samples(new_dataset)
-def show_results(results):
-    ids = create_ids(results)
-    for i in ids:
-        print(f"Result[{i}]:")
-        print(dataset_samples[i])
-        print("\n")
+# load the metadata set
+loadData = MTBLoadDataset()
+metadata_set = loadData.load_dataset()
 
 # connect to the pine cone api
 config = dotenv_values(".env")
@@ -73,7 +37,7 @@ print("\n")
 
 # create the embedder for the query
 # mini model - sentence-transformers/all-MiniLM-L12-v2
-search_query = "Intermediate and difficult trails in Albuquerque and Denver" 
+search_query = "Steep and rocky difficult trails in Albuquerque"
 model = SentenceTransformer("stsb-xlm-r-multilingual")
 query = model.encode(search_query)
 
@@ -85,7 +49,7 @@ total = end - start
 
 # load the query squad dataset
 print("Results from top 5 regular query:")
-show_results(results)
+loadData.show_results(results, metadata_set)
 print("\n")
 
 # filter using conditions for metadata
@@ -95,5 +59,5 @@ conditions = {
 }
 meta_results = index.query(vector=[query.tolist()], top_k=5, filter=conditions)
 print("Results from top 5 conditional query:")
-show_results(meta_results)
+loadData.show_results(meta_results, metadata_set)
 print("\n")
