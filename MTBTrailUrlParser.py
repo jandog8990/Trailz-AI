@@ -7,7 +7,7 @@ from MTBTrailParser import MTBTrailParser
 # This will create the following trail db dictionaries:
 # 	1. mtbTrailRoute MAP - high level trail route metadata
 # 2. mtbTrailRouteDescriptions MAP - contains the mtb trail route descriptions
-
+import re
 
 class MTBTrailUrlParser:
     def __init__(self):
@@ -29,6 +29,21 @@ class MTBTrailUrlParser:
         trailMap = mtbTrailParser.createTrailMap(url)
         if trailMap is None:
             return None 
+
+        # get the toolbox for the gpx file and driving directions
+        toolBox = soup.find(id="toolbox")
+        if toolBox is None:
+            return None
+        print("Tool box elems:")
+        pattern1 = re.compile(r'Driving directions')
+        pattern2 = re.compile(r'Download GPX File')
+        elem1 = toolBox.find('a', href=True, text=pattern1)
+        elem2 = toolBox.find('a', href=True, text=pattern2)
+        #for elem in elems:
+        print("elems:")
+        print(elem1['href'])
+        print(elem2['href'])
+        print("\n")
 
         # create the main MTB trail route
         trailTitle = soup.find(id="trail-title")

@@ -21,16 +21,18 @@ jsonLineParser = MTBJsonLineParser()
 trail_urls = jsonLineParser.parse(jlFile)
 et = time.time()
 elapsed = et - st
-#trail_urls = trail_urls[1:10]
+trail_urls = trail_urls[1:3]
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
 print("\n")
 
+"""
 index_urls = [url for url in trail_urls if "index.php" in url]
 print(f"Len index url = {len(index_urls)}")
 print("Index url 0:")
 print(index_urls[0])
 print("\n")
+"""
 
 # ----------------------------------------------------
 # Parse trail url function for parsing trail data
