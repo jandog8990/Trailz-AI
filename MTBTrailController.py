@@ -21,9 +21,15 @@ jsonLineParser = MTBJsonLineParser()
 trail_urls = jsonLineParser.parse(jlFile)
 et = time.time()
 elapsed = et - st
-trail_urls = trail_urls[1:10]
+#trail_urls = trail_urls[1:10]
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
+print("\n")
+
+index_urls = [url for url in trail_urls if "index.php" in url]
+print(f"Len index url = {len(index_urls)}")
+print("Index url 0:")
+print(index_urls[0])
 print("\n")
 
 # ----------------------------------------------------
@@ -38,16 +44,6 @@ def parse_trail_url(trail_url):
 # nodes, currently this is still pretty slow even
 # with chunking the main list into smaller pieces
 # ----------------------------------------------------
-
-# loop through the json lines and parse each individual URL
-"""
-trailUrlParser = MTBTrailUrlParser()
-trailDataTuples = []
-for i in range(len(trail_urls)):
-    url = trail_urls[i]
-    if (v := trailUrlParser.parseTrail(url)) is not None:
-        trailDataTuples.append(v)
-"""
 
 # multiprocessing pool that takes trail urls and batches
 cpu_count = os.cpu_count()
