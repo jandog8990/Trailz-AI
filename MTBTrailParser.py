@@ -46,10 +46,30 @@ class MTBTrailParser:
             val.show_contents()
             print("\n")
 
+    # create trail rating using the difficulty string
+    def createTrailRating(self, difficulty):
+        ratingMap = {
+            "Easy": "Green",
+            "Easy/Intermediate": "Green/Blue",
+            "Intermediate": "Blue",
+            "Intermediate/Difficult": "Blue/Black",
+            "Difficult": "Black",
+            "Very Difficult": "Double Black"
+        }
+        return ratingMap[difficulty]
+
     # create the main mtb trail route data
-    def createMTBTrailRoute(self, trailTitle, url):
-        # header
+    def createMTBTrailRoute(self, trailTitle, toolBox, url):
+        # trail title from the main header 
         trailTitle = trailTitle.text.strip()
+       
+        # toolbox from the main page
+        pattern1 = re.compile(r'Driving directions')
+        pattern2 = re.compile(r'Download GPX File')
+        elem1 = toolBox.find('a', href=True, text=pattern1)
+        elem2 = toolBox.find('a', href=True, text=pattern2)
+        driving_directions = elem1['href']
+        gpx_file = elem2['href']
 
         # split the trail name so we can set the id
         trailTokens = trailTitle.split()
@@ -62,6 +82,9 @@ class MTBTrailParser:
         if difficulty is None:
             return None
         difficulty = difficulty.text.strip()
+
+        # trail rating (colors)
+        trail_rating = self.createTrailRating(difficulty) 
 
         # trail subheader containing reviews
         metaWrapper = self.soup.find("div", class_="stars-container")
@@ -84,10 +107,13 @@ class MTBTrailParser:
         return {
             "_id": trail_id,
             "trail_url": url, 
+            "driving_directions": driving_directions,
+            "gpx_file": gpx_file,
             "route_name": trailTitle,
             "difficulty": difficulty,
-            "average_rating": avgRating,
-            "num_ratings": numRatings
+            "trail_rating": trail_rating,
+            "average_rating": float(avgRating),
+            "num_ratings": int(numRatings)
         }
 
     def createMainSectionHeaders(self, trailText):
