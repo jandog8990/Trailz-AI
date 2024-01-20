@@ -12,9 +12,19 @@ to a backend PineCone DB that allows NLP searching.
     1. Uses a pool processor to split urls and process them in chunks
     2. Calls MTBTrailUrlParser.py & MTBTrailParser.py for creating Routes and Descriptions
     3. Calls MTBTrailMongoDB.py to load the route/description tuples to Atlas
-3. Run PineConeDatasetUpload.py that takes text data, embeds and uploads to PineCone
+3. Need to create the pkl data from the MongoDB to be used by PineCone
+    * Run the MTBTrailPickleCreator.py which creates route and desc pkl files
+4. Run PineConeEmbeddingCreator.py to create the data to insert to PineCone VectorDB
+    * Creates new mtb_route_dataset.pkl pkl file with updated data 
+5. Run PineConeDatasetUpload.py that takes text data, embeds and uploads to PineCone
+    * Reads the mtb_route_dataset.pkl pkl file 
     * Uses PineCone upsert to upload batches of vector data to PineCone 
-4. Run PineConeSearch.py that searches for trails using NLP
+6. Run PineConeSearch.py that searches for trails using NLP
     * Uses an embedded query search for natural text search
     * Uses conditional filter for searching based on metadata
-5. MapBox API for showing the trail route data 
+7. MapBox API for showing the trail route data 
+
+### Class Diagram
+
+1. PineConeSearchLoader.py - contains pine cone connections
+2. MTBLoadDataset.py - load the dataset for the mtb data

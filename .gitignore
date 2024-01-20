@@ -1,5 +1,5 @@
 **/*.env
 **/*.jl
 **/*.swp
-pkl_data/
-jl_data/
+pkl_data/*.pkl
+jl_data/*.jl

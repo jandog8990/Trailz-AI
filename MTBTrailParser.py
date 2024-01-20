@@ -56,7 +56,11 @@ class MTBTrailParser:
             "Difficult": "Black",
             "Very Difficult": "Double Black"
         }
-        return ratingMap[difficulty]
+        
+        if difficulty in ratingMap:
+            return ratingMap[difficulty]
+        else:
+            return "Unknown"
 
     # create the main mtb trail route data
     def createMTBTrailRoute(self, trailTitle, toolBox, url):
@@ -79,7 +83,7 @@ class MTBTrailParser:
         # difficulty
         diffbanner = self.soup.find("div", class_="title")
         difficulty = self.soup.find("span", class_="difficulty-text")
-        if difficulty is None:
+        if (difficulty is None) or (difficulty == ""):
             return None
         difficulty = difficulty.text.strip()
 

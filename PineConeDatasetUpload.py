@@ -34,9 +34,6 @@ print(f"env_key = {env_key}")
 print(f"api_key = {api_key}")
 print("\n")
 
-# TODO: This needs to be renamed to MTBDatasetLoad, then create
-# the actual PineConeUpload class for upserting the new_dataset
-
 # initialize pinecone, create the index
 pinecone.init(
     api_key=api_key,
@@ -61,7 +58,6 @@ for i in tqdm(range(0, len(new_dataset), batch_size)):
         # correct if batch is beyond new_dataset size
         i_end = len(new_dataset)
     batch = new_dataset[i:i_end]
-    #print(f"Batch id type = {type(batch['_id'])}")
 
     # upsert the batch of mtb route data to pinecone
     index.upsert(vectors=zip(batch['_id'], batch['vector'], batch['metadata']))
