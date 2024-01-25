@@ -1,6 +1,7 @@
 import pickle
 import re
 
+# MTBLoadDataset - Class that loads data from route pkl dataset
 class MTBLoadDataset: 
     # dataset map updating the _id 
     def update_id(self, objId): 
@@ -39,13 +40,29 @@ class MTBLoadDataset:
          
         for i in ids:
             print(f"Metadata Set[{i}]:")
+            print(f"id = {i}") 
             print(metadata_set[i])
             print("\n")
 
-    # load the new dataset
+    # load the pinecone dataset
     def load_dataset(self): 
         # open the dataset from pkl to get results
-        with open('pkl_data/mtb_route_dataset.pkl', 'rb') as f:
+        with open('./pkl_data/mtb_route_dataset.pkl', 'rb') as f:
+            dataset = pickle.load(f)
+
+        # update the dataset ids
+        print(type(dataset)) 
+        new_dataset = dataset.map(
+            lambda x: {
+                '_id': self.update_id(x['_id'])
+            })
+
+        return self.create_metadata_set(new_dataset)
+
+    # Canopy - load the full dataset with all fields present (ie trail url and gpx shit)
+    def load_full_dataset(self):
+        # open the dataset from pkl to get results
+        with open('./pkl_data/mtb_route_dataset.pkl', 'rb') as f:
             dataset = pickle.load(f)
 
         # update the dataset ids
@@ -54,4 +71,5 @@ class MTBLoadDataset:
                 '_id': self.update_id(x['_id'])
             })
 
-        return self.create_metadata_set(new_dataset)
+        return new_dataset 
+        

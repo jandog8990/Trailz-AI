@@ -5,6 +5,12 @@ to a backend PineCone DB that allows NLP searching.
 
 ### Steps for Running Search ###
 
+1. For basic search we can run PineConeSearch.py
+    * Update PineConeSearch with your trail criteria 
+    * $ python PineConeSearch.py
+2. 
+### Steps for generating/parsing data, uploading to MongoDB and PineConeDB
+
 1. First we run the mtb-project-crawler project to crawl and scrape mtb data and store in a jsonline file for storing trail/ urls. 
     * Run the crawler using: 
         $scrapy crawl mtbproject --logfile mtbproject.log -o mtbproject.jl:jsonlines
