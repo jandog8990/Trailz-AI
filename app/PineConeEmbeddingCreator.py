@@ -1,6 +1,5 @@
 import sys
 from datasets import Dataset
-from MTBTrailMongoDB import MTBTrailMongoDB 
 from dotenv import dotenv_values
 from sentence_transformers import SentenceTransformer
 import pinecone

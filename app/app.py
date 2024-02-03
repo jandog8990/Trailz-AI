@@ -7,24 +7,28 @@ import pickle
 import re
 
 from PineConeSearchLoader import PineConeSearchLoader
-from MTBLoadDataset import MTBLoadDataset
 
 #Main Trailz AI app for searching the PineCone DB for
 #recommended trailz around my area
 
-# create the embedding transformer
-model = SentenceTransformer("stsb-xlm-r-multilingual")
-#model = SentenceTransformer("all-MiniLM-L12-v2")
+@st.cache_resource
+def get_model():
+    # create the embedding transformer
+    return SentenceTransformer("stsb-xlm-r-multilingual")
+    #model = SentenceTransformer("all-MiniLM-L12-v2")
 
-loadData = MTBLoadDataset()
-metadata_set = loadData.load_dataset()
+@st.cache_resource
+def get_search_loader():
+    # create the PineCone search loader
+    return PineConeSearchLoader()
 
-# create the PineCone search loader
-searchLoader = PineConeSearchLoader()
+# get the transformer model and search loader
+model = get_model()
+searchLoader = get_search_loader()
+
+# get the index and metadata set
 index = searchLoader.get_pinecone_index()
-print("PC Index:")
-print(index)
-print("\n")
+metadata_set = searchLoader.load_dataset()
 
 # main Trailz AI titles
 st.title("Trailz AI Recommendation")
@@ -58,12 +62,13 @@ if query:
     embed_query = model.encode(query) 
 
     start = time.time()
+    print("Index query:") 
     results = index.query(vector=[embed_query.tolist()], top_k=5)
     end = time.time()
     total = end - start
     print(f"Total time: {total}")
 
-    final_results = loadData.get_final_results(results, metadata_set) 
+    final_results = searchLoader.get_final_results(results, metadata_set) 
 
     # the result is an object {answer: x, sources: y}
     st.header("Recommendations:")

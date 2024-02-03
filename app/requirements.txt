@@ -1,0 +1,6 @@
+datasets
+python-dotenv
+sentence_transformers
+streamlit
+tqdm
+pinecone-client
