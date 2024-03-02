@@ -3,6 +3,7 @@ import re
 
 # MTBLoadDataset - Class that loads data from route pkl dataset
 class MTBLoadDataset: 
+    # TODO: This needs to used to upload data to MongoDB 
     # dataset map updating the _id 
     def update_id(self, objId): 
         newId = re.sub(r'[^a-zA-Z0-9\s]+', '', objId)
@@ -51,7 +52,6 @@ class MTBLoadDataset:
             dataset = pickle.load(f)
 
         # update the dataset ids
-        print(type(dataset)) 
         new_dataset = dataset.map(
             lambda x: {
                 '_id': self.update_id(x['_id'])

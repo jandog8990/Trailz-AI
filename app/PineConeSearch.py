@@ -43,8 +43,8 @@ print("\n")
 
 # create the embedder for the query
 # mini model - sentence-transformers/all-MiniLM-L12-v2
-#search_query = "Steep and rocky difficult trails in Albuquerque"
-search_query = "Trails in Illinois"
+search_query = "Steep and rocky difficult trails in Albuquerque"
+#search_query = "Trails in Illinois"
 model = SentenceTransformer("stsb-xlm-r-multilingual")
 query = model.encode(search_query)
 

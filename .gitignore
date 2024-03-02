@@ -5,3 +5,4 @@ pkl_data/
 jl_data/
 gpx/
 logs/
+**/**pycache**

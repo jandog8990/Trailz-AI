@@ -8,7 +8,7 @@ to a backend PineCone DB that allows NLP searching.
 1. For basic search we can run PineConeSearch.py
     * Update PineConeSearch with your trail criteria 
     * $ python PineConeSearch.py
-2. 
+
 ### Steps for generating/parsing data, uploading to MongoDB and PineConeDB
 
 1. First we run the mtb-project-crawler project to crawl and scrape mtb data and store in a jsonline file for storing trail/ urls. 
@@ -34,3 +34,9 @@ to a backend PineCone DB that allows NLP searching.
 
 1. PineConeSearchLoader.py - contains pine cone connections
 2. MTBLoadDataset.py - load the dataset for the mtb data
+
+### Steps for Deploying Docker to Google Cloud
+
+1. See the app/README.md file for all GCloud commands
+2. Follow all suceeding directions on setting up and mapping domains
+
