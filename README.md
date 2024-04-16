@@ -12,6 +12,9 @@ to a backend PineCone DB that allows NLP searching.
 ### Steps for generating/parsing data, uploading to MongoDB and PineConeDB
 
 1. First we run the mtb-project-crawler project to crawl and scrape mtb data and store in a jsonline file for storing trail/ urls. 
+   
+### MTB Crawler and Data Scraper
+    * cd MTBCrawlerScraper/
     * Run the crawler using: 
         $scrapy crawl mtbproject --logfile mtbproject.log -o mtbproject.jl:jsonlines
 2. Run MTBTrailController.py to store data to a MongoDB 
@@ -20,14 +23,20 @@ to a backend PineCone DB that allows NLP searching.
     3. Calls MTBTrailMongoDB.py to load the route/description tuples to Atlas
 3. Need to create the pkl data from the MongoDB to be used by PineCone
     * Run the MTBTrailPickleCreator.py which creates route and desc pkl files
+
+### PineCone Vector DB Upload
+    * cd PineCone/
 4. Run PineConeEmbeddingCreator.py to create the data to insert to PineCone VectorDB
     * Creates new mtb_route_dataset.pkl pkl file with updated data 
-5. Run PineConeDatasetUpload.py that takes text data, embeds and uploads to PineCone
-    * Reads the mtb_route_dataset.pkl pkl file 
+5. Run 
+6. Run PineConeDatasetUpload.py that takes text data, embeds and uploads to PineCone
+    * Reads the mtb_route_dataset.pkl pkl file in app/pkl_data
     * Uses PineCone upsert to upload batches of vector data to PineCone 
-6. Run PineConeSearch.py that searches for trails using NLP
+7. Run PineConeSearch.py that searches for trails using NLP
     * Uses an embedded query search for natural text search
     * Uses conditional filter for searching based on metadata
+
+### TODO: Mapping for each trail route
 7. MapBox API for showing the trail route data 
 
 ### Class Diagram
