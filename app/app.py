@@ -18,17 +18,17 @@ def get_model():
     #model = SentenceTransformer("all-MiniLM-L12-v2")
 
 @st.cache_resource
-def get_search_loader():
+def load_search_data():
     # create the PineCone search loader
-    return PineConeSearchLoader()
+    data_loader = PineConeSearchLoader()
+    index = data_loader.get_pinecone_index()
+    data_loader.load_dataset()
+
+    return (index, data_loader)
 
 # get the transformer model and search loader
 model = get_model()
-searchLoader = get_search_loader()
-
-# get the index and metadata set
-index = searchLoader.get_pinecone_index()
-metadata_set = searchLoader.load_dataset()
+(index, data_loader) = load_search_data()
 
 # main Trailz AI titles
 st.title("Trailz AI Recommendation")
@@ -62,13 +62,12 @@ if query:
     embed_query = model.encode(query) 
 
     start = time.time()
-    print("Index query:") 
     results = index.query(vector=[embed_query.tolist()], top_k=5)
     end = time.time()
     total = end - start
-    print(f"Total time: {total}")
+    print(f"Total query time: {total}")
 
-    final_results = searchLoader.get_final_results(results, metadata_set) 
+    final_results = data_loader.get_final_results(results) 
 
     # the result is an object {answer: x, sources: y}
     st.header("Recommendations:")
