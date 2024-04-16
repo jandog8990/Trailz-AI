@@ -1,12 +1,13 @@
-import pinecone
+from pinecone import Pinecone
 from tqdm.auto import tqdm
 import os
 import pickle
 from dotenv import dotenv_values
 import re
 
+route_path="app/pkl_data/"
 # load the data from a pickle file
-with open('mtb_route_dataset.pkl', 'rb') as f:
+with open(route_path+'mtb_route_dataset.pkl', 'rb') as f:
     dataset = pickle.load(f)
 
 # dataset map updating the _id 
@@ -35,14 +36,12 @@ print(f"api_key = {api_key}")
 print("\n")
 
 # initialize pinecone, create the index
-pinecone.init(
-    api_key=api_key,
-    environment=env_key
-)
+#    environment=env_key
+pc = Pinecone(api_key=api_key)
 
 # create pinecone index for searching trailz ai
 #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
-index = pinecone.Index("trailz-ai")
+index = pc.Index("trailz-ai")
 print("Index:")
 print(index)
 print("\n")
