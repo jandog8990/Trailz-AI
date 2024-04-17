@@ -26,12 +26,6 @@ print("\n")
 pc = Pinecone(
     api_key=api_key
 )
-"""
-pinecone.init(
-    api_key=api_key,
-    environment=env_key
-)
-"""
 
 # create pinecone index for searching trailz ai
 #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
@@ -43,7 +37,7 @@ print("\n")
 
 # create the embedder for the query
 # mini model - sentence-transformers/all-MiniLM-L12-v2
-search_query = "Steep and rocky difficult trails in Albuquerque"
+search_query = "Flowy and steep rocky trails, including blue and black rated trails"
 #search_query = "Trails in Illinois"
 model = SentenceTransformer("stsb-xlm-r-multilingual")
 query = model.encode(search_query)
@@ -60,11 +54,13 @@ loadData.show_results(results, metadata_set)
 print("\n")
 
 # filter using conditions for metadata
-#    "average_rating": {"$gte": 4.0} 
 conditions = {
-    "areaNames": {"$in": ["Illinois, Central Illinois", "Macomb"]}
+    "areaNames": {"$in": ["Albuquerque"]},
+    "difficulty": {"$in": ["Intermediate", "Difficult"]},
+    "average_rating": {"$gte": 3.5} 
 }
 meta_results = index.query(vector=[query.tolist()], top_k=10, filter=conditions)
-print("Results from top 5 conditional query:")
+print("Results from top 5 conditional metadata query:")
+print(f"Type meta res = {type(meta_results)}")
 loadData.show_results(meta_results, metadata_set)
 print("\n")

@@ -1,5 +1,6 @@
 import pickle
 import re
+import operator
 
 # MTBLoadDataset - Class that loads data from route pkl dataset
 class MTBLoadDataset: 
@@ -38,11 +39,14 @@ class MTBLoadDataset:
     # show results from query
     def show_results(self, results, metadata_set):
         ids = self.create_ids(results)
-         
-        for i in ids:
-            print(f"Metadata Set[{i}]:")
-            print(f"id = {i}") 
-            print(metadata_set[i])
+
+        # get the meta from list of ids
+        data_list = [metadata_set[id] for id in ids]
+        sorted_data = sorted(data_list, key=lambda d: d['metadata']['average_rating'], reverse=True) 
+        print(f"Sorted data based on aver rating:")
+        for data in sorted_data: 
+            print(f"Metadata Set for route {data['metadata']['route_name']}")
+            print(data)
             print("\n")
 
     # load the pinecone dataset
