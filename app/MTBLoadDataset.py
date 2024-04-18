@@ -15,9 +15,6 @@ class MTBLoadDataset:
     # create ids from the pinecone results
     def create_ids(self, results):
         ids = [obj['id'] for obj in results['matches']]
-        print(f"Ids len = {len(ids)}")
-        print(ids)
-        print("\n")
         return ids
 
     # get samples from the main dataset

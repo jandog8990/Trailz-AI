@@ -14,8 +14,6 @@ with open(pkl_data+'/mtb_routes.pkl', 'rb') as f:
     mtb_routes = pickle.load(f)
 with open(pkl_data+'/mtb_descs.pkl', 'rb') as f:
     mtb_descs = pickle.load(f)
-print(f"Routes len = {len(mtb_routes)}")
-print(f"Descs len = {len(mtb_descs)}")
 
 # append to the area lists if the elements exist
 def append_area_lists(areaObj, areaNames, areaRefs): 

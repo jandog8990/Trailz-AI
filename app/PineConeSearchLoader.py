@@ -33,5 +33,4 @@ class PineConeSearchLoader:
         _self.metadataSet = _self.loadData.load_dataset()
 
     def get_final_results(self, results):
-        print("Get final results...")
         return self.loadData.get_final_results(results, self.metadataSet)
