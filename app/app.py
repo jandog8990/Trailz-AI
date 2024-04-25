@@ -6,29 +6,23 @@ from dotenv import dotenv_values
 import pickle
 import re
 
-from PineConeSearchLoader import PineConeSearchLoader
+from PineConeRAGLoader import PineConeRAGLoader
 
 #Main Trailz AI app for searching the PineCone DB for
 #recommended trailz around my area
 
 @st.cache_resource
-def get_model():
-    # create the embedding transformer
-    return SentenceTransformer("stsb-xlm-r-multilingual")
-    #model = SentenceTransformer("all-MiniLM-L12-v2")
-
-@st.cache_resource
 def load_search_data():
     # create the PineCone search loader
-    data_loader = PineConeSearchLoader()
-    index = data_loader.get_pinecone_index()
+    data_loader = PineConeRAGLoader()
+    data_loader.load_pinecone_index()
     data_loader.load_dataset()
+    data_loader.load_model()
 
-    return (index, data_loader)
+    return data_loader
 
-# get the transformer model and search loader
-model = get_model()
-(index, data_loader) = load_search_data()
+# get the search loader object
+data_loader = load_search_data()
 
 # main Trailz AI titles
 st.title("Trailz AI Recommendation")
@@ -77,13 +71,9 @@ if query:
             "average_rating": {"$gte": float(rating)}
         }
 
-    embed_query = model.encode(query) 
-
+    import asyncio
     start = time.time()
-    if not conditions: 
-        results = index.query(vector=[embed_query.tolist()], top_k=10) 
-    else: 
-        results = index.query(vector=[embed_query.tolist()], top_k=10, filter=conditions)
+    results = asyncio.run(data_loader.retrieve(query, conditions)) 
     end = time.time()
     total = end - start
 
