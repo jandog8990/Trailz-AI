@@ -16,8 +16,9 @@ def load_search_data():
     # create the PineCone search loader
     data_loader = PineConeRAGLoader()
     data_loader.load_pinecone_index()
+    data_loader.load_openai_client()
+    data_loader.load_embed_model()
     data_loader.load_dataset()
-    data_loader.load_model()
 
     return data_loader
 
@@ -77,11 +78,18 @@ if query:
     end = time.time()
     total = end - start
 
-    final_results = data_loader.get_final_results(results)
-    final_results = dict(sorted(data_loader.get_final_results(results).items(), key=lambda x: x[1]['metadata']['average_rating'], reverse=True)) 
+    final_results = sorted(data_loader.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
+
+    # get the contexts from the values
+    contexts = [x['mainText'] for x in final_results] 
+    print(f"Contexts len = {len(contexts)}")
+    print(contexts)
+    print("\n")
 
     # the result is an object {answer: x, sources: y}
     st.header("Recommendations:")
     #st.subheader(final_results)
-    for key,val in final_results.items():
-        st.subheader(key + " : " + str(val))
+    #for key,val in final_results.items():
+    #    st.subheader(key + " : " + str(val))
+    for val in final_results:
+        st.subheader(str(val))
