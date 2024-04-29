@@ -1,3 +1,6 @@
+### Steps for running the app locally
+$ streamlit run app.py
+
 ### Docker image and container install
 
 1. First create requirements.txt - contains all python requirements

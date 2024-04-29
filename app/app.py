@@ -5,7 +5,8 @@ import time
 from dotenv import dotenv_values
 import pickle
 import re
-
+import asyncio
+import json
 from PineConeRAGLoader import PineConeRAGLoader
 
 #Main Trailz AI app for searching the PineCone DB for
@@ -18,9 +19,20 @@ def load_search_data():
     data_loader.load_pinecone_index()
     data_loader.load_openai_client()
     data_loader.load_embed_model()
-    data_loader.load_dataset()
+    #data_loader.load_dataset()
+    data_loader.ragUtility.load_dataset() 
+    data_loader.load_rag_rails() 
 
     return data_loader
+
+def run_retrieval_norag():
+    # run the docs retrieval with no RAG 
+    start = time.time()
+    results = asyncio.run(data_loader.retrieve(query, conditions)) 
+    end = time.time()
+    total = end - start
+
+    return sorted(data_loader.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
 
 # get the search loader object
 data_loader = load_search_data()
@@ -72,15 +84,30 @@ if query:
             "average_rating": {"$gte": float(rating)}
         }
 
-    import asyncio
-    start = time.time()
-    results = asyncio.run(data_loader.retrieve(query, conditions)) 
-    end = time.time()
-    total = end - start
+    # get the rag rails object
+    rag_rails = data_loader.rag_rails
+    
+    # create context from conditions and issue query
+    cond_json = json.dumps(conditions) 
+    messages = [
+        {"role": "context", "content": {"conditions": cond_json}},
+        {"role": "user", "content": query} 
+    ]
+    print("messages:")
+    print(messages)
+    print("\n")
+    #resp = asyncio.run(rag_rails.generate_async(prompt=query, messages=messages))
+    resp = asyncio.run(rag_rails.generate_async(messages=messages))
+    #resp = rag_rails.generate(prompt=query, messages=messages)
+    #resp = rag_rails.generate(prompt="hello")
+    print("Ayncio resp:")
+    print(resp)
+    print("\n")
+    st.subheader(str(resp))
 
-    final_results = sorted(data_loader.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
-
-    # get the contexts from the values
+    """
+    # retrieve values using PC index 
+    final_results = run_retrieval_norag() 
     contexts = [x['mainText'] for x in final_results] 
     print(f"Contexts len = {len(contexts)}")
     print(contexts)
@@ -93,3 +120,4 @@ if query:
     #    st.subheader(key + " : " + str(val))
     for val in final_results:
         st.subheader(str(val))
+    """
