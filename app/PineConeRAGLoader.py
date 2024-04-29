@@ -11,7 +11,6 @@ from RAGUtility import RAGUtility
 # Loads all necessary objects for PineCone and RAG
 class PineConeRAGLoader:
     def __init__(self):
-        self.loadData = MTBLoadDataset()
         self.ragUtility = RAGUtility() 
         self.config = dotenv_values(".env")
         self.metadataSet = None
@@ -47,12 +46,6 @@ class PineConeRAGLoader:
         #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
         _self.index = pc.Index("trailz-ai")
 
-    @st.cache_resource
-    def load_dataset(_self):
-        # load the dataset using load data object
-        print("Load Dataset...")
-        _self.metadataSet = _self.loadData.load_dataset()
-
     # retrieve data from PC index using embedding 
     async def retrieve(self, query: str, conditions: str) -> list:
         print("> Retrieve activated")
@@ -78,7 +71,8 @@ class PineConeRAGLoader:
         print("\n")
 
         #return self.ragUtility.parse_contexts(results) 
-        return results 
+        print("-> parse_contexts()") 
+        return self.ragUtility.parse_contexts(results)
 
     # rag function taht receives context from PC and 
     # queries user query from open ai model
@@ -86,9 +80,7 @@ class PineConeRAGLoader:
         model_id = "gpt-3.5-turbo-instruct" 
         print("> RAG activated")
         print(f"query: {query}") 
-        print("Contexts:")
-        print(contexts)
-        print("\n")
+        print(f"Contexts len = {len(contexts)}")
         
         context_str = "\n".join(contexts)
         print("Context str:")
@@ -107,12 +99,17 @@ class PineConeRAGLoader:
         Answer: """
 
         # generate the answer
+        #NOTE: higher temp means more randomness 
         res = self.client.completions.create(
             model=model_id,
             prompt=prompt,
             temperature=0.0,
-            max_tokens=100)
+            max_tokens=1000)
 
+        print("RAG response text:")
+        print(res.choices[0].text)
+        print("\n")
+        
         return res.choices[0].text
 
     @st.cache_resource

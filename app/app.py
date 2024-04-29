@@ -19,7 +19,6 @@ def load_search_data():
     data_loader.load_pinecone_index()
     data_loader.load_openai_client()
     data_loader.load_embed_model()
-    #data_loader.load_dataset()
     data_loader.ragUtility.load_dataset() 
     data_loader.load_rag_rails() 
 
@@ -86,7 +85,10 @@ if query:
 
     # get the rag rails object
     rag_rails = data_loader.rag_rails
-    
+    print("Rag rails:")
+    print(rag_rails)
+    print("\n")
+
     # create context from conditions and issue query
     cond_json = json.dumps(conditions) 
     messages = [
@@ -103,21 +105,6 @@ if query:
     print("Ayncio resp:")
     print(resp)
     print("\n")
-    st.subheader(str(resp))
-
-    """
-    # retrieve values using PC index 
-    final_results = run_retrieval_norag() 
-    contexts = [x['mainText'] for x in final_results] 
-    print(f"Contexts len = {len(contexts)}")
-    print(contexts)
-    print("\n")
-
-    # the result is an object {answer: x, sources: y}
+    
     st.header("Recommendations:")
-    #st.subheader(final_results)
-    #for key,val in final_results.items():
-    #    st.subheader(key + " : " + str(val))
-    for val in final_results:
-        st.subheader(str(val))
-    """
+    st.subheader(resp['content'])

@@ -18,9 +18,13 @@ class RAGUtility:
     
     def parse_contexts(self, results):
         # parse the results from PC into context vector 
+        final_results = sorted(self.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
+        contexts = [x['mainText'] for x in final_results]
+        print(f"Contexts len = {len(contexts)}")
+        print(contexts)
+        print("\n")
 
-        # TODO: Call the get final results func
-        #self.get_final_results(results)
+        return contexts
 
     def get_rag_config(self):
         # the RAG config for LLMRails 
