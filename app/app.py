@@ -37,20 +37,30 @@ def run_retrieval_norag():
 data_loader = load_search_data()
 
 # main Trailz AI titles
-st.title("Trailz AI Recommendation")
-st.sidebar.title("Trail Filtering")
-
-# TODO: move the trail filters to the middle panel 
-# make this a geo location that gets users location
-location = st.sidebar.text_input("Location", placeholder="Your city/town")
-# TODO: Make this a grid of selections for difficulty 
-difficulty = st.sidebar.text_input("Difficulty", placeholder="Easy,Intermediate,Difficult")
+st.title("Explore Your Trailz...")
 
 # placeholder for loading data bar
 main_placeholder = st.empty()
 
 # prompt the user for a trail recommendation query
-query = main_placeholder.text_input("What type of trail are you looking for?") 
+query_label = "What type of trails are you looking for?"
+query = main_placeholder.text_input(query_label)
+
+
+# TODO: move the trail filters to the middle panel 
+# TODO: Make this a grid of selections for difficulty 
+# make this a geo location that gets users location
+container = st.container(border=True)
+with container:
+    st.header("Filter Trailz")
+    col1, col2 = st.columns(2) 
+    with col1: 
+        loc_label = "Location" 
+        location = st.text_input(loc_label, placeholder="Your city/town")
+    with col2:
+        diff_label = "Difficulty" 
+        difficulty = st.text_input(diff_label, placeholder="Easy,Intermediate,Difficult")
+
 if query:
     
     # create the conditional queries 
@@ -100,10 +110,38 @@ if query:
     print(f"Trail results type = {type(trail_list)}")
     print(trail_list)
     print("\n")
+    
+    with st.container():
+        st.header("Trail Recommendations", divider='rainbow')
+        st.subheader(bot_resp)
+       
+        st.header("Trail Details", divider='rainbow')
+        for val in trail_list:
+            st.subheader(str(val))
 
-    st.header("Trail Recommendations", divider='rainbow')
-    st.subheader(bot_resp)
-   
-    st.header("Trail Details", divider='rainbow')
-    for val in trail_list:
-        st.subheader(str(val))
+st.components.v1.html(
+    f"""
+    <script>
+        var elems = window.parent.document.querySelectorAll('div[class*="stTextInput"] p');
+        var elem1 = Array.from(elems).find(x => x.innerText == '{loc_label}');
+        var elem2 = Array.from(elems).find(x => x.innerText == '{diff_label}');
+        var elem3 = Array.from(elems).find(x => x.innerText == '{query_label}');
+        elem1.style.fontSize = '20px'; 
+        elem2.style.fontSize = '20px'; 
+        elem3.style.fontSize = '20px';
+    </script>
+    """
+)
+st.components.v1.html(
+    """
+    <script>
+    
+        var inelems = window.parent.document.querySelectorAll('input[class*="st-ae"]');
+        input_elems = Array.from(inelems);
+        for(var i = 0; i < input_elems.length; i++) {
+            var elem = input_elems[i]; 
+            elem.style.fontSize = '18px'; 
+        }
+    </script>
+    """
+)
