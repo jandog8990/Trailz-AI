@@ -47,13 +47,8 @@ class PineConeRAGLoader:
         _self.index = pc.Index("trailz-ai")
 
     # retrieve data from PC index using embedding 
-    async def retrieve(self, query: str, conditions: str) -> list:
+    async def retrieve(self, query: str, conditions: str) -> (list, list):
         print("> Retrieve activated")
-        print(f"query = {query}") 
-        print("conditions:")
-        print(type(conditions))
-        print(conditions)
-        print("\n")
 
         # retrieve from PineCone using embedded query
         cond_dict = json.loads(conditions) 
@@ -61,31 +56,22 @@ class PineConeRAGLoader:
 
         # issue query to PC to get context vectors
         if not cond_dict:
-            print("Cond dict EMPTY!") 
-            results = self.index.query(vector=[embed_query.tolist()], top_k=10)
+            results = self.index.query(vector=[embed_query.tolist()], top_k=15)
         else:
-            print("Cond dict EXISTS!") 
-            results = self.index.query(vector=[embed_query.tolist()], top_k=10, filter=cond_dict)
-        print("results:")
-        print(results)
-        print("\n")
+            results = self.index.query(vector=[embed_query.tolist()], top_k=15, filter=cond_dict)
 
         #return self.ragUtility.parse_contexts(results) 
-        print("-> parse_contexts()") 
         return self.ragUtility.parse_contexts(results)
 
     # rag function taht receives context from PC and 
     # queries user query from open ai model
-    async def rag(self, query: str, contexts: list) -> str:
+    async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
         model_id = "gpt-3.5-turbo-instruct" 
         print("> RAG activated")
-        print(f"query: {query}") 
-        print(f"Contexts len = {len(contexts)}")
-        
+       
+        contexts = trail_tuple[0]
+        trail_list = trail_tuple[1]
         context_str = "\n".join(contexts)
-        print("Context str:")
-        print(context_str)
-        print("\n")
 
         # place the user query and contexts into RAG prompt
         prompt = f"""You are a helpful assistant, below is a query from a user and
@@ -98,20 +84,23 @@ class PineConeRAGLoader:
 
         Answer: """
 
-        # generate the answer
+        # generate the RAG client completions 
         #NOTE: higher temp means more randomness 
         res = self.client.completions.create(
             model=model_id,
             prompt=prompt,
             temperature=0.0,
-            max_tokens=1000)
+            max_tokens=500)
 
-        print("RAG response text:")
-        print(res.choices[0].text)
-        print("\n")
+        res_text = res.choices[0].text
+       
+        bot_answer = {
+            'bot_str': res_text,
+            'trail_list': trail_list 
+        }
         
-        return res.choices[0].text
-
+        return json.dumps(bot_answer) 
+    
     @st.cache_resource
     def load_rag_rails(_self):
         import asyncio 

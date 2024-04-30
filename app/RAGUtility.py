@@ -19,12 +19,12 @@ class RAGUtility:
     def parse_contexts(self, results):
         # parse the results from PC into context vector 
         final_results = sorted(self.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
-        contexts = [x['mainText'] for x in final_results]
-        print(f"Contexts len = {len(contexts)}")
-        print(contexts)
-        print("\n")
 
-        return contexts
+        # send the contexts of main text to RAG
+        contexts = [x['mainText'] for x in final_results]
+
+        # set the trail map for contexts and descs
+        return (contexts, final_results)
 
     def get_rag_config(self):
         # the RAG config for LLMRails 
@@ -35,6 +35,7 @@ class RAGUtility:
           model: gpt-3.5-turbo-instruct
         """
 
+        # colang content for defining boundaries and return vars 
         rag_colang_content = """
         # define RAG boundaries for Q/A 
         define user ask porn
@@ -77,8 +78,8 @@ class RAGUtility:
 
         define flow mtb
             user ask mtb
-            $contexts = execute retrieve(query=$last_user_message, conditions=$conditions)
-            $answer = execute rag(query=$last_user_message, contexts=$contexts)
+            $trail_tuple = execute retrieve(query=$last_user_message, conditions=$conditions)
+            $answer = execute rag(query=$last_user_message, trail_tuple=$trail_tuple) 
             bot $answer
         """
     

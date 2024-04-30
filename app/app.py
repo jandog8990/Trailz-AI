@@ -40,17 +40,11 @@ data_loader = load_search_data()
 st.title("Trailz AI Recommendation")
 st.sidebar.title("Trail Filtering")
 
-# TODO: Move these filters to the center window for better clarity
-# trail filter on the left panel
-filters = []
+# TODO: move the trail filters to the middle panel 
 # make this a geo location that gets users location
 location = st.sidebar.text_input("Location", placeholder="Your city/town")
 # TODO: Make this a grid of selections for difficulty 
 difficulty = st.sidebar.text_input("Difficulty", placeholder="Easy,Intermediate,Difficult")
-rating = st.sidebar.text_input("Rating", placeholder=4.1)
-#filters.append(location)
-#filters.append(difficulty)
-#filters.append(rating)
 
 # placeholder for loading data bar
 main_placeholder = st.empty()
@@ -61,50 +55,55 @@ if query:
     
     # create the conditional queries 
     diff_arr = [] 
+    loc_arr = [] 
     if difficulty != "": 
         diff_arr = difficulty.split(',') 
- 
+    if location != "":
+        loc_arr = location.split(',')
+    
     # Create the condition dict based on fields
-    if location == '' and not diff_arr and rating == '':
+    if location == '' and not diff_arr:
         conditions = {} 
-    elif not diff_arr and rating == '': 
-        conditions = {
-            "areaNames": {"$in": [location]}
-        }
     elif not diff_arr: 
         conditions = {
-            "areaNames": {"$in": [location]},
-            "average_rating": {"$gte": float(rating)}
+            "areaNames": {"$in": loc_arr}
         }
     else: 
         conditions = {
             "areaNames": {"$in": [location]},
-            "difficulty": {"$in": diff_arr},
-            "average_rating": {"$gte": float(rating)}
+            "difficulty": {"$in": diff_arr}
         }
 
     # get the rag rails object
     rag_rails = data_loader.rag_rails
-    print("Rag rails:")
-    print(rag_rails)
-    print("\n")
 
     # create context from conditions and issue query
     cond_json = json.dumps(conditions) 
+
     messages = [
         {"role": "context", "content": {"conditions": cond_json}},
         {"role": "user", "content": query} 
     ]
-    print("messages:")
-    print(messages)
-    print("\n")
-    #resp = asyncio.run(rag_rails.generate_async(prompt=query, messages=messages))
+   
+    # asynchronously run rag rails query with conditions map
     resp = asyncio.run(rag_rails.generate_async(messages=messages))
-    #resp = rag_rails.generate(prompt=query, messages=messages)
-    #resp = rag_rails.generate(prompt="hello")
-    print("Ayncio resp:")
-    print(resp)
+    content = resp['content'] 
+    resp_map = json.loads(content)   
+    print(f"Ayncio Response Map:") 
+    print(resp_map)
     print("\n")
-    
-    st.header("Recommendations:")
-    st.subheader(resp['content'])
+   
+    # need to parse both outputs
+    bot_resp = resp_map['bot_str']
+    trail_list = resp_map['trail_list']
+
+    print(f"Trail results type = {type(trail_list)}")
+    print(trail_list)
+    print("\n")
+
+    st.header("Trail Recommendations", divider='rainbow')
+    st.subheader(bot_resp)
+   
+    st.header("Trail Details", divider='rainbow')
+    for val in trail_list:
+        st.subheader(str(val))
