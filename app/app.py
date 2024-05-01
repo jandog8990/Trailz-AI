@@ -51,23 +51,59 @@ query = main_placeholder.text_input(query_label)
 # TODO: Make this a grid of selections for difficulty 
 # make this a geo location that gets users location
 container = st.container(border=True)
+
+# difficulties
+easy_label = "Easy"
+intermediate_label = "Intermediate"
+difficult_label = "Difficult"
+expert_label = "Expert"
+
+# style for the difficulty title
+st.markdown("""
+    <style> 
+    .diff-title {
+        margin-bottom: 0px; 
+        font-size: 20px; 
+    }
+    </style>""", unsafe_allow_html=True) 
+
+# 
 with container:
     st.header("Filter Trailz")
-    col1, col2 = st.columns(2) 
+    col1, col2 = st.columns(2, gap="small") 
     with col1: 
         loc_label = "Location" 
         location = st.text_input(loc_label, placeholder="Your city/town")
     with col2:
         diff_label = "Difficulty" 
-        difficulty = st.text_input(diff_label, placeholder="Easy,Intermediate,Difficult")
+        st.markdown('<p class="diff-title">Difficulty</p>', unsafe_allow_html=True)
+        
+        col11,col12 = st.columns(2, gap="small")
+        col21,col22 = st.columns(2, gap="small")
+        with col11: 
+            easy = st.toggle(easy_label)
+        with col12: 
+            intermediate = st.toggle(intermediate_label)
+        with col21: 
+            difficult = st.toggle(difficult_label)
+        with col22: 
+            expert = st.toggle(expert_label)
+
+        #difficulty = st.text_input(diff_label, placeholder="Easy,Intermediate,Difficult")
 
 if query:
-    
-    # create the conditional queries 
+
+    # get the toggle queries
     diff_arr = [] 
+    if easy:
+        diff_arr.append(easy_label)
+    if intermediate:
+        diff_arr.append(intermediate_label)
+    if difficult:
+        diff_arr.append(difficult_label)
+
+    # create the conditional queries 
     loc_arr = [] 
-    if difficulty != "": 
-        diff_arr = difficulty.split(',') 
     if location != "":
         loc_arr = location.split(',')
     
@@ -77,6 +113,10 @@ if query:
     elif not diff_arr: 
         conditions = {
             "areaNames": {"$in": loc_arr}
+        }
+    elif location == '':
+        conditions = {
+            "difficulty": {"$in": diff_arr}
         }
     else: 
         conditions = {
@@ -99,16 +139,12 @@ if query:
     resp = asyncio.run(rag_rails.generate_async(messages=messages))
     content = resp['content'] 
     resp_map = json.loads(content)   
-    print(f"Ayncio Response Map:") 
-    print(resp_map)
-    print("\n")
    
     # need to parse both outputs
     bot_resp = resp_map['bot_str']
     trail_list = resp_map['trail_list']
-
     print(f"Trail results type = {type(trail_list)}")
-    print(trail_list)
+    print(f"Trail list len = {len(trail_list)}")
     print("\n")
     
     with st.container():
@@ -123,19 +159,16 @@ st.components.v1.html(
     f"""
     <script>
         var elems = window.parent.document.querySelectorAll('div[class*="stTextInput"] p');
-        var elem1 = Array.from(elems).find(x => x.innerText == '{loc_label}');
-        var elem2 = Array.from(elems).find(x => x.innerText == '{diff_label}');
-        var elem3 = Array.from(elems).find(x => x.innerText == '{query_label}');
+        var elem1 = Array.from(elems).find(x => x.innerText == '{query_label}');
+        var elem2 = Array.from(elems).find(x => x.innerText == '{loc_label}');
         elem1.style.fontSize = '20px'; 
-        elem2.style.fontSize = '20px'; 
-        elem3.style.fontSize = '20px';
+        elem2.style.fontSize = '20px';
     </script>
     """
 )
 st.components.v1.html(
     """
     <script>
-    
         var inelems = window.parent.document.querySelectorAll('input[class*="st-ae"]');
         input_elems = Array.from(inelems);
         for(var i = 0; i < input_elems.length; i++) {
@@ -145,3 +178,4 @@ st.components.v1.html(
     </script>
     """
 )
+

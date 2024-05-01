@@ -56,17 +56,18 @@ class PineConeRAGLoader:
 
         # issue query to PC to get context vectors
         if not cond_dict:
-            results = self.index.query(vector=[embed_query.tolist()], top_k=15)
+            results = self.index.query(vector=[embed_query.tolist()], top_k=20)
         else:
-            results = self.index.query(vector=[embed_query.tolist()], top_k=15, filter=cond_dict)
+            results = self.index.query(vector=[embed_query.tolist()], top_k=20, filter=cond_dict)
 
-        #return self.ragUtility.parse_contexts(results) 
         return self.ragUtility.parse_contexts(results)
 
     # rag function taht receives context from PC and 
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
-        model_id = "gpt-3.5-turbo-instruct" 
+        #model_id = "gpt-3.5-turbo-instruct" 
+        model_id = "gpt-4-turbo" 
+        #model_id = "gpt-3.5-turbo-0125" 
         print("> RAG activated")
        
         contexts = trail_tuple[0]
@@ -74,8 +75,8 @@ class PineConeRAGLoader:
         context_str = "\n".join(contexts)
 
         # place the user query and contexts into RAG prompt
-        prompt = f"""You are a helpful assistant, below is a query from a user and
-        some relevant contexts. Answer the question given the information in those
+        system_msg = "You are a helpful assistant, below is a query from a user and some relevant contexts." 
+        user_msg = f"""Answer the question given the information in those
         contexts. If you cannot find the answer to the question, say "I don't know".
 
         Contexts: {context_str}
@@ -83,17 +84,21 @@ class PineConeRAGLoader:
         Query: {query}
 
         Answer: """
-
+        messages = [
+            {"role": "system", "content": system_msg},
+            {"role": "user", "content": user_msg}
+        ]
+        
         # generate the RAG client completions 
         #NOTE: higher temp means more randomness 
-        res = self.client.completions.create(
+        res = self.client.chat.completions.create(
             model=model_id,
-            prompt=prompt,
+            messages=messages,
             temperature=0.0,
-            max_tokens=500)
+            max_tokens=1000)
 
-        res_text = res.choices[0].text
-       
+        res_text = res.choices[0].message.content
+
         bot_answer = {
             'bot_str': res_text,
             'trail_list': trail_list 

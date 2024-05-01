@@ -28,11 +28,12 @@ class RAGUtility:
 
     def get_rag_config(self):
         # the RAG config for LLMRails 
+        # TODO: Make a configuration for the models 
         yaml_content = """
         models:
         - type: main
           engine: openai
-          model: gpt-3.5-turbo-instruct
+          model: gpt-4-turbo 
         """
 
         # colang content for defining boundaries and return vars 
