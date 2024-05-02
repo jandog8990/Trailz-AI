@@ -43,6 +43,7 @@ st.title("Explore Your Trailz...")
 main_placeholder = st.empty()
 
 # prompt the user for a trail recommendation query
+progress_text = ":sunglasses: Operation in progress..."
 query_label = "What type of trails are you looking for?"
 query = main_placeholder.text_input(query_label)
 
@@ -136,16 +137,30 @@ if query:
     ]
    
     # asynchronously run rag rails query with conditions map
-    resp = asyncio.run(rag_rails.generate_async(messages=messages))
+    my_bar = st.progress(0, text=progress_text)
+    for percent_complete in range(100):
+        time.sleep(0.01)
+        my_bar.progress(percent_complete+1, text=progress_text)
+    time.sleep(1)
+    my_bar.empty()
+
+    import base64 
+    with open("code.GIF", "rb") as f:
+        contents = f.read()
+    data_url = base64.b64encode(contents).decode("utf-8")
+    gif_str = f'<img src="data:image/gif;base64,{data_url}" alt="code gif">' 
+    progress_text = '<span style="font-size:20px;">:blue[Finding your trailz...]</span>' 
+    st.markdown(gif_str+progress_text, unsafe_allow_html=True)
+    with st.spinner("Searching..."): 
+        resp = asyncio.run(rag_rails.generate_async(messages=messages))
+    st.success('Done!')
+
     content = resp['content'] 
     resp_map = json.loads(content)   
-   
+       
     # need to parse both outputs
     bot_resp = resp_map['bot_str']
     trail_list = resp_map['trail_list']
-    print(f"Trail results type = {type(trail_list)}")
-    print(f"Trail list len = {len(trail_list)}")
-    print("\n")
     
     with st.container():
         st.header("Trail Recommendations", divider='rainbow')

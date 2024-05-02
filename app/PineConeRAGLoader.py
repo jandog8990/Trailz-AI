@@ -48,7 +48,6 @@ class PineConeRAGLoader:
 
     # retrieve data from PC index using embedding 
     async def retrieve(self, query: str, conditions: str) -> (list, list):
-        print("> Retrieve activated")
 
         # retrieve from PineCone using embedded query
         cond_dict = json.loads(conditions) 
@@ -66,9 +65,8 @@ class PineConeRAGLoader:
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
         #model_id = "gpt-3.5-turbo-instruct" 
-        model_id = "gpt-4-turbo" 
         #model_id = "gpt-3.5-turbo-0125" 
-        print("> RAG activated")
+        model_id = "gpt-4-turbo" 
        
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
@@ -97,10 +95,9 @@ class PineConeRAGLoader:
             temperature=0.0,
             max_tokens=1000)
 
-        res_text = res.choices[0].message.content
-
+        # the new chat completion uses message content
         bot_answer = {
-            'bot_str': res_text,
+            'bot_str': res.choices[0].message.content,
             'trail_list': trail_list 
         }
         
