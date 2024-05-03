@@ -90,8 +90,6 @@ with container:
         with col22: 
             expert = st.toggle(expert_label)
 
-        #difficulty = st.text_input(diff_label, placeholder="Easy,Intermediate,Difficult")
-
 if query:
 
     # get the toggle queries
@@ -135,40 +133,25 @@ if query:
         {"role": "context", "content": {"conditions": cond_json}},
         {"role": "user", "content": query} 
     ]
-   
-    # asynchronously run rag rails query with conditions map
-    my_bar = st.progress(0, text=progress_text)
-    for percent_complete in range(100):
-        time.sleep(0.01)
-        my_bar.progress(percent_complete+1, text=progress_text)
-    time.sleep(1)
-    my_bar.empty()
 
-    import base64 
-    with open("code.GIF", "rb") as f:
-        contents = f.read()
-    data_url = base64.b64encode(contents).decode("utf-8")
-    gif_str = f'<img src="data:image/gif;base64,{data_url}" alt="code gif">' 
-    progress_text = '<span style="font-size:20px;">:blue[Finding your trailz...]</span>' 
-    st.markdown(gif_str+progress_text, unsafe_allow_html=True)
-    with st.spinner("Searching..."): 
-        resp = asyncio.run(rag_rails.generate_async(messages=messages))
-    st.success('Done!')
+    # run the PineCone and RAG model for generating trails
+    resp = asyncio.run(rag_rails.generate_async(messages=messages))
+    st_success = data_loader.st_success
 
+    # get the content and response
     content = resp['content'] 
     resp_map = json.loads(content)   
        
     # need to parse both outputs
-    bot_resp = resp_map['bot_str']
     trail_list = resp_map['trail_list']
-    
+   
+    # display the results in the new container
     with st.container():
-        st.header("Trail Recommendations", divider='rainbow')
-        st.subheader(bot_resp)
-       
         st.header("Trail Details", divider='rainbow')
         for val in trail_list:
             st.subheader(str(val))
+        time.sleep(2)
+        st_success.empty()
 
 st.components.v1.html(
     f"""

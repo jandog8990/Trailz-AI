@@ -2,6 +2,7 @@ import streamlit as st
 from pinecone import Pinecone
 import time
 import json
+import base64
 from openai import OpenAI
 from dotenv import dotenv_values
 from sentence_transformers import SentenceTransformer
@@ -46,14 +47,34 @@ class PineConeRAGLoader:
         #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
         _self.index = pc.Index("trailz-ai")
 
+    def load_markdown(self):
+        with open("hackbird.GIF", "rb") as f:
+            hack = f.read()
+        hack_url = base64.b64encode(hack).decode("utf-8")
+        hack_gif = f'<img src="data:image/gif;base64,{hack_url}" alt="hack gif">'
+        load_txt = '<span style="font-size:20px;color: #32CD32;">  Finding your trailz...</span>'
+        return hack_gif+load_txt
+
+    def stream_chunks(self, stream):
+        count = 0 
+
+        for chunk in stream:
+            content = chunk.choices[0].delta.content
+            if content is not None: 
+                count = count + 1 
+                yield content
+
     # retrieve data from PC index using embedding 
     async def retrieve(self, query: str, conditions: str) -> (list, list):
+        # NOTE: The query and conditions are passed as json role objects
 
         # retrieve from PineCone using embedded query
         cond_dict = json.loads(conditions) 
         embed_query = self.model.encode(query) 
 
         # issue query to PC to get context vectors
+        self.md_obj = st.empty() 
+        self.md_obj.markdown(self.load_markdown(), unsafe_allow_html=True)
         if not cond_dict:
             results = self.index.query(vector=[embed_query.tolist()], top_k=20)
         else:
@@ -89,15 +110,23 @@ class PineConeRAGLoader:
         
         # generate the RAG client completions 
         #NOTE: higher temp means more randomness 
-        res = self.client.chat.completions.create(
+        stream = self.client.chat.completions.create(
             model=model_id,
             messages=messages,
             temperature=0.0,
+            stream=True,
             max_tokens=1000)
+       
+        # show the results from the RAG response using Stream 
+        result_holder = st.empty() 
+        with result_holder.container(): 
+            st.header("Trail Recommendations", divider='rainbow')
+            st.write_stream(self.stream_chunks(stream))
+            self.md_obj.empty()
+            self.st_success = st.success('Trailz found! See below for details.')
 
-        # the new chat completion uses message content
+        # return the trail list from the PineCone query 
         bot_answer = {
-            'bot_str': res.choices[0].message.content,
             'trail_list': trail_list 
         }
         
