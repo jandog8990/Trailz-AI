@@ -10,8 +10,8 @@ $ streamlit run app.py
 
 ### Build Docker image
 
-1. docker build -t trailzfinder .
-2. docker run -p 8080:8080 trailzfinder
+1. docker build -t trailzai .
+2. docker run -p 8080:8080 trailzai 
 
 ### General Gcloud commands
 
@@ -25,7 +25,7 @@ $ streamlit run app.py
 1. First list the configurations for the current project
 $ gcloud config list
 
-2.Set the project in google cloud
+2. Set the project in google cloud
 $ gcloud projects list
 $ gcloud config set project trailz-finder
 

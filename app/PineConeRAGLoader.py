@@ -3,6 +3,7 @@ from pinecone import Pinecone
 import time
 import json
 import base64
+import os
 from openai import OpenAI
 from dotenv import dotenv_values
 from sentence_transformers import SentenceTransformer
@@ -23,7 +24,8 @@ class PineConeRAGLoader:
     def load_embed_model(_self):
         # create the embedding transformer
         print("Load Embed model...") 
-        _self.model = SentenceTransformer("stsb-xlm-r-multilingual")
+        model_id = _self.config["EMBED_MODEL_ID"] 
+        _self.model = SentenceTransformer(model_id)
 
     @st.cache_resource
     def load_openai_client(_self):
@@ -85,9 +87,7 @@ class PineConeRAGLoader:
     # rag function taht receives context from PC and 
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
-        #model_id = "gpt-3.5-turbo-instruct" 
-        #model_id = "gpt-3.5-turbo-0125" 
-        model_id = "gpt-4-turbo" 
+        model_id = self.config["OPENAI_MODEL_ID"]
        
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
@@ -129,7 +129,7 @@ class PineConeRAGLoader:
         bot_answer = {
             'trail_list': trail_list 
         }
-        
+
         return json.dumps(bot_answer) 
     
     @st.cache_resource
@@ -138,7 +138,6 @@ class PineConeRAGLoader:
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         from nemoguardrails import LLMRails, RailsConfig
-        import os
 
         print("Load RAG rails...") 
         openai_api_key = _self.config["OPENAI_API_KEY"]

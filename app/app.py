@@ -51,7 +51,7 @@ query = main_placeholder.text_input(query_label)
 # TODO: move the trail filters to the middle panel 
 # TODO: Make this a grid of selections for difficulty 
 # make this a geo location that gets users location
-container = st.container(border=True)
+filter_container = st.container(border=True)
 
 # difficulties
 easy_label = "Easy"
@@ -66,10 +66,18 @@ st.markdown("""
         margin-bottom: 0px; 
         font-size: 20px; 
     }
+    .route-name {
+        font-size: 24px; 
+        font-weight: bold; 
+    }
+    .route-details {
+        font-size: 20px; 
+        font-weight: 200; 
+    }
     </style>""", unsafe_allow_html=True) 
 
 # 
-with container:
+with filter_container:
     st.header("Filter Trailz")
     col1, col2 = st.columns(2, gap="small") 
     with col1: 
@@ -144,12 +152,45 @@ if query:
        
     # need to parse both outputs
     trail_list = resp_map['trail_list']
-   
+ 
+    # let's create the rows of columns
+    num_rows = len(trail_list)
+    height = 320
+
     # display the results in the new container
     with st.container():
         st.header("Trail Details", divider='rainbow')
-        for val in trail_list:
-            st.subheader(str(val))
+        for i in range(0, num_rows, 2): 
+            # get the main text from the object
+            val1 = trail_list[i]
+            val2 = trail_list[i+1]
+            meta1 = val1['metadata'] 
+            meta2 = val2['metadata'] 
+            route_name1 = meta1['route_name']
+            route_name2 = meta2['route_name']
+            trail_rating1 = meta1['trail_rating']
+            trail_rating2 = meta2['trail_rating']
+            average_rating1 = meta1['average_rating']
+            average_rating2 = meta2['average_rating']
+            main_text1 = val1['mainText']
+            main_text2 = val2['mainText']
+           
+            # trail details
+            trail_details1 = str(trail_rating1) + " - " + str(average_rating1)
+            trail_details2 = str(trail_rating2) + " - " + str(average_rating2)
+           
+            # two columns of trail details 
+            cc1, cc2 = st.columns(2) 
+            with st.container():    # row container 
+                with cc1.container(height=height):
+                        st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-details">{trail_details1}</p>', unsafe_allow_html=True) 
+                        st.markdown(main_text1) 
+                with cc2.container(height=height): 
+                        st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-details">{trail_details2}</p>', unsafe_allow_html=True) 
+                        st.markdown(main_text2) 
+        
         time.sleep(2)
         st_success.empty()
 

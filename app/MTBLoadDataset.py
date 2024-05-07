@@ -48,6 +48,7 @@ class MTBLoadDataset:
 
     # load the pinecone dataset
     def load_dataset(self): 
+         
         # open the dataset from pkl to get results
         with open('./pkl_data/mtb_route_dataset.pkl', 'rb') as f:
             dataset = pickle.load(f)
