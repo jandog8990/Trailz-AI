@@ -25,7 +25,7 @@ class PineConeRAGLoader:
         # create the embedding transformer
         print("Load Embed model...") 
         model_id = _self.config["EMBED_MODEL_ID"] 
-        _self.model = SentenceTransformer(model_id)
+        _self.model = SentenceTransformer(model_id, cache_folder="./.model")
 
     @st.cache_resource
     def load_openai_client(_self):
@@ -50,7 +50,7 @@ class PineConeRAGLoader:
         _self.index = pc.Index("trailz-ai")
 
     def load_markdown(self):
-        with open("hackbird.GIF", "rb") as f:
+        with open("media/hackbird.GIF", "rb") as f:
             hack = f.read()
         hack_url = base64.b64encode(hack).decode("utf-8")
         hack_gif = f'<img src="data:image/gif;base64,{hack_url}" alt="hack gif">'
