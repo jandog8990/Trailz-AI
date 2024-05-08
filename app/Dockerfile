@@ -4,7 +4,6 @@ WORKDIR /app
 
 # copy all local files to the image
 COPY . /app 
-COPY .env /app
 
 #RUN python3.8 -m pip install --upgrade pip \
 #&& python3.8 -m pip install -r requirements.txt 
