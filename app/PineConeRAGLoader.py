@@ -5,7 +5,6 @@ import json
 import base64
 import os
 from openai import OpenAI
-from dotenv import dotenv_values
 from sentence_transformers import SentenceTransformer
 from MTBLoadDataset import MTBLoadDataset 
 from RAGUtility import RAGUtility
@@ -14,7 +13,6 @@ from RAGUtility import RAGUtility
 class PineConeRAGLoader:
     def __init__(self):
         self.ragUtility = RAGUtility() 
-        self.config = dotenv_values(".env")
         self.metadataSet = None
         self.rag_rails = None 
         self.index = None
@@ -24,21 +22,21 @@ class PineConeRAGLoader:
     def load_embed_model(_self):
         # create the embedding transformer
         print("Load Embed model...") 
-        model_id = _self.config["EMBED_MODEL_ID"] 
+        model_id = os.environ["EMBED_MODEL_ID"] 
         _self.model = SentenceTransformer(model_id, cache_folder="./.model")
 
     @st.cache_resource
     def load_openai_client(_self):
         print("Load OpenAI client...") 
-        openai_api_key = _self.config["OPENAI_API_KEY"]
+        openai_api_key = os.environ["OPENAI_API_KEY"]
         _self.client = OpenAI(api_key=openai_api_key)
 
     @st.cache_resource
     def load_pinecone_index(_self):
         # connect to the pine cone api
         print("Load PC index...") 
-        env_key = _self.config["PINE_CONE_ENV_KEY"]
-        api_key = _self.config["PINE_CONE_API_KEY"]
+        env_key = os.environ["PINE_CONE_ENV_KEY"]
+        api_key = os.environ["PINE_CONE_API_KEY"]
 
         # initialize pinecone, create the index
         pc = Pinecone(
@@ -87,7 +85,7 @@ class PineConeRAGLoader:
     # rag function taht receives context from PC and 
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
-        model_id = self.config["OPENAI_MODEL_ID"]
+        model_id = os.environ["OPENAI_MODEL_ID"]
        
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
@@ -140,7 +138,7 @@ class PineConeRAGLoader:
         from nemoguardrails import LLMRails, RailsConfig
 
         print("Load RAG rails...") 
-        openai_api_key = _self.config["OPENAI_API_KEY"]
+        openai_api_key = os.environ["OPENAI_API_KEY"]
         os.environ["OPENAI_API_KEY"] = openai_api_key
         (yaml_content, rag_colang_content) = _self.ragUtility.get_rag_config()
 

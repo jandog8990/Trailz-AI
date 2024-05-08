@@ -1,0 +1,6 @@
+README.md
+jupyter/
+.*.swp
+.*.swo
+env.list
+.env
