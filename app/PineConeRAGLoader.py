@@ -21,20 +21,20 @@ class PineConeRAGLoader:
     @st.cache_resource
     def load_embed_model(_self):
         # create the embedding transformer
-        print("Load Embed model...") 
+        print("Loading embedding model...") 
         model_id = os.environ["EMBED_MODEL_ID"] 
         _self.model = SentenceTransformer(model_id, cache_folder="./.model")
 
     @st.cache_resource
     def load_openai_client(_self):
-        print("Load OpenAI client...") 
+        print("Loading OpenAI client...") 
         openai_api_key = os.environ["OPENAI_API_KEY"]
         _self.client = OpenAI(api_key=openai_api_key)
 
     @st.cache_resource
     def load_pinecone_index(_self):
         # connect to the pine cone api
-        print("Load PC index...") 
+        print("Loading PineCone index...") 
         env_key = os.environ["PINE_CONE_ENV_KEY"]
         api_key = os.environ["PINE_CONE_API_KEY"]
 
@@ -86,7 +86,7 @@ class PineConeRAGLoader:
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
         model_id = os.environ["OPENAI_MODEL_ID"]
-       
+
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
         context_str = "\n".join(contexts)
@@ -119,9 +119,17 @@ class PineConeRAGLoader:
         result_holder = st.empty() 
         with result_holder.container(): 
             st.header("Trail Recommendations", divider='rainbow')
-            st.write_stream(self.stream_chunks(stream))
+            stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
-            self.st_success = st.success('Trailz found! See below for details.')
+          
+            # stream output could be idk
+            if stream_output == "I don't know.":
+                self.resp_message = st.info('''
+                Sorry, we couldn't find any specific trails for you.\n
+                Please see our recommendations below, or enter a new search.
+                ''')
+            else: 
+                self.resp_message = st.success('Trailz found! See below for details.')
 
         # return the trail list from the PineCone query 
         bot_answer = {
@@ -137,16 +145,13 @@ class PineConeRAGLoader:
         asyncio.set_event_loop(loop)
         from nemoguardrails import LLMRails, RailsConfig
 
-        print("Load RAG rails...") 
-        openai_api_key = os.environ["OPENAI_API_KEY"]
-        os.environ["OPENAI_API_KEY"] = openai_api_key
+        print("Loading RAG rails...") 
         (yaml_content, rag_colang_content) = _self.ragUtility.get_rag_config()
 
+        # create the rails using config
         config = RailsConfig.from_content(
             colang_content=rag_colang_content,
             yaml_content=yaml_content)
-
-        # create the rails
         _self.rag_rails = LLMRails(config)
 
         # register the actions in RAG rails obj

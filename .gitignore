@@ -2,6 +2,7 @@
 **/env.list
 **/*.jl
 **/*.swp
+**/*.model
 pkl_data/
 jl_data/
 gpx/

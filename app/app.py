@@ -26,10 +26,7 @@ def load_search_data():
 
 def run_retrieval_norag():
     # run the docs retrieval with no RAG 
-    start = time.time()
     results = asyncio.run(data_loader.retrieve(query, conditions)) 
-    end = time.time()
-    total = end - start
 
     return sorted(data_loader.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
 
@@ -144,55 +141,64 @@ if query:
 
     # run the PineCone and RAG model for generating trails
     resp = asyncio.run(rag_rails.generate_async(messages=messages))
-    st_success = data_loader.st_success
+    resp_message = data_loader.resp_message
 
     # get the content and response
     content = resp['content'] 
-    resp_map = json.loads(content)   
-       
-    # need to parse both outputs
-    trail_list = resp_map['trail_list']
- 
-    # let's create the rows of columns
-    num_rows = len(trail_list)
-    height = 320
+   
+    # only process trailz if information was found
+    err_md = st.empty() 
+    if content != None: 
+        err_md.empty() 
+        resp_map = json.loads(content)   
+           
+        # need to parse both outputs
+        trail_list = resp_map['trail_list']
+     
+        # let's create the rows of columns
+        num_rows = len(trail_list)
+        height = 320
 
-    # display the results in the new container
-    with st.container():
-        st.header("Trail Details", divider='rainbow')
-        for i in range(0, num_rows, 2): 
-            # get the main text from the object
-            val1 = trail_list[i]
-            val2 = trail_list[i+1]
-            meta1 = val1['metadata'] 
-            meta2 = val2['metadata'] 
-            route_name1 = meta1['route_name']
-            route_name2 = meta2['route_name']
-            trail_rating1 = meta1['trail_rating']
-            trail_rating2 = meta2['trail_rating']
-            average_rating1 = meta1['average_rating']
-            average_rating2 = meta2['average_rating']
-            main_text1 = val1['mainText']
-            main_text2 = val2['mainText']
-           
-            # trail details
-            trail_details1 = str(trail_rating1) + " - " + str(average_rating1)
-            trail_details2 = str(trail_rating2) + " - " + str(average_rating2)
-           
-            # two columns of trail details 
-            cc1, cc2 = st.columns(2) 
-            with st.container():    # row container 
-                with cc1.container(height=height):
-                        st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details">{trail_details1}</p>', unsafe_allow_html=True) 
-                        st.markdown(main_text1) 
-                with cc2.container(height=height): 
-                        st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details">{trail_details2}</p>', unsafe_allow_html=True) 
-                        st.markdown(main_text2) 
-        
-        time.sleep(2)
-        st_success.empty()
+        # display the results in the new container
+        with st.container():
+            st.header("Trail Details", divider='rainbow')
+            for i in range(0, num_rows, 2): 
+                # get the main text from the object
+                val1 = trail_list[i]
+                val2 = trail_list[i+1]
+                meta1 = val1['metadata'] 
+                meta2 = val2['metadata'] 
+                route_name1 = meta1['route_name']
+                route_name2 = meta2['route_name']
+                trail_rating1 = meta1['trail_rating']
+                trail_rating2 = meta2['trail_rating']
+                average_rating1 = meta1['average_rating']
+                average_rating2 = meta2['average_rating']
+                main_text1 = val1['mainText']
+                main_text2 = val2['mainText']
+               
+                # trail details
+                trail_details1 = str(trail_rating1) + " - " + str(average_rating1)
+                trail_details2 = str(trail_rating2) + " - " + str(average_rating2)
+               
+                # two columns of trail details 
+                cc1, cc2 = st.columns(2) 
+                with st.container():    # row container 
+                    with cc1.container(height=height):
+                            st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
+                            st.markdown(f'<p class="route-details">{trail_details1}</p>', unsafe_allow_html=True) 
+                            st.markdown(main_text1) 
+                    with cc2.container(height=height): 
+                            st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
+                            st.markdown(f'<p class="route-details">{trail_details2}</p>', unsafe_allow_html=True) 
+                            st.markdown(main_text2) 
+    else:
+        err_md.markdown('''
+        # We're sorry, no trailz were found, please enter a new trail search.
+        ''') 
+    
+    time.sleep(4.5)
+    resp_message.empty()
 
 st.components.v1.html(
     f"""

@@ -11,7 +11,7 @@ $ streamlit run app.py
 ### Build Docker image
 
 1. docker build -t trailzai .
-2. docker run -p 8080:8080 trailzai 
+2. docker run --env-file ./env.list -p 8080:8080 trailzai 
 
 ### General Gcloud commands
 

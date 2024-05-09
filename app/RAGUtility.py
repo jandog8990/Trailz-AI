@@ -28,7 +28,6 @@ class RAGUtility:
 
     def get_rag_config(self):
         # the RAG config for LLMRails 
-        # TODO: Make a configuration for the models 
         yaml_content = """
         models:
         - type: main
