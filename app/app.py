@@ -66,6 +66,7 @@ st.markdown("""
     .route-name {
         font-size: 24px; 
         font-weight: bold; 
+        margin-bottom: 0px; 
     }
     .route-details {
         font-size: 20px; 
@@ -154,7 +155,7 @@ if query:
            
         # need to parse both outputs
         trail_list = resp_map['trail_list']
-     
+
         # let's create the rows of columns
         num_rows = len(trail_list)
         height = 320
@@ -177,20 +178,18 @@ if query:
                 main_text1 = val1['mainText']
                 main_text2 = val2['mainText']
                
-                # trail details
-                trail_details1 = str(trail_rating1) + " - " + str(average_rating1)
-                trail_details2 = str(trail_rating2) + " - " + str(average_rating2)
-               
                 # two columns of trail details 
                 cc1, cc2 = st.columns(2) 
                 with st.container():    # row container 
                     with cc1.container(height=height):
                             st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
-                            st.markdown(f'<p class="route-details">{trail_details1}</p>', unsafe_allow_html=True) 
+                            st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating1)}</p>', unsafe_allow_html=True) 
+                            st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
                             st.markdown(main_text1) 
                     with cc2.container(height=height): 
                             st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
-                            st.markdown(f'<p class="route-details">{trail_details2}</p>', unsafe_allow_html=True) 
+                            st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating2)}</p>', unsafe_allow_html=True) 
+                            st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
                             st.markdown(main_text2) 
     else:
         err_md.markdown('''
