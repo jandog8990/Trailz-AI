@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from sentence_transformers import SentenceTransformer
 import pinecone
 import time
@@ -15,6 +16,7 @@ from PineConeRAGLoader import PineConeRAGLoader
 @st.cache_resource
 def load_search_data():
     # create the PineCone search loader
+    print("Initialize search data objects...") 
     data_loader = PineConeRAGLoader()
     data_loader.load_pinecone_index()
     data_loader.load_openai_client()
@@ -24,11 +26,68 @@ def load_search_data():
 
     return data_loader
 
+# retrieve the final json objects (replace with MongoDB)
 def run_retrieval_norag():
     # run the docs retrieval with no RAG 
     results = asyncio.run(data_loader.retrieve(query, conditions)) 
 
     return sorted(data_loader.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
+
+# display the returned results from the RAG model
+def display_trail_results(content: str):
+    err_md.empty() 
+    resp_map = json.loads(content)   
+       
+    # need to parse both outputs
+    trail_list = resp_map['trail_list']
+
+    # let's create the rows of columns
+    num_rows = len(trail_list)
+    height = 320
+
+    # display the results in the new container
+    with st.container():
+        st.header("Trail Details", divider='rainbow')
+        for i in range(0, num_rows, 2): 
+            # get the data from ith object
+            val1 = trail_list[i]
+            meta1 = val1['metadata'] 
+            route_name1 = meta1['route_name']
+            trail_rating1 = meta1['trail_rating']
+            average_rating1 = meta1['average_rating']
+            main_text1 = val1['mainText']
+           
+            # get the data from i+1th object
+            if (i+1) < num_rows: 
+                val2 = trail_list[i+1]
+                meta2 = val2['metadata'] 
+                route_name2 = meta2['route_name']
+                trail_rating2 = meta2['trail_rating']
+                average_rating2 = meta2['average_rating']
+                main_text2 = val2['mainText']
+           
+            # two columns of trail details 
+            cc1, cc2 = st.columns(2) 
+
+            with st.container():    # row container 
+                # column 1 trail details 
+                with cc1.container(height=height):
+                    st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating1)}</p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
+                    st.markdown(main_text1) 
+               
+                # column 2 trail details (check if we are in bounds)
+                if (i+1) < num_rows: 
+                    with cc2.container(height=height): 
+                        st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating2)}</p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                        st.markdown(main_text2) 
+
+# run the search when search button clicked
+def run_search():
+    print("Search clicked!")
 
 # get the search loader object
 data_loader = load_search_data()
@@ -40,12 +99,10 @@ st.title("Explore Your Trailz...")
 main_placeholder = st.empty()
 
 # prompt the user for a trail recommendation query
-progress_text = ":sunglasses: Operation in progress..."
 query_label = "What type of trails are you looking for?"
-query = main_placeholder.text_input(query_label)
+query = main_placeholder.text_input(query_label, placeholder="Fast and flowy with some jumps")
 
 
-# TODO: move the trail filters to the middle panel 
 # TODO: Make this a grid of selections for difficulty 
 # make this a geo location that gets users location
 filter_container = st.container(border=True)
@@ -54,7 +111,6 @@ filter_container = st.container(border=True)
 easy_label = "Easy"
 intermediate_label = "Intermediate"
 difficult_label = "Difficult"
-expert_label = "Expert"
 
 # style for the difficulty title
 st.markdown("""
@@ -72,12 +128,30 @@ st.markdown("""
         font-size: 20px; 
         font-weight: 200; 
     }
+    div.stButton > button:first-child {
+        background-color: green;
+        color: white !important; 
+        border-color: black !important; 
+    }
+    #div.stButton > button:hover {
+    #    background-color: green;
+    #    color: pink; 
+    #}
+    div.stButton > button:focus{
+        background-color: green;
+        border-color: black !important; 
+        color: white !important; 
+    }
+    div.stButton > button:active {
+        background-color: green;
+        border-color: white !important; 
+        color: white !important; 
+    }
     </style>""", unsafe_allow_html=True) 
 
-# 
 with filter_container:
-    st.header("Filter Trailz")
     col1, col2 = st.columns(2, gap="small") 
+    col3, col4 = st.columns(2, gap="small") 
     with col1: 
         loc_label = "Location" 
         location = st.text_input(loc_label, placeholder="Your city/town")
@@ -93,8 +167,8 @@ with filter_container:
             intermediate = st.toggle(intermediate_label)
         with col21: 
             difficult = st.toggle(difficult_label)
-        with col22: 
-            expert = st.toggle(expert_label)
+    with col3:
+        st.button(':white[Search]', on_click=run_search) 
 
 if query:
 
@@ -143,54 +217,12 @@ if query:
     # run the PineCone and RAG model for generating trails
     resp = asyncio.run(rag_rails.generate_async(messages=messages))
     resp_message = data_loader.resp_message
-
-    # get the content and response
     content = resp['content'] 
-   
+
     # only process trailz if information was found
     err_md = st.empty() 
-    if content != None: 
-        err_md.empty() 
-        resp_map = json.loads(content)   
-           
-        # need to parse both outputs
-        trail_list = resp_map['trail_list']
-
-        # let's create the rows of columns
-        num_rows = len(trail_list)
-        height = 320
-
-        # display the results in the new container
-        with st.container():
-            st.header("Trail Details", divider='rainbow')
-            for i in range(0, num_rows, 2): 
-                # get the main text from the object
-                val1 = trail_list[i]
-                val2 = trail_list[i+1]
-                meta1 = val1['metadata'] 
-                meta2 = val2['metadata'] 
-                route_name1 = meta1['route_name']
-                route_name2 = meta2['route_name']
-                trail_rating1 = meta1['trail_rating']
-                trail_rating2 = meta2['trail_rating']
-                average_rating1 = meta1['average_rating']
-                average_rating2 = meta2['average_rating']
-                main_text1 = val1['mainText']
-                main_text2 = val2['mainText']
-               
-                # two columns of trail details 
-                cc1, cc2 = st.columns(2) 
-                with st.container():    # row container 
-                    with cc1.container(height=height):
-                            st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
-                            st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating1)}</p>', unsafe_allow_html=True) 
-                            st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
-                            st.markdown(main_text1) 
-                    with cc2.container(height=height): 
-                            st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
-                            st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating2)}</p>', unsafe_allow_html=True) 
-                            st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
-                            st.markdown(main_text2) 
+    if content: 
+        display_trail_results(content) 
     else:
         err_md.markdown('''
         # We're sorry, no trailz were found, please enter a new trail search.
@@ -199,18 +231,18 @@ if query:
     time.sleep(4.5)
     resp_message.empty()
 
-st.components.v1.html(
+components.html(
     f"""
     <script>
         var elems = window.parent.document.querySelectorAll('div[class*="stTextInput"] p');
         var elem1 = Array.from(elems).find(x => x.innerText == '{query_label}');
         var elem2 = Array.from(elems).find(x => x.innerText == '{loc_label}');
-        elem1.style.fontSize = '20px'; 
-        elem2.style.fontSize = '20px';
+        elem1.style.fontSize = '18px'; 
+        elem2.style.fontSize = '18px';
     </script>
     """
 )
-st.components.v1.html(
+components.html(
     """
     <script>
         var inelems = window.parent.document.querySelectorAll('input[class*="st-ae"]');

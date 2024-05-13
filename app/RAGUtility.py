@@ -4,9 +4,10 @@ from MTBLoadDataset import MTBLoadDataset
 # RAG utility class for config and extra work
 class RAGUtility:
     def __init__(self):
+        print("RAGUtility.init()...") 
         self.loadData = MTBLoadDataset()
 
-    @st.cache_resource
+    @st.cache_data
     def load_dataset(_self):
         # load the metadata set for the final results
         print("Load Dataset...")

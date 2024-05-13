@@ -12,12 +12,14 @@ from RAGUtility import RAGUtility
 # Loads all necessary objects for PineCone and RAG
 class PineConeRAGLoader:
     def __init__(self):
+        print("PineConeRAGLoader.init()...") 
         self.ragUtility = RAGUtility() 
         self.metadataSet = None
         self.rag_rails = None 
         self.index = None
         self.model = None
-
+        self.resp_message = None
+    
     @st.cache_resource
     def load_embed_model(_self):
         # create the embedding transformer
@@ -111,7 +113,7 @@ class PineConeRAGLoader:
         stream = self.client.chat.completions.create(
             model=model_id,
             messages=messages,
-            temperature=0.0,
+            temperature=1.0,
             stream=True,
             max_tokens=1000)
        
