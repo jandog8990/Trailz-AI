@@ -19,6 +19,7 @@ class PineConeRAGLoader:
         self.index = None
         self.model = None
         self.resp_message = None
+        self.result_holder = None
     
     @st.cache_resource
     def load_embed_model(_self):
@@ -118,24 +119,20 @@ class PineConeRAGLoader:
             max_tokens=1000)
        
         # show the results from the RAG response using Stream 
-        result_holder = st.empty() 
-        with result_holder.container(): 
+        self.result_holder = st.empty() 
+        with self.result_holder.container(): 
             st.header("Trail Recommendations", divider='rainbow')
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
           
             # stream output could be idk
-            if stream_output == "I don't know.":
-                self.resp_message = st.info('''
-                Sorry, we couldn't find any specific trails for you.\n
-                Please see our recommendations below, or enter a new search.
-                ''')
-            else: 
+            if stream_output != "I don't know.":
                 self.resp_message = st.success('Trailz found! See below for details.')
 
         # return the trail list from the PineCone query 
         bot_answer = {
-            'trail_list': trail_list 
+            'trail_list': trail_list, 
+            'stream_output': stream_output
         }
 
         return json.dumps(bot_answer) 

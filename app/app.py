@@ -40,9 +40,16 @@ if 'rag_query' not in st.session_state:
     st.session_state.rag_query = ""
 if 'trail_content' not in st.session_state: 
     st.session_state.trail_content = ""
+if 'searching' not in st.session_state:
+    st.session_state.searching = False
 
 def run_search():
     st.session_state.search_click = True
+    st.session_state.searching = True 
+
+def enable_query():
+    st.session_state.search_click = False 
+    st.session_state.searching = False
 
 # get the search loader object
 data_loader = load_search_data()
@@ -120,21 +127,21 @@ with filter_container:
         with col21: 
             difficult = st.toggle(difficult_label)
     with col3:
-        st.button(':white[Search]', on_click=run_search)
+        # Need to disable button during the actual searching 
+        st.button(':white[Search]', on_click=run_search, disabled=st.session_state.searching)
 
 # run the search when search button clicked
 if st.session_state.search_click:
-    print(f"Search clicked (and reset) = {st.session_state.search_click}")
-    print(f"query = {query}")
-    st.session_state.search_click = False 
-
-    # TODO Need to store state in cache and check prev query 
-    if query: 
-        print(f"location = {location}") 
-        print(f"easy = {easy}")
-        print(f"intermediate = {intermediate}")
-        print(f"difficult = {difficult}\n")
-
+    
+    if not query:
+        with filter_container: 
+            user_message = st.info('''
+            Please enter a trail query to find your trailz.
+            ''')
+            time.sleep(3)
+            user_message.empty()
+            enable_query() 
+    else:
         # get the toggle queries for difficulty
         diff_arr = [] 
         if easy:
@@ -174,15 +181,10 @@ if st.session_state.search_click:
             {"role": "user", "content": query} 
         ]
         rag_query = str(messages) 
-        print(f"RAG query type = {type(rag_query)}") 
-        print(f"RAG query = {rag_query}") 
-        print(f"Session state RAG query = {st.session_state.rag_query}\n")
 
         # run the PineCone and RAG model for generating trails
         if rag_query != st.session_state.rag_query: 
-            print("Run RAG rails query!") 
             st.session_state.rag_query = rag_query 
-            print(f"New session query = {st.session_state.rag_query}")
             rag_rails = data_loader.rag_rails
             resp = asyncio.run(rag_rails.generate_async(messages=messages))
             resp_message = data_loader.resp_message
@@ -190,30 +192,51 @@ if st.session_state.search_click:
             # need to make this a session state, and only update view when it's present
             trail_content = resp['content'] 
             st.session_state.trail_content = trail_content 
-            print(f"Trail content type = {type(trail_content)}")
     
             # remove the success message
             if (resp_message):
-                time.sleep(3)
+                time.sleep(2)
                 resp_message.empty()
-                
-# TODO: Need to create a state variable for changes?
-# Only show results if we have them 
+                enable_query() 
+        else:
+            # previous query matches current query 
+            with filter_container: 
+                user_message = st.info('''
+                You've already run this query, please see the results below.\n
+                Or, you can enter a different query, location or difficulty.
+                ''')
+                time.sleep(4)
+                user_message.empty()
+                enable_query() 
+
+# Only show trail_content results if we have them 
 err_md = st.empty() 
 if st.session_state.trail_content: 
-    print(f"Trail content EXISTS => show results") 
     trail_content = st.session_state.trail_content 
     err_md.empty() 
     resp_map = json.loads(trail_content)   
        
     # need to parse both outputs
     trail_list = resp_map['trail_list']
+    stream_output = resp_map['stream_output']
 
     # let's create the rows of columns
     num_rows = len(trail_list)
     height = 320
 
-    # display the results in the new container
+    # display the stream results in the recommendation section
+    if data_loader.result_holder: 
+        data_loader.result_holder.empty()
+        with st.container():
+            st.header("Trail Recommendations", divider='rainbow') 
+            if stream_output == "I don't know.":
+                stream_output = '''
+                Sorry, I couldn't recommend any specific trailz for you.
+                However, below you will find some trailz you might like.
+                '''
+            st.write(stream_output)
+
+    # display the trail_list results in the details section 
     with st.container():
         st.header("Trail Details", divider='rainbow')
         for i in range(0, num_rows, 2): 
