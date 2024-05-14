@@ -65,7 +65,7 @@ easy_label = "Easy"
 intermediate_label = "Intermediate"
 difficult_label = "Difficult"
 
-# style for the difficulty title
+# style for the text in filter and output 
 st.markdown("""
     <style> 
     .diff-title {
@@ -86,10 +86,6 @@ st.markdown("""
         color: white !important; 
         border-color: black !important; 
     }
-    #div.stButton > button:hover {
-    #    background-color: green;
-    #    color: pink; 
-    #}
     div.stButton > button:focus{
         background-color: green;
         border-color: black !important; 
@@ -102,6 +98,7 @@ st.markdown("""
     }
     </style>""", unsafe_allow_html=True) 
 
+# create the filter container for location and difficulty
 with filter_container:
     col1, col2 = st.columns(2, gap="small") 
     col3, col4 = st.columns(2, gap="small") 
@@ -124,7 +121,6 @@ with filter_container:
         st.button(':white[Search]', on_click=run_search)
 
 # run the search when search button clicked
-trail_content = ""
 if st.session_state.search_click:
     print(f"Search clicked (and reset) = {st.session_state.search_click}")
     print(f"query = {query}")
@@ -184,23 +180,22 @@ if st.session_state.search_click:
         #st.session_state.rag_query = str(messages)
 
         # run the PineCone and RAG model for generating trails
+        trail_content = ""  # is this needed?
         if rag_query != st.session_state.rag_query: 
             print("Run RAG rails query!") 
             st.session_state.rag_query = rag_query 
             print(f"New session query = {st.session_state.rag_query}")
-
-        """ 
-        rag_rails = data_loader.rag_rails
-        resp = asyncio.run(rag_rails.generate_async(messages=messages))
-        resp_message = data_loader.resp_message
+            rag_rails = data_loader.rag_rails
+            resp = asyncio.run(rag_rails.generate_async(messages=messages))
+            resp_message = data_loader.resp_message
        
-        # need to make this a session state, and only update view when it's present
-        trail_content = resp['content'] 
-        """ 
+            # need to make this a session state, and only update view when it's present
+            trail_content = resp['content'] 
 
         # Only show results if we have them 
         err_md = st.empty() 
         if trail_content: 
+            print(f"Trail content EXISTS!") 
             err_md.empty() 
             resp_map = json.loads(trail_content)   
                
@@ -250,13 +245,15 @@ if st.session_state.search_click:
                                 st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating2)}</p>', unsafe_allow_html=True) 
                                 st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
                                 st.markdown(main_text2) 
-        else:
-            err_md.markdown('''
-                # We're sorry, no trailz were found, please enter a new trail search.
-            ''') 
-
-        time.sleep(4.5)
-        resp_message.empty()
+        #else:
+        #    err_md.markdown('''
+        #        # We're sorry, no trailz were found, please enter a new trail search.
+        #    ''') 
+            
+            # remove the success message
+            if (resp_message):
+                time.sleep(4)
+                resp_message.empty()
 
 components.html(
     f"""
