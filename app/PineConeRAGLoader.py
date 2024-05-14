@@ -69,14 +69,14 @@ class PineConeRAGLoader:
     # retrieve data from PC index using embedding 
     async def retrieve(self, query: str, conditions: str) -> (list, list):
         # NOTE: The query and conditions are passed as json role objects
+        self.md_obj = st.empty() 
+        self.md_obj.markdown(self.load_markdown(), unsafe_allow_html=True)
 
         # retrieve from PineCone using embedded query
         cond_dict = json.loads(conditions) 
         embed_query = self.model.encode(query) 
 
         # issue query to PC to get context vectors
-        self.md_obj = st.empty() 
-        self.md_obj.markdown(self.load_markdown(), unsafe_allow_html=True)
         if not cond_dict:
             results = self.index.query(vector=[embed_query.tolist()], top_k=20)
         else:
