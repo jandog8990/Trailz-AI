@@ -33,61 +33,14 @@ def run_retrieval_norag():
 
     return sorted(data_loader.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
 
-# display the returned results from the RAG model
-def display_trail_results(content: str):
-    err_md.empty() 
-    resp_map = json.loads(content)   
-       
-    # need to parse both outputs
-    trail_list = resp_map['trail_list']
+# set the session state vars
+if 'search_click' not in st.session_state:
+    st.session_state.search_click = False
+if 'rag_query' not in st.session_state:
+    st.session_state.rag_query = ""
 
-    # let's create the rows of columns
-    num_rows = len(trail_list)
-    height = 320
-
-    # display the results in the new container
-    with st.container():
-        st.header("Trail Details", divider='rainbow')
-        for i in range(0, num_rows, 2): 
-            # get the data from ith object
-            val1 = trail_list[i]
-            meta1 = val1['metadata'] 
-            route_name1 = meta1['route_name']
-            trail_rating1 = meta1['trail_rating']
-            average_rating1 = meta1['average_rating']
-            main_text1 = val1['mainText']
-           
-            # get the data from i+1th object
-            if (i+1) < num_rows: 
-                val2 = trail_list[i+1]
-                meta2 = val2['metadata'] 
-                route_name2 = meta2['route_name']
-                trail_rating2 = meta2['trail_rating']
-                average_rating2 = meta2['average_rating']
-                main_text2 = val2['mainText']
-           
-            # two columns of trail details 
-            cc1, cc2 = st.columns(2) 
-
-            with st.container():    # row container 
-                # column 1 trail details 
-                with cc1.container(height=height):
-                    st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
-                    st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating1)}</p>', unsafe_allow_html=True) 
-                    st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
-                    st.markdown(main_text1) 
-               
-                # column 2 trail details (check if we are in bounds)
-                if (i+1) < num_rows: 
-                    with cc2.container(height=height): 
-                        st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating2)}</p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
-                        st.markdown(main_text2) 
-
-# run the search when search button clicked
 def run_search():
-    print("Search clicked!")
+    st.session_state.search_click = True
 
 # get the search loader object
 data_loader = load_search_data()
@@ -168,68 +121,142 @@ with filter_container:
         with col21: 
             difficult = st.toggle(difficult_label)
     with col3:
-        st.button(':white[Search]', on_click=run_search) 
+        st.button(':white[Search]', on_click=run_search)
 
-if query:
+# run the search when search button clicked
+trail_content = ""
+if st.session_state.search_click:
+    print(f"Search clicked (and reset) = {st.session_state.search_click}")
+    print(f"query = {query}")
+    st.session_state.search_click = False 
 
-    # get the toggle queries
-    diff_arr = [] 
-    if easy:
-        diff_arr.append(easy_label)
-    if intermediate:
-        diff_arr.append(intermediate_label)
-    if difficult:
-        diff_arr.append(difficult_label)
+    # TODO Need to store state in cache and check prev query 
+    if query: 
+        print(f"location = {location}") 
+        print(f"easy = {easy}")
+        print(f"intermediate = {intermediate}")
+        print(f"difficult = {difficult}\n")
 
-    # create the conditional queries 
-    loc_arr = [] 
-    if location != "":
-        loc_arr = location.split(',')
-    
-    # Create the condition dict based on fields
-    if location == '' and not diff_arr:
-        conditions = {} 
-    elif not diff_arr: 
-        conditions = {
-            "areaNames": {"$in": loc_arr}
-        }
-    elif location == '':
-        conditions = {
-            "difficulty": {"$in": diff_arr}
-        }
-    else: 
-        conditions = {
-            "areaNames": {"$in": [location]},
-            "difficulty": {"$in": diff_arr}
-        }
+        # get the toggle queries for difficulty
+        diff_arr = [] 
+        if easy:
+            diff_arr.append(easy_label)
+        if intermediate:
+            diff_arr.append(intermediate_label)
+        if difficult:
+            diff_arr.append(difficult_label)
 
-    # get the rag rails object
-    rag_rails = data_loader.rag_rails
+        # create the conditional queries for rag query 
+        loc_arr = [] 
+        if location != "":
+            loc_arr = location.split(',')
+        
+        # create the condition dict based on fields
+        if location == '' and not diff_arr:
+            conditions = {} 
+        elif not diff_arr: 
+            conditions = {
+                "areaNames": {"$in": loc_arr}
+            }
+        elif location == '':
+            conditions = {
+                "difficulty": {"$in": diff_arr}
+            }
+        else: 
+            conditions = {
+                "areaNames": {"$in": [location]},
+                "difficulty": {"$in": diff_arr}
+            }
 
-    # create context from conditions and issue query
-    cond_json = json.dumps(conditions) 
+        # create context from conditions and issue query
+        cond_json = json.dumps(conditions) 
 
-    messages = [
-        {"role": "context", "content": {"conditions": cond_json}},
-        {"role": "user", "content": query} 
-    ]
+        messages = [
+            {"role": "context", "content": {"conditions": cond_json}},
+            {"role": "user", "content": query} 
+        ]
+        rag_query = str(messages) 
+        print(f"RAG query type = {type(rag_query)}") 
+        print(f"RAG query = {rag_query}") 
+        print(f"Session state RAG query = {st.session_state.rag_query}\n")
 
-    # run the PineCone and RAG model for generating trails
-    resp = asyncio.run(rag_rails.generate_async(messages=messages))
-    resp_message = data_loader.resp_message
-    content = resp['content'] 
+        # set the session state query
+        #st.session_state.rag_query = str(messages)
 
-    # only process trailz if information was found
-    err_md = st.empty() 
-    if content: 
-        display_trail_results(content) 
-    else:
-        err_md.markdown('''
-        # We're sorry, no trailz were found, please enter a new trail search.
-        ''') 
-    
-    time.sleep(4.5)
-    resp_message.empty()
+        # run the PineCone and RAG model for generating trails
+        if rag_query != st.session_state.rag_query: 
+            print("Run RAG rails query!") 
+            st.session_state.rag_query = rag_query 
+            print(f"New session query = {st.session_state.rag_query}")
+
+        """ 
+        rag_rails = data_loader.rag_rails
+        resp = asyncio.run(rag_rails.generate_async(messages=messages))
+        resp_message = data_loader.resp_message
+       
+        # need to make this a session state, and only update view when it's present
+        trail_content = resp['content'] 
+        """ 
+
+        # Only show results if we have them 
+        err_md = st.empty() 
+        if trail_content: 
+            err_md.empty() 
+            resp_map = json.loads(trail_content)   
+               
+            # need to parse both outputs
+            trail_list = resp_map['trail_list']
+
+            # let's create the rows of columns
+            num_rows = len(trail_list)
+            height = 320
+
+            # display the results in the new container
+            with st.container():
+                st.header("Trail Details", divider='rainbow')
+                for i in range(0, num_rows, 2): 
+                    # get the data from ith object
+                    val1 = trail_list[i]
+                    meta1 = val1['metadata'] 
+                    route_name1 = meta1['route_name']
+                    trail_rating1 = meta1['trail_rating']
+                    average_rating1 = meta1['average_rating']
+                    main_text1 = val1['mainText']
+                   
+                    # get the data from i+1th object
+                    if (i+1) < num_rows: 
+                        val2 = trail_list[i+1]
+                        meta2 = val2['metadata'] 
+                        route_name2 = meta2['route_name']
+                        trail_rating2 = meta2['trail_rating']
+                        average_rating2 = meta2['average_rating']
+                        main_text2 = val2['mainText']
+                   
+                    # two columns of trail details 
+                    cc1, cc2 = st.columns(2) 
+
+                    with st.container():    # row container 
+                        # column 1 trail details 
+                        with cc1.container(height=height):
+                            st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
+                            st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating1)}</p>', unsafe_allow_html=True) 
+                            st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
+                            st.markdown(main_text1) 
+                       
+                        # column 2 trail details (check if we are in bounds)
+                        if (i+1) < num_rows: 
+                            with cc2.container(height=height): 
+                                st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
+                                st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating2)}</p>', unsafe_allow_html=True) 
+                                st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                                st.markdown(main_text2) 
+        else:
+            err_md.markdown('''
+                # We're sorry, no trailz were found, please enter a new trail search.
+            ''') 
+
+        time.sleep(4.5)
+        resp_message.empty()
 
 components.html(
     f"""
