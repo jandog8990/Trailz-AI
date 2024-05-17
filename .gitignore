@@ -3,6 +3,7 @@
 **/*.jl
 **/*.swp
 **/*.model
+**/pkl_data
 pkl_data/
 jl_data/
 gpx/

@@ -10,8 +10,8 @@ import asyncio
 import json
 from PineConeRAGLoader import PineConeRAGLoader
 
-#Main Trailz AI app for searching the PineCone DB for
-#recommended trailz around my area
+# Main Trailz AI app for searching the PineCone DB for
+# recommended trailz around my area
 
 @st.cache_resource
 def load_search_data():
@@ -36,12 +36,12 @@ def run_retrieval_norag():
 # set the session state vars
 if 'search_click' not in st.session_state:
     st.session_state.search_click = False
+if 'searching' not in st.session_state:
+    st.session_state.searching = False
 if 'rag_query' not in st.session_state:
     st.session_state.rag_query = ""
 if 'trail_content' not in st.session_state: 
     st.session_state.trail_content = ""
-if 'searching' not in st.session_state:
-    st.session_state.searching = False
 
 def run_search():
     st.session_state.search_click = True
@@ -65,8 +65,7 @@ query_label = "What type of trails are you looking for?"
 query = main_placeholder.text_input(query_label, placeholder="Fast and flowy with some jumps")
 
 
-# TODO: Make this a grid of selections for difficulty 
-# make this a geo location that gets users location
+# TODO: make this a geo location that gets users location
 filter_container = st.container(border=True)
 
 # difficulties
@@ -129,6 +128,7 @@ with filter_container:
     with col3:
         # Need to disable button during the actual searching 
         st.button(':white[Search]', on_click=run_search, disabled=st.session_state.searching)
+    user_message = st.empty()
 
 # run the search when search button clicked
 if st.session_state.search_click:
@@ -140,7 +140,6 @@ if st.session_state.search_click:
             ''')
             time.sleep(3)
             user_message.empty()
-            enable_query() 
     else:
         # get the toggle queries for difficulty
         diff_arr = [] 
@@ -182,35 +181,29 @@ if st.session_state.search_click:
         ]
         rag_query = str(messages) 
 
-        # run the PineCone and RAG model for generating trails
+        # Check that the user is not issuing the same query as their previous
         if rag_query != st.session_state.rag_query: 
             st.session_state.rag_query = rag_query 
+            
+            # run the PineCone and RAG model for generating trails
             rag_rails = data_loader.rag_rails
             resp = asyncio.run(rag_rails.generate_async(messages=messages))
-            resp_message = data_loader.resp_message
        
-            # need to make this a session state, and only update view when it's present
+            # set the trail content to show the user 
             trail_content = resp['content'] 
             st.session_state.trail_content = trail_content 
-    
-            # remove the success message
-            if (resp_message):
-                time.sleep(2)
-                resp_message.empty()
-                enable_query() 
         else:
             # previous query matches current query 
             with filter_container: 
                 user_message = st.info('''
-                You've already run this query, please see the results below.\n
-                Or, you can enter a different query, location or difficulty.
+                You've already run this query, please see the results below.
                 ''')
-                time.sleep(4)
+                time.sleep(3)
                 user_message.empty()
-                enable_query() 
 
 # Only show trail_content results if we have them 
 err_md = st.empty() 
+enable_query() 
 if st.session_state.trail_content: 
     trail_content = st.session_state.trail_content 
     err_md.empty() 
@@ -232,7 +225,8 @@ if st.session_state.trail_content:
             if stream_output == "I don't know.":
                 stream_output = '''
                 Sorry, I couldn't recommend any specific trailz for you.
-                However, below you will find some trailz you might like.
+                However, below I've found some trailz that I 
+                think you might enjoy. 
                 '''
             st.write(stream_output)
 

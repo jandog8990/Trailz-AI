@@ -28,7 +28,7 @@ to a backend PineCone DB that allows NLP searching.
     * cd PineCone/
 4. Run PineConeEmbeddingCreator.py to create the data to insert to PineCone VectorDB
     * Creates new mtb_route_dataset.pkl pkl file with updated data 
-5. Run 
+5. Run PineConeCreateServerless.py to create the serverless index if it DNE 
 6. Run PineConeDatasetUpload.py that takes text data, embeds and uploads to PineCone
     * Reads the mtb_route_dataset.pkl pkl file in app/pkl_data
     * Uses PineCone upsert to upload batches of vector data to PineCone 

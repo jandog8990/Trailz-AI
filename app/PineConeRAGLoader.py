@@ -6,7 +6,6 @@ import base64
 import os
 from openai import OpenAI
 from sentence_transformers import SentenceTransformer
-from MTBLoadDataset import MTBLoadDataset 
 from RAGUtility import RAGUtility
 
 # Loads all necessary objects for PineCone and RAG
@@ -18,7 +17,6 @@ class PineConeRAGLoader:
         self.rag_rails = None 
         self.index = None
         self.model = None
-        self.resp_message = None
         self.result_holder = None
     
     @st.cache_resource
@@ -124,10 +122,6 @@ class PineConeRAGLoader:
             st.header("Trail Recommendations", divider='rainbow')
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
-          
-            # stream output could be idk
-            if stream_output != "I don't know.":
-                self.resp_message = st.success('Trailz found! See below for details.')
 
         # return the trail list from the PineCone query 
         bot_answer = {

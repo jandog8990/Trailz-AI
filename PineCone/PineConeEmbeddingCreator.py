@@ -8,6 +8,10 @@ import time
 import pickle
 import json
 
+# This class creates the routes, descriptions and metdata to 
+# be used in a pkl file, which is then imported by
+# PineConeDatasetUpload to upload to PC Index
+
 # load the data
 pkl_data = 'pkl_data'
 with open(pkl_data+'/mtb_routes.pkl', 'rb') as f:
@@ -115,6 +119,9 @@ mtbRouteDataset = Dataset.from_list(mainMTBRoutes)
 print(f"First routes dataset (len = {len(mtbRouteDataset)}):")
 print(mtbRouteDataset[0])
 print("\n")
+
+# TODO: Update this class to use a new embedding model with 
+# better accuracy for trail parsing
 
 # create embeddings of the main text for the mtb routes
 model = SentenceTransformer('stsb-xlm-r-multilingual')
