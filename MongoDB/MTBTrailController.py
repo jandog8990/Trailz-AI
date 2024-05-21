@@ -15,13 +15,13 @@ import os
 # ------------------------------------------------------------------
 
 # let's parse the json lines file to get all trail routes
-jlFile = "../mtb-project-crawler/mtbproject.jl"
+jlFile = "../../mtb-project-crawler/mtbproject.jl"
 st = time.time()
 jsonLineParser = MTBJsonLineParser()
 trail_urls = jsonLineParser.parse(jlFile)
 et = time.time()
 elapsed = et - st
-#trail_urls = trail_urls[1:10]
+trail_urls = trail_urls[1:10]
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
 print("\n")
@@ -41,12 +41,20 @@ trailUrlParser = MTBTrailUrlParser()
 def parse_trail_url(trail_url):
     return trailUrlParser.parseTrail(trail_url) 
 
+trail_url = trail_urls[0]
+print(f"Trail url = {trail_url}")
+out = parse_trail_url(trail_url)
+print("Output:")
+print(out)
+print("\n")
+
 # ----------------------------------------------------
 # POOL Layer for splitting the data across multiple
 # nodes, currently this is still pretty slow even
 # with chunking the main list into smaller pieces
 # ----------------------------------------------------
 
+"""
 # multiprocessing pool that takes trail urls and batches
 cpu_count = os.cpu_count()
 CHUNK_LEN = 25 
@@ -66,12 +74,14 @@ print("\n")
 
 # trail data tuples
 trailDataTuples = [t for t in res if t]
+"""
 
 # --------------------------------------------------------
 # Collect the data from multiprocessing into lists after
 # parsing on multiples CPUs or Nodes
 # --------------------------------------------------------
 
+"""
 # let's get individual lists of the metadata and the descriptions separately
 mtbTrailRoutes = list(zip(*trailDataTuples))[0] # list of objs
 mtbTrailRouteDescriptions = list(zip(*trailDataTuples))[1] # list of lists of objs
@@ -91,11 +101,13 @@ mtbTrailRoutes = [mtbTrailRoutes[i] for i in
     range(len(mtbTrailRoutes)) if i not in missingIndices]
 print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
 print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
+"""
 
 # --------------------------------------------
 # MongoDB Operations for deleting/inserting
 # --------------------------------------------
 
+"""
 # Initialize the TrailMongo DB using ATLAS 
 trailMongoDB = MTBTrailMongoDB()
 #db = trailMongoDB.get_database()
@@ -125,3 +137,4 @@ trailMongoDB.insert_mtb_trail_routes(newMTBTrailRoutes)
 print("Insert mtb trail route descriptions...")
 trailMongoDB.insert_mtb_trail_route_descriptions(newMTBTrailRoutes,
     mtbTrailRouteDescriptions)
+"""
