@@ -60,6 +60,12 @@ class MTBTrailParser:
         metHighLow = (metHighElev, metLowElev)
         return {"impElev": impHighLow, "metElev": metHighLow}
 
+    def updateTrailId(self, trailId):
+        newId = re.sub(r'[^a-zA-Z0-9\s]+', '', trailId)
+        newId = re.sub(' +', ' ', newId)
+        newId = newId.replace(u'\xa0', u' ')
+        return newId
+
     # create the trail stats (elev, mi, etc)
     # NOTE:
     # B0 = Dist and % singletrack
@@ -72,11 +78,11 @@ class MTBTrailParser:
         overallElevBlock = statBlocks[1]
         bikingElevBlock = statBlocks[2]
         gradeBlock = statBlocks[3]
-       
+
         # parse the distances block
         miBlock = distBlock.find("span", class_="imperial")
         kmBlock = distBlock.find("span", class_="metric")
-        singleTrack = distBlock.find_all("h3", class_='')[2].text
+        singleTrack = distBlock.find_all("h3", class_='')[2].text if len(distBlock.find_all("h3", class_='')) == 3 else "NA"
         impDist = miBlock.find("h3").text
         impUnits = miBlock.find("span", class_="units").text 
         metDist = kmBlock.find("h3").text
@@ -170,6 +176,7 @@ class MTBTrailParser:
         trailTokens = trailTitle.split()
         #trail_id = trailTokens[0].lower()
         trail_id = trailTitle.lower()
+        trail_id = self.updateTrailId(trail_id)
 
         # difficulty
         diffbanner = self.soup.find("div", class_="title")
@@ -280,7 +287,8 @@ class MTBTrailParser:
         mtb_trail_route_descriptions = []
         for key in mainTextMap:
             description = mainTextMap[key]
-           
+          
+            # NOTE: it's cool how i leave myself breadcrumbs
             # trail id and the key from the text type gives the PK 
             # the FK used in this table is what relates it to the route 
             primaryKey = trailId + " " + key.lower() 

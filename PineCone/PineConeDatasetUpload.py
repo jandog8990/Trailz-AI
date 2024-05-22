@@ -10,6 +10,7 @@ route_path="app/pkl_data/"
 with open(route_path+'mtb_route_dataset.pkl', 'rb') as f:
     dataset = pickle.load(f)
 
+# TODO: Will not need to update the ID since it's done in MongoDB
 # dataset map updating the _id 
 def update_id(objId): 
     newId = re.sub(r'[^a-zA-Z0-9\s]+', '', objId)
@@ -17,10 +18,12 @@ def update_id(objId):
     newId = newId.replace(u'\xa0', u' ') 
     return newId
 
+"""
 new_dataset = dataset.map(
     lambda x: {
         '_id': update_id(x['_id'])
     })
+"""
 
 print(f"Dataset type = {type(new_dataset)}")
 print("Example dataset:")
@@ -28,7 +31,7 @@ print(new_dataset[10])
 print("\n")
 
 # connect to the pine cone api
-config = dotenv_values(".env")
+config = dotenv_values("../.env")
 env_key = config["PINE_CONE_ENV_KEY"]
 api_key = config["PINE_CONE_API_KEY"]
 index_name = config["INDEX_NAME"]

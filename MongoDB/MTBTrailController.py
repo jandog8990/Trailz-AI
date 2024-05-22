@@ -24,7 +24,7 @@ elapsed = et - st
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
 print("\n")
-
+trail_urls = trail_urls[1:1000]
 """
 index_urls = [url for url in trail_urls if "index.php" in url]
 print(f"Len index url = {len(index_urls)}")
@@ -40,8 +40,9 @@ trailUrlParser = MTBTrailUrlParser()
 def parse_trail_url(trail_url):
     return trailUrlParser.parseTrail(trail_url) 
 
-trail_url = trail_urls[0]
-res = parse_trail_url(trail_url)
+# TODO: This is a test for testing individual urls
+#trail_url = trail_urls[0]
+#res = parse_trail_url(trail_url)
 
 # ----------------------------------------------------
 # POOL Layer for splitting the data across multiple
@@ -49,7 +50,6 @@ res = parse_trail_url(trail_url)
 # with chunking the main list into smaller pieces
 # ----------------------------------------------------
 
-"""
 # multiprocessing pool that takes trail urls and batches
 cpu_count = os.cpu_count()
 CHUNK_LEN = 25 
@@ -69,8 +69,6 @@ print("\n")
 
 # trail data tuples
 trailDataTuples = [t for t in res if t]
-"""
-trailDataTuples = [res]
 
 # --------------------------------------------------------
 # Collect the data from multiprocessing into lists after
@@ -104,12 +102,6 @@ trailMongoDB = MTBTrailMongoDB()
 
 # mtb trail routes serialized as json 
 newMTBTrailRoutes = trailMongoDB.serialize_mtb_trail_route_data(mtbTrailRoutes)
-print(f"MTB Trail Routes {len(newMTBTrailRoutes)}:")
-print(newMTBTrailRoutes)
-print("\n")
-print(f"MTB Trail Descs {len(mtbTrailRouteDescriptions)}:")
-print(mtbTrailRouteDescriptions)
-print("\n")
 
 """
 # This is needed when we need new INDEXES for the collections
