@@ -27,10 +27,10 @@ class MTBTrailMongoDB:
 
     # get the database 
     def get_database(self):
-        config = dotenv_values(".env")
+        config = dotenv_values("../.env")
         URL_STRING = config["ATLAS_URI"]
         DB_NAME = config["DB_NAME"]
-        
+
         # connect to MongoDB client
         client = MongoClient(URL_STRING, server_api=ServerApi('1'))
         mtb_db = client[DB_NAME]

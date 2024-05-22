@@ -37,7 +37,9 @@ class MTBTrailParser:
         if len(areaList) == 0:
             print(f"Area list EMPTY for url = {url}")
             return None 
-        return trailArea.parse_area_list(areaList, url)
+        trailMap = trailArea.parse_area_list(areaList, url)
+
+        return trailMap
 
     def printTrailMapContents(self, trailMap):
         print("Trail Map Contents:") 
@@ -64,7 +66,7 @@ class MTBTrailParser:
     # B1 = Max elev/min elev
     # B3 = Climbing elev/desc elev
     # B4 = Avg/max grade (steepness)
-    def createTrailStats(self, trailStats):
+    def createTrailStatsMap(self, trailStats):
         statBlocks = trailStats.find_all('div', class_="stat-block")
         distBlock = statBlocks[0]
         overallElevBlock = statBlocks[1]
@@ -83,10 +85,6 @@ class MTBTrailParser:
         impString = impDist + " " + impUnits
         metString = metDist + " " + metUnits
         singleTrackString = singleTrack + " Singletrack"
-        print(f"Impt dist = {impString}") 
-        print(f"Metric dist = {metString}") 
-        print(f"Single track = {singleTrackString}")
-        print("\n")
       
         # parse overall elev block
         elevMap = self.parseElevation(overallElevBlock) 
@@ -97,10 +95,6 @@ class MTBTrailParser:
         metHigh = metElev[0]
         metLow = metElev[1]
 
-        print(f"Imp elev = {impHigh} {impLow}")
-        print(f"Met elev = {metHigh} {metLow}")
-        print("\n")
-
         # parse elev change block
         elevChangeMap = self.parseElevation(bikingElevBlock) 
         impElevChange = elevChangeMap["impElev"] 
@@ -109,24 +103,39 @@ class MTBTrailParser:
         impElevLow = impElevChange[1]
         metElevHigh = metElevChange[0]
         metElevLow = metElevChange[1]
-        print(f"Imp elev change = {impElevHigh} {impElevLow}")
-        print(f"Met elev change = {metElevHigh} {metElevLow}")
-        print("\n")
        
         # parse the grade
         grades = gradeBlock.find_all("h3")
-        print("Grades:")
-        print(grades)
         gradeArr = gradeBlock.text.split("</br>")[0].splitlines()
         gradeArr = [x.strip() for x in gradeArr if x.strip()] 
         avgGrade = gradeArr[0] + ' ' + gradeArr[1]
         maxGrade = gradeArr[2] + ' ' + gradeArr[3]
-        print(f"avgGrade = {avgGrade}")
-        print(f"maxGrade = {maxGrade}")
-        print("\n")
 
-        # let's now make a map for the stats
-        statMap = {}
+        # create the trail stats map 
+        trailStatsMap = {}
+        trailStatsMap["distance"] = {
+            "imperial": impString,
+            "metric": metString,
+            "singleTrack": singleTrackString
+        }
+        trailStatsMap["elevationChange"] = {
+            "imperialUp": impElevHigh,
+            "imperialDown": impElevLow,
+            "metricUp": metElevHigh,
+            "metricDown": metElevLow,
+        }
+        trailStatsMap["overallElevation"] = {
+            "imperialHigh": impHigh,
+            "imperialLow": impLow,
+            "metricHigh": metHigh,
+            "metricLow": metLow,
+        }
+        trailStatsMap["grade"] = {
+            "averageGrade": avgGrade,
+            "maximumGrade": maxGrade
+        }
+        
+        return trailStatsMap
 
     # create trail rating using the difficulty string
     def createTrailRating(self, difficulty):

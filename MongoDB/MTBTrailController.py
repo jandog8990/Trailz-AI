@@ -21,7 +21,6 @@ jsonLineParser = MTBJsonLineParser()
 trail_urls = jsonLineParser.parse(jlFile)
 et = time.time()
 elapsed = et - st
-trail_urls = trail_urls[1:10]
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
 print("\n")
@@ -42,11 +41,7 @@ def parse_trail_url(trail_url):
     return trailUrlParser.parseTrail(trail_url) 
 
 trail_url = trail_urls[0]
-print(f"Trail url = {trail_url}")
-out = parse_trail_url(trail_url)
-print("Output:")
-print(out)
-print("\n")
+res = parse_trail_url(trail_url)
 
 # ----------------------------------------------------
 # POOL Layer for splitting the data across multiple
@@ -75,13 +70,13 @@ print("\n")
 # trail data tuples
 trailDataTuples = [t for t in res if t]
 """
+trailDataTuples = [res]
 
 # --------------------------------------------------------
 # Collect the data from multiprocessing into lists after
 # parsing on multiples CPUs or Nodes
 # --------------------------------------------------------
 
-"""
 # let's get individual lists of the metadata and the descriptions separately
 mtbTrailRoutes = list(zip(*trailDataTuples))[0] # list of objs
 mtbTrailRouteDescriptions = list(zip(*trailDataTuples))[1] # list of lists of objs
@@ -89,9 +84,6 @@ mtbTrailRouteDescriptions = list(zip(*trailDataTuples))[1] # list of lists of ob
 # MTB trail route descriptions
 missingIndices = [i for i in range(len(mtbTrailRouteDescriptions))
     if len(mtbTrailRouteDescriptions[i]) == 0]
-print(f"Missing Descriptions len = {len(missingIndices)}") 
-print(missingIndices)
-print("\n")
 missingTrailRoutes = np.take(mtbTrailRoutes, missingIndices)
 
 # remove the missing elements
@@ -101,28 +93,22 @@ mtbTrailRoutes = [mtbTrailRoutes[i] for i in
     range(len(mtbTrailRoutes)) if i not in missingIndices]
 print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
 print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
-"""
 
 # --------------------------------------------
 # MongoDB Operations for deleting/inserting
 # --------------------------------------------
 
-"""
 # Initialize the TrailMongo DB using ATLAS 
 trailMongoDB = MTBTrailMongoDB()
 #db = trailMongoDB.get_database()
 
 # mtb trail routes serialized as json 
 newMTBTrailRoutes = trailMongoDB.serialize_mtb_trail_route_data(mtbTrailRoutes)
-
-print("New MTB Trail Routes 0:")
-print(newMTBTrailRoutes[-1])
+print(f"New MTB Trail Routes {len(newMTBTrailRoutes)}:")
+print(newMTBTrailRoutes)
 print("\n")
 
-print("MTB Trail Route Descriptions 0:")
-print(mtbTrailRouteDescriptions[-1])
-print("\n")
-
+"""
 # This is needed when we need new INDEXES for the collections
 #trailMongoDB.create_indexes()
 

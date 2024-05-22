@@ -29,15 +29,12 @@ class MTBTrailUrlParser:
         trailMap = mtbTrailParser.createTrailMap(url)
         if trailMap is None:
             return None 
-        print("Trail Map:")
-        print(trailMap)
-        print("\n")
 
         # get the trail stats such as elevation change/distance
         trailStats = soup.find(id="trail-stats-bar")
         if trailStats is None:
             return None
-        mtbTrailParser.createTrailStats(trailStats)
+        trailStatsMap = mtbTrailParser.createTrailStatsMap(trailStats)
 
         # get the toolbox for the gpx file and driving directions
         toolBox = soup.find(id="toolbox")
@@ -54,6 +51,7 @@ class MTBTrailUrlParser:
         trailId = mtbTrailRoute["_id"] 
 
         mtbTrailRoute["trail_area"] = trailMap
+        mtbTrailRoute["trail_stats"] = trailStatsMap 
 
         # main text for trail descriptions
         trailText = soup.find(id="trail-text")
