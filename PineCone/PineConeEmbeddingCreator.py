@@ -12,6 +12,10 @@ import json
 # be used in a pkl file, which is then imported by
 # PineConeDatasetUpload to upload to PC Index
 
+# get the configuration from local env
+config = dotenv_values("../.env")
+embed_model_id = config["EMBED_MODEL_ID"]
+
 # load the data
 pkl_data = 'pkl_data'
 with open(pkl_data+'/mtb_routes.pkl', 'rb') as f:
@@ -124,7 +128,7 @@ print("\n")
 # better accuracy for trail parsing
 
 # create embeddings of the main text for the mtb routes
-model = SentenceTransformer('stsb-xlm-r-multilingual')
+model = SentenceTransformer(embed_model_id)
 
 # create vector using text embeddings
 mtbRouteDataset = mtbRouteDataset.map(

@@ -31,6 +31,7 @@ print("\n")
 config = dotenv_values(".env")
 env_key = config["PINE_CONE_ENV_KEY"]
 api_key = config["PINE_CONE_API_KEY"]
+index_name = config["INDEX_NAME"]
 print(f"env_key = {env_key}")
 print(f"api_key = {api_key}")
 print("\n")
@@ -41,7 +42,7 @@ pc = Pinecone(api_key=api_key)
 
 # create pinecone index for searching trailz ai
 #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
-index = pc.Index("trailz-ai")
+index = pc.Index(index_name)
 print("Index:")
 print(index)
 print("\n")

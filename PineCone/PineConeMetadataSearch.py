@@ -15,6 +15,7 @@ metadata_set = loadData.load_dataset()
 config = dotenv_values(".env")
 env_key = config["PINE_CONE_ENV_KEY"]
 api_key = config["PINE_CONE_API_KEY"]
+embed_model_id = config["EMBED_MODEL_ID"]
 print(f"env_key = {env_key}")
 print(f"api_key = {api_key}")
 print("\n")
@@ -39,7 +40,7 @@ print("\n")
 # mini model - sentence-transformers/all-MiniLM-L12-v2
 search_query = "Flowy and steep rocky trails, including blue and black rated trails"
 #search_query = "Trails in Illinois"
-model = SentenceTransformer("stsb-xlm-r-multilingual")
+model = SentenceTransformer(embed_model_id)
 query = model.encode(search_query)
 
 # run the query for the trail

@@ -9,3 +9,4 @@ jl_data/
 gpx/
 logs/
 **/**pycache**
+**/*.log

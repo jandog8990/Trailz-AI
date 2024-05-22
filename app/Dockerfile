@@ -12,7 +12,7 @@ COPY . /app
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # run command for loading/caching embed model
-RUN python -c 'from sentence_transformers import SentenceTransformer; SentenceTransformer("sentence-transformers/stsb-xlm-r-multilingual", cache_folder="./.model")'
+RUN python -c 'from sentence_transformers import SentenceTransformer; SentenceTransformer("sentence-transformers/all-MiniLM-L12-v2", cache_folder="./.model")'
 
 EXPOSE 8080
 

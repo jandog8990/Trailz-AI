@@ -3,7 +3,6 @@
 
 # TODO: Add a method to convert this object to a dict/json object
 
-
 class TrailRouteDescription:
     def __init__(self, primaryKey, trailKey, trailDescription, trailRouteId): 
         self._id = primaryKey 

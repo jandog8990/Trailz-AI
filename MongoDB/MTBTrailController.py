@@ -104,8 +104,11 @@ trailMongoDB = MTBTrailMongoDB()
 
 # mtb trail routes serialized as json 
 newMTBTrailRoutes = trailMongoDB.serialize_mtb_trail_route_data(mtbTrailRoutes)
-print(f"New MTB Trail Routes {len(newMTBTrailRoutes)}:")
+print(f"MTB Trail Routes {len(newMTBTrailRoutes)}:")
 print(newMTBTrailRoutes)
+print("\n")
+print(f"MTB Trail Descs {len(mtbTrailRouteDescriptions)}:")
+print(mtbTrailRouteDescriptions)
 print("\n")
 
 """
