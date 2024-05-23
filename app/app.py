@@ -5,8 +5,6 @@ import pinecone
 import time
 from dotenv import dotenv_values
 import pickle
-from PIL import Image
-import urllib.request
 import re
 import asyncio
 import json
@@ -58,17 +56,11 @@ data_loader = load_search_data()
 
 # main Trailz AI titles
 st.title("Explore Your Trailz...")
+
+# TODO: These images will be retrieved from the query to MongoDB
 #img = "https://mtbproject.com/assets/photos/mtb/4525152_medium_1554328039.jpg"
 img = "https://mtbproject.com/assets/photos/mtb/5962430_medium_1554390092.jpg"
 #img = "https://mtbproject.com/assets/photos/mtb/598984_medium_1554221930.jpg" 
-urllib.request.urlretrieve(img, "img1.jpg")
-image = Image.open("img1.jpg")
-width,height = image.size
-print(f"w = {width}, h = {height}")
-
-# setting points for cropped image
-newsize = (320,180)
-image = image.resize(newsize)
 
 # placeholder for loading data bar
 main_placeholder = st.empty()
