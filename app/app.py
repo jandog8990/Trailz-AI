@@ -5,6 +5,8 @@ import pinecone
 import time
 from dotenv import dotenv_values
 import pickle
+from PIL import Image
+import urllib.request
 import re
 import asyncio
 import json
@@ -56,6 +58,17 @@ data_loader = load_search_data()
 
 # main Trailz AI titles
 st.title("Explore Your Trailz...")
+#img = "https://mtbproject.com/assets/photos/mtb/4525152_medium_1554328039.jpg"
+img = "https://mtbproject.com/assets/photos/mtb/5962430_medium_1554390092.jpg"
+#img = "https://mtbproject.com/assets/photos/mtb/598984_medium_1554221930.jpg" 
+urllib.request.urlretrieve(img, "img1.jpg")
+image = Image.open("img1.jpg")
+width,height = image.size
+print(f"w = {width}, h = {height}")
+
+# setting points for cropped image
+newsize = (320,180)
+image = image.resize(newsize)
 
 # placeholder for loading data bar
 main_placeholder = st.empty()
@@ -74,6 +87,9 @@ intermediate_label = "Intermediate"
 difficult_label = "Difficult"
 
 # style for the text in filter and output 
+#font-weight: bold; 
+#margin-left: auto;
+#margin-right: auto;
 st.markdown("""
     <style> 
     .diff-title {
@@ -81,13 +97,24 @@ st.markdown("""
         font-size: 20px; 
     }
     .route-name {
-        font-size: 24px; 
-        font-weight: bold; 
+        font-size: 21px; 
         margin-bottom: 0px; 
     }
     .route-details {
-        font-size: 20px; 
-        font-weight: 200; 
+        font-size: 17px; 
+        margin-bottom: 0px; 
+    }
+    .trail-image-container {
+        margin-bottom: 4px; 
+        width: 100%;
+        height: 180px;
+        display: flex; 
+        justify-content: center; 
+    }
+    .trail-image {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
     }
     div.stButton > button:first-child {
         background-color: green;
@@ -257,17 +284,25 @@ if st.session_state.trail_content:
             with st.container():    # row container 
                 # column 1 trail details 
                 with cc1.container(height=height):
-                    st.markdown(f'<p class="route-name">{route_name1}</p>', unsafe_allow_html=True) 
-                    st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating1)}</p>', unsafe_allow_html=True) 
-                    st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-name"><a href="#">{route_name1}</a></p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-details">Difficulty: {str(trail_rating1)}, Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
+                    st.markdown(f"<p class='route-details'>10mi - 2,345' Up - 2,123' Down</p>", unsafe_allow_html=True) 
+                    # TODO: Make this distance, elevation up/down 
+                    #st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
+                    #st.image(img, width=320)
+                    #st.image(image,use_column_width="always") 
+                    st.markdown(f'<div class="trail-image-container"><a href="#"><img src={img} class="trail-image"></a></div>', unsafe_allow_html=True) 
                     st.markdown(main_text1) 
                
                 # column 2 trail details (check if we are in bounds)
                 if (i+1) < num_rows: 
                     with cc2.container(height=height): 
-                        st.markdown(f'<p class="route-name">{route_name2}</p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details" style="margin-bottom: 0px;">Trail difficulty: {str(trail_rating2)}</p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-name"><a href="#">{route_name2}</a></p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-details">Difficulty: {str(trail_rating2)}, Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                        st.markdown(f"<p class='route-details'>10mi - 2,345' Up - 2,123' Down</p>", unsafe_allow_html=True) 
+                        # TODO: Make this distance, elevation up/down 
+                        #st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                        st.markdown(f'<div class="trail-image-container"><a href="#"><img src={img} class="trail-image"></a></div>', unsafe_allow_html=True) 
                         st.markdown(main_text2) 
 
 components.html(
