@@ -103,10 +103,9 @@ class MTBTrailMongoDB:
                 logging.error(e.details['writeErrors'])
             except TypeError as e:
                 logging.error("New Type error:")
-                logging.error(f"Inserting trail route descriptions len = {len(trailRouteDescriptions)}") 
                 logging.error(f"Index = {index}") 
                 trailRoute = mtbTrailRoutes[index]
-                logging.error(f"Trail route = {trailRoute['route_name']}") 
+                logging.error(f"Trail route = {trailRoute['trail_url']}") 
             index = index + 1 
         print(f"Total trail descriptions inserted = {index}")
 
@@ -145,5 +144,5 @@ class MTBTrailMongoDB:
 
         # let's get the descriptions using the list of trail ids
         trailDescriptions = self.find_mtb_trail_descriptions_by_ids(trailIds) 
-
+        print(f"Trail desc len = {len(trailDescriptions)}")
         return (trailRoutes, trailDescriptions)

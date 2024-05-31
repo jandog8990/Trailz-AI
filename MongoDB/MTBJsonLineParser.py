@@ -17,3 +17,16 @@ class MTBJsonLineParser:
         print(f"MTB urls = {mtbUrls[1:10]}")
         return mtbUrls
         
+    def parse_trailz(self, jsonFile):
+        trailPattern1 = "https://www.mtbproject.com/trail"
+        trailPattern2 = "https://www.mtbproject.com/index.php/trail"
+        urlMap = {} 
+        with jsonlines.open(jsonFile) as reader:
+            for obj in reader:
+                if "url" in obj:
+                    url = obj["url"]
+                    if (trailPattern1 in url) or (trailPattern2 in url):
+                            urlMap[url] = 1
+
+        return list(urlMap.keys())
+        

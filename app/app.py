@@ -31,7 +31,7 @@ def run_retrieval_norag():
     # run the docs retrieval with no RAG 
     results = asyncio.run(data_loader.retrieve(query, conditions)) 
 
-    return sorted(data_loader.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
+    return results 
 
 # set the session state vars
 if 'search_click' not in st.session_state:
@@ -283,7 +283,7 @@ if st.session_state.trail_content:
                     #st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
                     #st.image(img, width=320)
                     #st.image(image,use_column_width="always") 
-                    st.markdown(f'<div class="trail-image-container"><a href="#"><img src={img} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                    st.markdown(f'<div class="trail-image-container"><a href="/trail_details" target="_self"><img src={img} class="trail-image"></a></div>', unsafe_allow_html=True) 
                     st.markdown(main_text1) 
                
                 # column 2 trail details (check if we are in bounds)

@@ -18,13 +18,14 @@ import os
 jlFile = "../../mtb-project-crawler/mtbproject.jl"
 st = time.time()
 jsonLineParser = MTBJsonLineParser()
-trail_urls = jsonLineParser.parse(jlFile)
+trail_urls = jsonLineParser.parse_trailz(jlFile)
 et = time.time()
 elapsed = et - st
+#trail_urls = trail_urls[0:100]
 print(f"Json Line Parser time = {elapsed} sec")
 print(f"Trail urls len = {len(trail_urls)}")
 print("\n")
-trail_urls = trail_urls[1:1000]
+
 """
 index_urls = [url for url in trail_urls if "index.php" in url]
 print(f"Len index url = {len(index_urls)}")
@@ -65,11 +66,11 @@ print("\n")
 print(f"CPU count = {cpu_count}")
 print(f"Execution time (pooling): {elapsed} sec")
 print(f"Result len = {len(res)}")
-print("\n")
 
 # trail data tuples
 trailDataTuples = [t for t in res if t]
-
+print(f"Trail data tuples len = {len(trailDataTuples)}")
+print("\n")
 # --------------------------------------------------------
 # Collect the data from multiprocessing into lists after
 # parsing on multiples CPUs or Nodes
@@ -78,11 +79,14 @@ trailDataTuples = [t for t in res if t]
 # let's get individual lists of the metadata and the descriptions separately
 mtbTrailRoutes = list(zip(*trailDataTuples))[0] # list of objs
 mtbTrailRouteDescriptions = list(zip(*trailDataTuples))[1] # list of lists of objs
+print(f"OG MTB trail routes len = {len(mtbTrailRoutes)}")
+print(f"OG MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
 
 # MTB trail route descriptions
 missingIndices = [i for i in range(len(mtbTrailRouteDescriptions))
     if len(mtbTrailRouteDescriptions[i]) == 0]
 missingTrailRoutes = np.take(mtbTrailRoutes, missingIndices)
+print(f"Missing indices len = {len(missingIndices)}")
 
 # remove the missing elements
 mtbTrailRouteDescriptions = [mtbTrailRouteDescriptions[i] for i in 
@@ -91,6 +95,14 @@ mtbTrailRoutes = [mtbTrailRoutes[i] for i in
     range(len(mtbTrailRoutes)) if i not in missingIndices]
 print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
 print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
+
+print("\n")
+print("MTB Trail Routes:")
+print(mtbTrailRoutes[2])
+print("\n")
+print(f"MTB Trail Route Descriptions len = {len(mtbTrailRouteDescriptions[2])}")
+print(mtbTrailRouteDescriptions[2])
+print("\n")
 
 # --------------------------------------------
 # MongoDB Operations for deleting/inserting
@@ -103,7 +115,6 @@ trailMongoDB = MTBTrailMongoDB()
 # mtb trail routes serialized as json 
 newMTBTrailRoutes = trailMongoDB.serialize_mtb_trail_route_data(mtbTrailRoutes)
 
-"""
 # This is needed when we need new INDEXES for the collections
 #trailMongoDB.create_indexes()
 
@@ -118,4 +129,3 @@ trailMongoDB.insert_mtb_trail_routes(newMTBTrailRoutes)
 print("Insert mtb trail route descriptions...")
 trailMongoDB.insert_mtb_trail_route_descriptions(newMTBTrailRoutes,
     mtbTrailRouteDescriptions)
-"""

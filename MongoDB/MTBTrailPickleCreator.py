@@ -17,12 +17,11 @@ descDF = mongoDB.find_mtb_trail_descriptions()
 print(f"Routes list len = {len(routesDF)}")
 print(f"Descs list len = {len(descDF)}")
 print("\n")
-print(f"Routes link size = {len(routeDataFrames)}")
-print(f"Descs link size = {len(descDataFrames)}")
+print(f"Routes frame size = {len(routeDataFrames)}")
+print(f"Descs frame size = {len(descDataFrames)}")
 print("\n")
 
 with open('mtb_routes.pkl', 'wb') as f:
     pickle.dump(routeDataFrames, f)
 with open('mtb_descs.pkl', 'wb') as f:
     pickle.dump(descDataFrames, f)
-

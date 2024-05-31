@@ -1,6 +1,7 @@
 import requests
 from requests.adapters import HTTPAdapter, Retry
 from bs4 import BeautifulSoup
+import cssutils
 from MTBTrailParser import MTBTrailParser
 
 # Read in the given trail url and parse the contents
@@ -16,17 +17,36 @@ class MTBTrailUrlParser:
         self.session.mount('https://www.mtbproject.com', HTTPAdapter(max_retries=retries))
     
     # this parses the trail url and creates tuple of dicts
-    def parseTrail(self, url):
+    def parseTrail(self, trail_url):
 
         # URL parsing for MTB articles
-        page = self.session.get(url) 
+        page = self.session.get(trail_url) 
         soup = BeautifulSoup(page.content, "html.parser")
 
         # initialize the mtb trail parser obj
         mtbTrailParser = MTBTrailParser(soup)
 
+        # get the images from the carousel
+        # class = carousel-inner
+        # class = carousel-item
+        imageItems = soup.find_all("div", class_="carousel-item")
+        imageUrls = [] 
+        for i in imageItems:
+            attrs = i.attrs
+            if "style" in attrs:
+                style = attrs["style"]
+                style = cssutils.parseStyle(style)
+                img_url = style["background-image"]
+                img_url = img_url.replace('url(', '').replace(')', '')
+                img_url = img_url.split("?")[0] 
+                imageUrls.append(img_url) 
+            if "data-src" in attrs:
+                img_url = attrs["data-src"]
+                img_url = img_url.split("?")[0] 
+                imageUrls.append(img_url) 
+
         # create the trail map and print
-        trailMap = mtbTrailParser.createTrailMap(url)
+        trailMap = mtbTrailParser.createTrailMap(trail_url)
         if trailMap is None:
             return None 
 
@@ -45,13 +65,14 @@ class MTBTrailUrlParser:
         trailTitle = soup.find(id="trail-title")
         if trailTitle is None:
             return None
-        mtbTrailRoute = mtbTrailParser.createMTBTrailRoute(trailTitle, toolBox, url)
+        mtbTrailRoute = mtbTrailParser.createMTBTrailRoute(trailTitle, toolBox, trail_url)
         if mtbTrailRoute is None:
             return None
         trailId = mtbTrailRoute["_id"] 
 
         mtbTrailRoute["trail_area"] = trailMap
         mtbTrailRoute["trail_stats"] = trailStatsMap 
+        mtbTrailRoute["trail_images"] = imageUrls
 
         # main text for trail descriptions
         trailText = soup.find(id="trail-text")

@@ -38,6 +38,7 @@ class PineConeRAGLoader:
         print("Loading PineCone index...") 
         env_key = os.environ["PINE_CONE_ENV_KEY"]
         api_key = os.environ["PINE_CONE_API_KEY"]
+        index_name = os.environ["INDEX_NAME"]
 
         # initialize pinecone, create the index
         pc = Pinecone(
@@ -46,7 +47,7 @@ class PineConeRAGLoader:
 
         # create pinecone index for searching trailz ai
         #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
-        _self.index = pc.Index("trailz-ai")
+        _self.index = pc.Index(index_name)
 
     def load_markdown(self):
         with open("media/hackbird.GIF", "rb") as f:
@@ -81,6 +82,7 @@ class PineConeRAGLoader:
         else:
             results = self.index.query(vector=[embed_query.tolist()], top_k=20, filter=cond_dict)
 
+        # returns a tuple of contexts and trail results
         return self.ragUtility.parse_contexts(results)
 
     # rag function taht receives context from PC and 
@@ -109,6 +111,7 @@ class PineConeRAGLoader:
         
         # generate the RAG client completions 
         #NOTE: higher temp means more randomness 
+        """ 
         stream = self.client.chat.completions.create(
             model=model_id,
             messages=messages,
@@ -122,8 +125,10 @@ class PineConeRAGLoader:
             st.header("Trail Recommendations", divider='rainbow')
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
+        """ 
 
-        # return the trail list from the PineCone query 
+        # return the trail list from the PineCone query and RAG output 
+        stream_output = "I don't know." 
         bot_answer = {
             'trail_list': trail_list, 
             'stream_output': stream_output

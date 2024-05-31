@@ -6,7 +6,7 @@ from dotenv import dotenv_values
 import re
 
 # connect to the pine cone api
-config = dotenv_values(".env")
+config = dotenv_values("../.env")
 env_key = config["PINE_CONE_ENV_KEY"]
 api_key = config["PINE_CONE_API_KEY"]
 print(f"env_key = {env_key}")
@@ -24,8 +24,8 @@ pinecone.init(
 """
 
 # create pinecone index for searching trailz ai
-pc.create_index(name="trailz-ai",
-    dimension=768,
+pc.create_index(name="trailz-ai-v2",
+    dimension=384,
     metric="cosine",
     spec=ServerlessSpec(
         cloud="aws",

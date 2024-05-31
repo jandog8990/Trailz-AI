@@ -1,3 +1,4 @@
+import os
 import sys
 from datasets import Dataset
 from dotenv import dotenv_values
@@ -12,9 +13,14 @@ import json
 # be used in a pkl file, which is then imported by
 # PineConeDatasetUpload to upload to PC Index
 
+# HuggingFace tokenizer parallelism
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 # get the configuration from local env
 config = dotenv_values("../.env")
 embed_model_id = config["EMBED_MODEL_ID"]
+print(f"Embedding model id = {embed_model_id}")
+print("\n")
 
 # load the data
 pkl_data = 'pkl_data'
@@ -87,9 +93,8 @@ for route in mtb_routes:
     # need to put the trail area in a sentence description to be 
     # searched by the user query
     routeSentence = "This mtb trail route"  
-    trailRouteName = areaNames[-1] 
     trailRouteLocation = ", ".join(areaNames) 
-    trailAreaSentence = routeSentence + " is called " + route_name + ", and it lies in " + trailRouteName + " located in " + trailRouteLocation + "." 
+    trailAreaSentence = routeSentence + " is called " + route_name + ", it's located in " + trailRouteLocation + "." 
 
     # trail difficulty sentence
     trailDifficultySentence = routeSentence + " is rated as " + trail_rating + ", with a difficulty of " + route_difficulty + "." 
@@ -106,7 +111,11 @@ for route in mtb_routes:
     textArr.insert(2, trailUserRatingSentence) 
     mainText = " ".join(textArr)
     count = count + 1
-  
+
+    # remove all escape chars from description
+    filter = ''.join([chr(i) for i in range(1, 32)])
+    mainText = mainText.translate(str.maketrans('', '', filter))
+
     # create the final main text 
     newRouteObj['mainText'] = mainText 
 
@@ -115,17 +124,15 @@ for route in mtb_routes:
     mainMTBRoutes.append(newRouteObj)
 
 # create datasets from lists
-print(f"\nMain MTB Routes len = {len(mainMTBRoutes)}")
-print(mainMTBRoutes[0:2])
+print("\n")
+print(f"Main MTB Routes (len = {len(mainMTBRoutes)})")
+print(mainMTBRoutes[0])
 print("\n")
 
 mtbRouteDataset = Dataset.from_list(mainMTBRoutes)
 print(f"First routes dataset (len = {len(mtbRouteDataset)}):")
 print(mtbRouteDataset[0])
 print("\n")
-
-# TODO: Update this class to use a new embedding model with 
-# better accuracy for trail parsing
 
 # create embeddings of the main text for the mtb routes
 model = SentenceTransformer(embed_model_id)

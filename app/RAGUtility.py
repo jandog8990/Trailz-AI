@@ -13,18 +13,21 @@ class RAGUtility:
         print("Load Dataset...")
         _self.metadataSet = _self.loadData.load_dataset()
 
+    # TODO: This needs to be replaced with MONGO_DB Call
     # get the final results using mtb metadata
     def get_final_results(self, results):
         return self.loadData.get_final_results(results, self.metadataSet)
     
     def parse_contexts(self, results):
+        # TODO: sort depending on if the user specified a trail difficulty (if not sort on rating)
+
         # parse the results from PC into context vector 
         final_results = sorted(self.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
 
         # send the contexts of main text to RAG
         contexts = [x['mainText'] for x in final_results]
 
-        # set the trail map for contexts and descs
+        # set the trail map for contexts and 
         return (contexts, final_results)
 
     def get_rag_config(self):

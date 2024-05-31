@@ -19,4 +19,4 @@ EXPOSE 8080
 HEALTHCHECK CMD curl --fail http://localhost:8080/_stcore/health
 
 # run the actual streamlit server
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]
+ENTRYPOINT ["streamlit", "run", "--client.showSidebarNavigation=False", "app.py", "--server.port=8080", "--server.address=0.0.0.0"]
