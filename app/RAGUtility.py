@@ -1,29 +1,38 @@
 import streamlit as st
-from MTBLoadDataset import MTBLoadDataset
+from TrailMongoDB import TrailMongoDB
 
 # RAG utility class for config and extra work
 class RAGUtility:
     def __init__(self):
         print("RAGUtility.init()...") 
-        self.loadData = MTBLoadDataset()
-
-    @st.cache_data
-    def load_dataset(_self):
-        # load the metadata set for the final results
-        print("Load Dataset...")
-        _self.metadataSet = _self.loadData.load_dataset()
-
-    # TODO: This needs to be replaced with MONGO_DB Call
-    # get the final results using mtb metadata
-    def get_final_results(self, results):
-        return self.loadData.get_final_results(results, self.metadataSet)
+        self.mongoDB = TrailMongoDB() 
     
-    def parse_contexts(self, results):
+    # get the final results using MongoDB query 
+    def query_mongodb_data(self, results):
+        # NOTE: This gets data from the mainText and metadata of the PC PKL file 
+        #return self.loadData.get_final_results(results, self.metadataSet)
+        trail_ids = [obj['id'] for obj in results['matches']]
+
+        # query the mongodb for trail routes/descriptions
+        (routeDataFrames, descDataFrames) = mongoDB.find_mtb_trail_data_by_ids(trail_ids)
+        print(f"Route DataFrame 0:")
+        print(routeDataFrames[0])
+        print("\n")
+        
+        print(f"Route Desc DataFrame 0:")
+        print(descDataFrames[0])
+        print("\n")
+
+        # TODO: Need to create the final results from routes/descs 
+
+    # Results is a list of trail contexts from the VectorDB
+    def parse_rag_contexts(self, results):
         # TODO: sort depending on if the user specified a trail difficulty (if not sort on rating)
 
-        # parse the results from PC into context vector 
-        final_results = sorted(self.get_final_results(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
-
+        # TODO: parse the results from the MongoDB and sort based on difficulty and rating
+        #final_results = sorted(self.query_(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
+        final_results = self.query_mongodb_data(results)
+        
         # send the contexts of main text to RAG
         contexts = [x['mainText'] for x in final_results]
 

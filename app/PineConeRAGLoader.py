@@ -83,7 +83,7 @@ class PineConeRAGLoader:
             results = self.index.query(vector=[embed_query.tolist()], top_k=20, filter=cond_dict)
 
         # returns a tuple of contexts and trail results
-        return self.ragUtility.parse_contexts(results)
+        return self.ragUtility.parse_rag_contexts(results)
 
     # rag function taht receives context from PC and 
     # queries user query from open ai model

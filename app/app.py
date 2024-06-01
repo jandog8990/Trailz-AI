@@ -21,7 +21,6 @@ def load_search_data():
     data_loader.load_pinecone_index()
     data_loader.load_openai_client()
     data_loader.load_embed_model()
-    data_loader.ragUtility.load_dataset() 
     data_loader.load_rag_rails() 
 
     return data_loader
