@@ -5,6 +5,7 @@ from pymongo.server_api import ServerApi
 from pandas import DataFrame
 import json
 import sys
+import os
 
 # -----------------------------------------------------
 # ---- PyMongo TRAIL DB GET METHODS ----
@@ -82,11 +83,11 @@ class TrailMongoDB:
     # method for getting data frames for trail routes and descriptions
     def find_mtb_trail_data_by_ids(self, ids):
         # let's pull tables and collections using the route ids 
-        trailRoutes = self.find_mtb_trail_routes(ids)
+        trailRoutes = self.find_mtb_trail_routes_by_ids(ids)
         
         # let's pull all of the trail route ids from the route data 
         trailIds = [frame['_id'] for frame in trailRoutes] 
-        print(f"Trail ids len = {len(trailIds)}")
+        print(f"Trail routes len = {len(trailRoutes)}")
 
         # let's get the descriptions using the list of trail ids
         trailDescriptions = self.find_mtb_trail_descriptions_by_ids(trailIds) 

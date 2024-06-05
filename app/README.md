@@ -1,5 +1,6 @@
 ### Steps for running the app locally
 $ streamlit run app.py
+$ streamlit run --client.showSidebarNavigation=False app.py
 
 ### Docker image and container install
 

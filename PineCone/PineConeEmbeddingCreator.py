@@ -14,7 +14,7 @@ import json
 # PineConeDatasetUpload to upload to PC Index
 
 # HuggingFace tokenizer parallelism
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+#os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 # get the configuration from local env
 config = dotenv_values("../.env")
@@ -39,7 +39,6 @@ def append_area_lists(areaObj, areaNames, areaRefs):
 
 # Create the main mtb routes objects by combining routes/descriptions
 mainMTBRoutes = [] 
-count = 0
 for route in mtb_routes:
     # create the new route object from route and desc 
     newRouteObj = {} 
@@ -110,7 +109,6 @@ for route in mtb_routes:
     textArr.insert(1, trailDifficultySentence) 
     textArr.insert(2, trailUserRatingSentence) 
     mainText = " ".join(textArr)
-    count = count + 1
 
     # remove all escape chars from description
     filter = ''.join([chr(i) for i in range(1, 32)])

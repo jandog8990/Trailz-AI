@@ -50,9 +50,6 @@ class TrailArea:
         # create the area obj
         # this entire logic will be replaced with
         # the trail list keys directly 
-
-        # TODO: Let's make each value in the map an array of Area objects, the
-        # first will be the state object and the last will be trail system obj 
         areaList.pop(0) 
         stateJson = areaList.pop(0)
         
@@ -61,14 +58,7 @@ class TrailArea:
         self.trailMap[self.STATE_KEY] = [stateArea]
        
         # the area list 
-        if len(areaList) == 0:
-            print("Area list has zero elements:")
-            print(f"Area list url = {url}") 
-            print(f"State json = {stateJson}")
-            print(f"Area list len = {len(areaList)}") 
-            print(f"=> Return trailMap")  
-            print("\n")
-        else: 
+        if len(areaList) > 0:
             trailJson = areaList.pop(-1)
             trailArea = Area(trailJson["name"], trailJson["item"])
           

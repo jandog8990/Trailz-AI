@@ -24,6 +24,7 @@ class PineConeRAGLoader:
         # create the embedding transformer
         print("Loading embedding model...") 
         model_id = os.environ["EMBED_MODEL_ID"] 
+        print(f"Model id = {model_id}") 
         _self.model = SentenceTransformer(model_id, cache_folder="./.model")
 
     @st.cache_resource
@@ -72,6 +73,11 @@ class PineConeRAGLoader:
         self.md_obj = st.empty() 
         self.md_obj.markdown(self.load_markdown(), unsafe_allow_html=True)
 
+        print("Retrieve handler:")
+        print(f"Query = {query}")
+        print(f"Conditions = {conditions}")
+        print("\n")
+
         # retrieve from PineCone using embedded query
         cond_dict = json.loads(conditions) 
         embed_query = self.model.encode(query) 
@@ -89,10 +95,15 @@ class PineConeRAGLoader:
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
         model_id = os.environ["OPENAI_MODEL_ID"]
+        print("RAG handler:")
+        print(f"Query = {query}")
 
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
         context_str = "\n".join(contexts)
+        print(f"Contexts len = {len(contexts)}")
+        print(f"Trail list len = {len(trail_list)}")
+        print("\n")
 
         # place the user query and contexts into RAG prompt
         system_msg = "You are a helpful assistant, below is a query from a user and some relevant contexts." 
@@ -104,6 +115,8 @@ class PineConeRAGLoader:
         Query: {query}
 
         Answer: """
+       
+        # create the messages to send
         messages = [
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg}
@@ -126,6 +139,7 @@ class PineConeRAGLoader:
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
         """ 
+        self.md_obj.empty()
 
         # return the trail list from the PineCone query and RAG output 
         stream_output = "I don't know." 

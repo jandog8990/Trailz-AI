@@ -1,5 +1,6 @@
 import streamlit as st
 from TrailMongoDB import TrailMongoDB
+from MTBTrailCreator import MTBTrailCreator
 
 # RAG utility class for config and extra work
 class RAGUtility:
@@ -11,32 +12,38 @@ class RAGUtility:
     def query_mongodb_data(self, results):
         # NOTE: This gets data from the mainText and metadata of the PC PKL file 
         #return self.loadData.get_final_results(results, self.metadataSet)
+        
+        trailCreator = MTBTrailCreator()
         trail_ids = [obj['id'] for obj in results['matches']]
 
         # query the mongodb for trail routes/descriptions
-        (routeDataFrames, descDataFrames) = mongoDB.find_mtb_trail_data_by_ids(trail_ids)
-        print(f"Route DataFrame 0:")
-        print(routeDataFrames[0])
-        print("\n")
-        
-        print(f"Route Desc DataFrame 0:")
-        print(descDataFrames[0])
+        (trailRoutes, trailDescs) = self.mongoDB.find_mtb_trail_data_by_ids(trail_ids)
+
+        # create the main mtb routes from the trail data
+        mainMTBRoutes = trailCreator.create_mtb_routes(trailRoutes, trailDescs)
+        print(f"Trail routes (len = {len(trailRoutes)})")
+        print(f"Trail Descs (len = {len(trailDescs)})")
+        print(f"Main MTB routes (len = {len(mainMTBRoutes)})")
         print("\n")
 
-        # TODO: Need to create the final results from routes/descs 
+        return mainMTBRoutes 
 
     # Results is a list of trail contexts from the VectorDB
     def parse_rag_contexts(self, results):
         # TODO: sort depending on if the user specified a trail difficulty (if not sort on rating)
 
-        # TODO: parse the results from the MongoDB and sort based on difficulty and rating
+        # TODO: parse the results from the MongoDB and sort based on difficulty and rating if user specifies
         #final_results = sorted(self.query_(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
         final_results = self.query_mongodb_data(results)
-        
+        print(f"Final trail results (len = {len(final_results)})")
+        for res in final_results:
+            print(res)
+            print("\n")
+
         # send the contexts of main text to RAG
         contexts = [x['mainText'] for x in final_results]
 
-        # set the trail map for contexts and 
+        # set the trail map for contexts and  
         return (contexts, final_results)
 
     def get_rag_config(self):

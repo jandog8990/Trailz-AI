@@ -6,6 +6,7 @@ import time
 from dotenv import dotenv_values
 import pickle
 import re
+import os
 import asyncio
 import json
 from PineConeRAGLoader import PineConeRAGLoader
@@ -52,6 +53,7 @@ def enable_query():
 
 # get the search loader object
 data_loader = load_search_data()
+trailzAIImg = os.environ["TRAILZ_AI_IMG"]
 
 # main Trailz AI titles
 st.title("Explore Your Trailz...")
@@ -92,7 +94,7 @@ st.markdown("""
         margin-bottom: 0px; 
     }
     .route-details {
-        font-size: 17px; 
+        font-size: 16px; 
         margin-bottom: 0px; 
     }
     .trail-image-container {
@@ -253,21 +255,29 @@ if st.session_state.trail_content:
         st.header("Trail Details", divider='rainbow')
         for i in range(0, num_rows, 2): 
             # get the data from ith object
+            # need: route name, trail rating, trail dist/elev,
+            # trail summary, trail image
             val1 = trail_list[i]
-            meta1 = val1['metadata'] 
-            route_name1 = meta1['route_name']
-            trail_rating1 = meta1['trail_rating']
-            average_rating1 = meta1['average_rating']
-            main_text1 = val1['mainText']
-           
+            route_name1 = val1['route_name']
+            difficulty1 = val1['trail_rating']
+            average_rating1 = val1['average_rating']
+            summary1 = val1['summary']
+            trail_images = val1['trail_images']
+            trailImage1 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
+            print(f"Trail img 1 = {trailImage1}") 
+            trailStats1 = val1['trail_stats']
+
             # get the data from i+1th object
             if (i+1) < num_rows: 
                 val2 = trail_list[i+1]
-                meta2 = val2['metadata'] 
-                route_name2 = meta2['route_name']
-                trail_rating2 = meta2['trail_rating']
-                average_rating2 = meta2['average_rating']
-                main_text2 = val2['mainText']
+                route_name2 = val2['route_name']
+                difficulty2 = val2['trail_rating']
+                average_rating2 = val2['average_rating']
+                summary2 = val2['summary']
+                trail_images = val2['trail_images']
+                trailImage2 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
+                print(f"Trail img 2 = {trailImage2}") 
+                trailStats2 = val1['trail_stats']
            
             # two columns of trail details 
             cc1, cc2 = st.columns(2) 
@@ -276,25 +286,25 @@ if st.session_state.trail_content:
                 # column 1 trail details 
                 with cc1.container(height=height):
                     st.markdown(f'<p class="route-name"><a href="#">{route_name1}</a></p>', unsafe_allow_html=True) 
-                    st.markdown(f'<p class="route-details">Difficulty: {str(trail_rating1)}, Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)}, Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
                     st.markdown(f"<p class='route-details'>10mi - 2,345' Up - 2,123' Down</p>", unsafe_allow_html=True) 
                     # TODO: Make this distance, elevation up/down 
                     #st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
                     #st.image(img, width=320)
                     #st.image(image,use_column_width="always") 
-                    st.markdown(f'<div class="trail-image-container"><a href="/trail_details" target="_self"><img src={img} class="trail-image"></a></div>', unsafe_allow_html=True) 
-                    st.markdown(main_text1) 
+                    st.markdown(f'<div class="trail-image-container"><a href="/trail_details" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                    st.markdown(summary1) 
                
                 # column 2 trail details (check if we are in bounds)
                 if (i+1) < num_rows: 
                     with cc2.container(height=height): 
                         st.markdown(f'<p class="route-name"><a href="#">{route_name2}</a></p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details">Difficulty: {str(trail_rating2)}, Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)}, Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
                         st.markdown(f"<p class='route-details'>10mi - 2,345' Up - 2,123' Down</p>", unsafe_allow_html=True) 
                         # TODO: Make this distance, elevation up/down 
                         #st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
-                        st.markdown(f'<div class="trail-image-container"><a href="#"><img src={img} class="trail-image"></a></div>', unsafe_allow_html=True) 
-                        st.markdown(main_text2) 
+                        st.markdown(f'<div class="trail-image-container"><a href="#"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                        st.markdown(summary2) 
 
 components.html(
     f"""

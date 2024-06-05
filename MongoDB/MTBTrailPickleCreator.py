@@ -21,7 +21,8 @@ print(f"Routes frame size = {len(routeDataFrames)}")
 print(f"Descs frame size = {len(descDataFrames)}")
 print("\n")
 
-with open('mtb_routes.pkl', 'wb') as f:
+pklDir = "../PineCone/pkl_data/" 
+with open(pklDir+"mtb_routes.pkl", 'wb') as f:
     pickle.dump(routeDataFrames, f)
-with open('mtb_descs.pkl', 'wb') as f:
+with open(pklDir+"mtb_descs.pkl", 'wb') as f:
     pickle.dump(descDataFrames, f)

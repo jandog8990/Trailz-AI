@@ -16,6 +16,7 @@ import os
 
 # let's parse the json lines file to get all trail routes
 jlFile = "../../mtb-project-crawler/mtbproject.jl"
+#jlFile = "../../mtb-project-crawler/test.jl"
 st = time.time()
 jsonLineParser = MTBJsonLineParser()
 trail_urls = jsonLineParser.parse_trailz(jlFile)
@@ -95,13 +96,6 @@ mtbTrailRoutes = [mtbTrailRoutes[i] for i in
     range(len(mtbTrailRoutes)) if i not in missingIndices]
 print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
 print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
-
-print("\n")
-print("MTB Trail Routes:")
-print(mtbTrailRoutes[2])
-print("\n")
-print(f"MTB Trail Route Descriptions len = {len(mtbTrailRouteDescriptions[2])}")
-print(mtbTrailRouteDescriptions[2])
 print("\n")
 
 # --------------------------------------------

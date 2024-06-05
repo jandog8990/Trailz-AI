@@ -108,10 +108,18 @@ class MTBTrailMongoDB:
                 logging.error(f"Trail route = {trailRoute['trail_url']}") 
             index = index + 1 
         print(f"Total trail descriptions inserted = {index}")
+    
+    # -----------------------------------------------------
+    # ---------- DELETE MTB Trail Route Tables ------------ 
+    # -----------------------------------------------------
 
     def delete_mtb_trail_route_data(self):
         self.DB.mtb_trail_routes.drop()
         self.DB.mtb_trail_route_descriptions.drop()
+    
+    # ---------------------------------------------------
+    # ---------- FIND MTB Trail Descriptions ------------ 
+    # ---------------------------------------------------
 
     def find_mtb_trail_descriptions(self):
         data = self.DB.mtb_trail_route_descriptions.find()
@@ -121,6 +129,10 @@ class MTBTrailMongoDB:
         # retrieve documents for all trailIds
         data = self.DB.mtb_trail_route_descriptions.find({'mtb_trail_route_id': {'$in': trailIds}})
         return list(data)
+    
+    # ---------------------------------------------
+    # ---------- FIND MTB Trail Routes ------------ 
+    # ---------------------------------------------
 
     def find_mtb_trail_routes(self):
         # retrieve data from both the routes/descriptions tables 
@@ -131,6 +143,10 @@ class MTBTrailMongoDB:
         # retrieve data from both the routes/descriptions tables 
         data = self.DB.mtb_trail_routes.find({'_id': {'$in': ids}})
         return list(data)
+    
+    # -----------------------------------------------------
+    # ---------- FIND ALL MTB Trail Route Data ------------ 
+    # -----------------------------------------------------
 
     # method for playing with data frame data between trail route and descriptions
     def find_mtb_trail_data(self):
@@ -141,6 +157,20 @@ class MTBTrailMongoDB:
         #trailIds = routeDataFrame.loc[:, '_id'].tolist()
         trailIds = [frame['_id'] for frame in trailRoutes] 
         print(f"Trail ids len = {len(trailIds)}")
+
+        # let's get the descriptions using the list of trail ids
+        trailDescriptions = self.find_mtb_trail_descriptions_by_ids(trailIds) 
+        print(f"Trail desc len = {len(trailDescriptions)}")
+        return (trailRoutes, trailDescriptions)
+    
+    # method for getting data frames for trail routes and descriptions
+    def find_mtb_trail_data_by_ids(self, ids):
+        # let's pull tables and collections using the route ids 
+        trailRoutes = self.find_mtb_trail_routes_by_ids(ids)
+        
+        # let's pull all of the trail route ids from the route data 
+        trailIds = [frame['_id'] for frame in trailRoutes] 
+        print(f"Trail routes len = {len(trailRoutes)}")
 
         # let's get the descriptions using the list of trail ids
         trailDescriptions = self.find_mtb_trail_descriptions_by_ids(trailIds) 
