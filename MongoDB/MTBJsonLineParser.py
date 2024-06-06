@@ -1,7 +1,15 @@
 import jsonlines
+import re
 
 # parse the jsonlines file so that we can parse trails
 class MTBJsonLineParser:
+  
+    def createTrailId(self, url):
+        urlArr1 = re.split("trail/", url)
+        urlArr2 = urlArr1[1].split("/")
+        trailId = urlArr2[-1] + "-" + urlArr2[0]
+        return trailId
+
     def parse(self, jsonFile):
         trailPattern1 = "https://www.mtbproject.com/trail"
         trailPattern2 = "https://www.mtbproject.com/index.php/trail"
@@ -26,7 +34,8 @@ class MTBJsonLineParser:
                 if "url" in obj:
                     url = obj["url"]
                     if (trailPattern1 in url) or (trailPattern2 in url):
-                            urlMap[url] = 1
+                        trailId = self.createTrailId(url)
+                        urlMap[trailId] = url
 
-        return list(urlMap.keys())
+        return urlMap
         

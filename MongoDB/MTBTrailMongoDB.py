@@ -77,37 +77,18 @@ class MTBTrailMongoDB:
         return mtbTrailRoutes        
     
     def insert_mtb_trail_routes(self, mtbTrailRoutes):
-
-        """
-        MTB Trails Insertion into the PyMongo DB
-        """
-        # TODO: Surround with try catch so that we can't skip dup errors 
         try: 
             print(f"Inserting {len(mtbTrailRoutes)} mtb trail routes...") 
             self.DB.mtb_trail_routes.insert_many(mtbTrailRoutes, ordered=False, bypass_document_validation=True)
         except BulkWriteError as e:
             logging.error(e.details['writeErrors'])
     
-    def insert_mtb_trail_route_descriptions(self, mtbTrailRoutes, mtbTrailRouteDescriptions):
-        # # insert the sample mtb trail descriptions
-        # loop through list of lists and insert 
-        index = 0 
-        for trailRouteDescriptions in mtbTrailRouteDescriptions: 
-            # if (len(trailRouteDescriptions) == 1): 
-            #    print(trailRouteDescriptions[0]) 
-            
-            # TODO: Surround with try catch so that we can't skip dup errors 
-            try: 
-                self.DB.mtb_trail_route_descriptions.insert_many(trailRouteDescriptions, ordered=False, bypass_document_validation=True)
-            except BulkWriteError as e: 
-                logging.error(e.details['writeErrors'])
-            except TypeError as e:
-                logging.error("New Type error:")
-                logging.error(f"Index = {index}") 
-                trailRoute = mtbTrailRoutes[index]
-                logging.error(f"Trail route = {trailRoute['trail_url']}") 
-            index = index + 1 
-        print(f"Total trail descriptions inserted = {index}")
+    def insert_mtb_trail_route_descriptions(self, mtbTrailRouteDescriptions):
+        try: 
+            print(f"Inserting {len(mtbTrailRouteDescriptions)} mtb trail route descriptions...") 
+            self.DB.mtb_trail_route_descriptions.insert_many(mtbTrailRouteDescriptions, ordered=False, bypass_document_validation=True)
+        except BulkWriteError as e:
+            logging.error(e.details['writeErrors'])
     
     # -----------------------------------------------------
     # ---------- DELETE MTB Trail Route Tables ------------ 

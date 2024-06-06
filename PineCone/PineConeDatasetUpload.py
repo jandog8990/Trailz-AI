@@ -5,9 +5,9 @@ import pickle
 from dotenv import dotenv_values
 import re
 
-#route_path="app/pkl_data/"
 # load the data from a pickle file
-with open("./mtb_route_dataset.pkl", 'rb') as f:
+pklData="../pkl_data"
+with open(pklData+"/mtb_route_dataset.pkl", 'rb') as f:
     dataset = pickle.load(f)
 
 print(f"Dataset type = {type(dataset)}")

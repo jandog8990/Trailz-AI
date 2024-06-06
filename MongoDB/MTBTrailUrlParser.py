@@ -4,18 +4,16 @@ from bs4 import BeautifulSoup
 import cssutils
 from MTBTrailParser import MTBTrailParser
 
-# Read in the given trail url and parse the contents
+# Read in the given trail item and parse the contents
 # This will create the following trail db dictionaries:
-# 	1. mtbTrailRoute MAP - high level trail route metadata
-# 2. mtbTrailRouteDescriptions MAP - contains the mtb trail route descriptions
+#   1. mtbTrailRoute MAP - high level trail route metadata
+#   2. mtbTrailRouteDescriptions MAP - contains the mtb trail route descriptions
 import re
 
-# TODO: Increase total retries, factor and forcelist (429)
-# TODO: backoff of 2, total retries = 8
 class MTBTrailUrlParser:
     def __init__(self):
         self.session = requests.Session()
-        retries = Retry(total=8, backoff_factor=2, status_forcelist=[429,500,502,503,504])
+        retries = Retry(total=6, backoff_factor=2, status_forcelist=[429,500,502,503,504])
         self.session.mount('https://www.mtbproject.com', HTTPAdapter(max_retries=retries))
 
     # parse the image from photo link
@@ -30,8 +28,10 @@ class MTBTrailUrlParser:
         else:
             return None
 
-    # this parses the trail url and creates tuple of dicts
-    def parseTrail(self, trail_url):
+    def parseTrailItem(self, trailItem):
+        # get the trail id and url from the elem
+        trail_id = trailItem[0]
+        trail_url = trailItem[1]
         
         # URL parsing for MTB articles
         page = self.session.get(trail_url) 
@@ -70,11 +70,6 @@ class MTBTrailUrlParser:
                     if img_url: 
                         imageUrls.append(img_url)
 
-        #print(f"Trail url = {trail_url}")
-        #print(f"Image urls (len = {len(imageUrls)})")
-        #print(imageUrls)
-        #print("\n")
-
         # create the trail map and print
         trailMap = mtbTrailParser.createTrailMap(trail_url)
         if trailMap is None:
@@ -95,7 +90,7 @@ class MTBTrailUrlParser:
         trailTitle = soup.find(id="trail-title")
         if trailTitle is None:
             return None
-        mtbTrailRoute = mtbTrailParser.createMTBTrailRoute(trailTitle, toolBox, trail_url)
+        mtbTrailRoute = mtbTrailParser.createMTBTrailRoute(trailTitle, trail_id, toolBox, trail_url)
         if mtbTrailRoute is None:
             return None
         
@@ -116,5 +111,5 @@ class MTBTrailUrlParser:
         bodyText = mtbTrailParser.parseMainText(trailText)
         mtbTrailRouteDescriptions = mtbTrailParser.createMTBTrailRouteDescriptions(trailId, mainSectionHeaders, bodyText)
       
-        print(f"{trail_url},", end="", flush=True) 
+        print(".", end="", flush=True) 
         return (mtbTrailRoute, mtbTrailRouteDescriptions)

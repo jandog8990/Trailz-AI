@@ -18,7 +18,7 @@ class MTBTrailParser:
         if titlebar is None:
             return None
         
-        # TODO: Within the title bar lies the areas - areas needed for DB
+        # Within the title bar lies the areas - areas needed for DB
         # storage to recommend trailz based on location of user
         # within the script tags lives the item list for area bread
         script_obj = titlebar.find('script')
@@ -59,17 +59,6 @@ class MTBTrailParser:
         impHighLow = (impHighElev, impLowElev)
         metHighLow = (metHighElev, metLowElev)
         return {"impElev": impHighLow, "metElev": metHighLow}
-
-    def updateTrailId(self, trailId, url):
-        url_split = re.split('trail/', url)
-        url_id = url_split[1].split("/")
-        url_id = url_id[0] 
-        newId = re.sub(r'[^a-zA-Z0-9\s]+', '', trailId)
-        newId = re.sub(' +', ' ', newId)
-        newId = newId.replace(u'\xa0', u' ')
-        newId = newId.replace(" ", "_") 
-        newId = newId + "_" + url_id 
-        return newId
 
     # create the trail stats (elev, mi, etc)
     # NOTE:
@@ -165,7 +154,7 @@ class MTBTrailParser:
             return "Unknown"
 
     # create the main mtb trail route data
-    def createMTBTrailRoute(self, trailTitle, toolBox, url):
+    def createMTBTrailRoute(self, trailTitle, trailId, toolBox, url):
         # trail title from the main header 
         trailTitle = trailTitle.text.strip()
        
@@ -179,9 +168,6 @@ class MTBTrailParser:
 
         # split the trail name so we can set the id
         trailTokens = trailTitle.split()
-        #trail_id = trailTokens[0].lower()
-        trail_id = trailTitle.lower()
-        trail_id = self.updateTrailId(trail_id, url)
 
         # difficulty
         diffbanner = self.soup.find("div", class_="title")
@@ -212,7 +198,7 @@ class MTBTrailParser:
 
         # Let's now create the main table for the trailz route
         return {
-            "_id": trail_id,
+            "_id": trailId,
             "trail_url": url, 
             "driving_directions": driving_directions,
             "gpx_file": gpx_file,
@@ -296,7 +282,9 @@ class MTBTrailParser:
             # NOTE: it's cool how i leave myself breadcrumbs
             # trail id and the key from the text type gives the PK 
             # the FK used in this table is what relates it to the route 
-            primaryKey = trailId + "_" + key.lower() 
+            header = key.lower()
+            header = header.replace(" ", "-")
+            primaryKey = trailId + "-" + header 
             descObj = {
                 "_id": primaryKey, 
                 "key": key,

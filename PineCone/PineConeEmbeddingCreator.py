@@ -23,11 +23,14 @@ print(f"Embedding model id = {embed_model_id}")
 print("\n")
 
 # load the data
-pkl_data = 'pkl_data'
+pkl_data = '../pkl_data'
 with open(pkl_data+'/mtb_routes.pkl', 'rb') as f:
     mtb_routes = pickle.load(f)
 with open(pkl_data+'/mtb_descs.pkl', 'rb') as f:
     mtb_descs = pickle.load(f)
+
+print(f"OG MTB routes len = {len(mtb_routes)}")
+print(f"OG MTB descs len = {len(mtb_descs)}")
 
 # append to the area lists if the elements exist
 def append_area_lists(areaObj, areaNames, areaRefs): 
@@ -102,8 +105,7 @@ for route in mtb_routes:
     trailUserRatingSentence = routeSentence + " has an average rider rating of " + str(average_rating) + " from " + str(num_ratings) + " different riders." 
 
     # create the main text from all descriptions
-    descs = [desc for desc in mtb_descs 
-        if desc['mtb_trail_route_id'] == route_id]
+    descs = [desc for desc in mtb_descs if desc['mtb_trail_route_id'] == route_id]
     textArr = [desc['text'] for desc in descs] 
     textArr.insert(0, trailAreaSentence)
     textArr.insert(1, trailDifficultySentence) 
@@ -118,16 +120,11 @@ for route in mtb_routes:
     newRouteObj['mainText'] = mainText 
 
     # append to the main routes list
-    print(".", end="", flush=True) 
     mainMTBRoutes.append(newRouteObj)
 
-# create datasets from lists
-print("\n")
-print(f"Main MTB Routes (len = {len(mainMTBRoutes)})")
-print(mainMTBRoutes[0])
-print("\n")
-
+# create datasets from list
 mtbRouteDataset = Dataset.from_list(mainMTBRoutes)
+print("\n")
 print(f"First routes dataset (len = {len(mtbRouteDataset)}):")
 print(mtbRouteDataset[0])
 print("\n")
@@ -142,5 +139,5 @@ mtbRouteDataset = mtbRouteDataset.map(
     }, batched=True, batch_size=16)
 
 # let's save the dataset as a pkl file for use later
-with open('mtb_route_dataset.pkl', 'wb') as f:
+with open(pkl_data+'/mtb_route_dataset.pkl', 'wb') as f:
     pickle.dump(mtbRouteDataset, f)

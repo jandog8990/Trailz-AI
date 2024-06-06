@@ -6,6 +6,7 @@ from multiprocessing import Pool
 import numpy as np
 import time
 import os
+import pickle
 
 # ------------------------------------------------------------------
 # This is the main mtb trails parser that uses the following files:
@@ -19,32 +20,29 @@ jlFile = "../../mtb-project-crawler/mtbproject.jl"
 #jlFile = "../../mtb-project-crawler/test.jl"
 st = time.time()
 jsonLineParser = MTBJsonLineParser()
-trail_urls = jsonLineParser.parse_trailz(jlFile)
+trailMap = jsonLineParser.parse_trailz(jlFile)
 et = time.time()
 elapsed = et - st
-#trail_urls = trail_urls[0:100]
 print(f"Json Line Parser time = {elapsed} sec")
-print(f"Trail urls len = {len(trail_urls)}")
+print(f"Trail map len = {len(trailMap)}")
 print("\n")
 
 """
-index_urls = [url for url in trail_urls if "index.php" in url]
-print(f"Len index url = {len(index_urls)}")
-print("Index url 0:")
-print(index_urls[0])
-print("\n")
+newTrailMap = {}
+count = 0
+for k,v in trailMap.items():
+    if count == 50:
+        break
+    newTrailMap[k] = v
+    count += 1
 """
 
 # ----------------------------------------------------
 # Parse trail url function for parsing trail data
 # ----------------------------------------------------
 trailUrlParser = MTBTrailUrlParser()
-def parse_trail_url(trail_url):
-    return trailUrlParser.parseTrail(trail_url) 
-
-# TODO: This is a test for testing individual urls
-#trail_url = trail_urls[0]
-#res = parse_trail_url(trail_url)
+def parse_trail_item(trailItem):
+    return trailUrlParser.parseTrailItem(trailItem) 
 
 # ----------------------------------------------------
 # POOL Layer for splitting the data across multiple
@@ -57,7 +55,7 @@ cpu_count = os.cpu_count()
 CHUNK_LEN = 25 
 pool = Pool(processes=cpu_count)
 st = time.time()
-result = pool.map_async(parse_trail_url, trail_urls,
+result = pool.map_async(parse_trail_item, trailMap.items(),
         chunksize=CHUNK_LEN)
 pool.close()
 res = result.get()
@@ -70,8 +68,11 @@ print(f"Result len = {len(res)}")
 
 # trail data tuples
 trailDataTuples = [t for t in res if t]
+print(trailDataTuples)
+print("\n")
 print(f"Trail data tuples len = {len(trailDataTuples)}")
 print("\n")
+
 # --------------------------------------------------------
 # Collect the data from multiprocessing into lists after
 # parsing on multiples CPUs or Nodes
@@ -87,6 +88,9 @@ print(f"OG MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}")
 missingIndices = [i for i in range(len(mtbTrailRouteDescriptions))
     if len(mtbTrailRouteDescriptions[i]) == 0]
 missingTrailRoutes = np.take(mtbTrailRoutes, missingIndices)
+print(missingIndices)
+print("Missing trail data tuple 0:")
+print(trailDataTuples[missingIndices[0]])
 print(f"Missing indices len = {len(missingIndices)}")
 
 # remove the missing elements
@@ -96,30 +100,29 @@ mtbTrailRoutes = [mtbTrailRoutes[i] for i in
     range(len(mtbTrailRoutes)) if i not in missingIndices]
 print(f"MTB trail routes len = {len(mtbTrailRoutes)}")
 print(f"MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}") 
-print("\n")
 
-# --------------------------------------------
-# MongoDB Operations for deleting/inserting
-# --------------------------------------------
+# ----------------------------------------------
+# Pickle Operations for inserting routes/descs
+# ----------------------------------------------
 
 # Initialize the TrailMongo DB using ATLAS 
 trailMongoDB = MTBTrailMongoDB()
-#db = trailMongoDB.get_database()
 
 # mtb trail routes serialized as json 
 newMTBTrailRoutes = trailMongoDB.serialize_mtb_trail_route_data(mtbTrailRoutes)
+print(f"New mtb trail routes len = {len(newMTBTrailRoutes)}")
 
-# This is needed when we need new INDEXES for the collections
-#trailMongoDB.create_indexes()
+# mtb trail route descriptions unzipped
+newMTBTrailRouteDescriptions = [
+    desc 
+    for descs in mtbTrailRouteDescriptions
+    for desc in descs] 
+print(f"New mtb trail route descs len = {len(newMTBTrailRouteDescriptions)}")
+print("\n")
 
-# let's delete all records from the DB tables
-trailMongoDB.delete_mtb_trail_route_data()
-
-# insert the mtb trail routes to the mongoDB
-print("Insert mtb trail routes...")
-trailMongoDB.insert_mtb_trail_routes(newMTBTrailRoutes)
-
-# insert the mtb trail route descriptions to the mongoDB
-print("Insert mtb trail route descriptions...")
-trailMongoDB.insert_mtb_trail_route_descriptions(newMTBTrailRoutes,
-    mtbTrailRouteDescriptions)
+# write to pkl files
+pklDir = "../pkl_data/"
+with open(pklDir+"mtb_routes.pkl", 'wb') as f:
+    pickle.dump(newMTBTrailRoutes, f)
+with open(pklDir+"mtb_descs.pkl", 'wb') as f:
+    pickle.dump(newMTBTrailRouteDescriptions, f)
