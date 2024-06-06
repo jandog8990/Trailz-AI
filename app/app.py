@@ -10,6 +10,7 @@ import os
 import asyncio
 import json
 from PineConeRAGLoader import PineConeRAGLoader
+from TrailUtility import TrailUtility 
 
 # Main Trailz AI app for searching the PineCone DB for
 # recommended trailz around my area
@@ -52,6 +53,7 @@ def enable_query():
     st.session_state.searching = False
 
 # get the search loader object
+trailUtility = TrailUtility()
 data_loader = load_search_data()
 trailzAIImg = os.environ["TRAILZ_AI_IMG"]
 
@@ -78,6 +80,7 @@ filter_container = st.container(border=True)
 easy_label = "Easy"
 intermediate_label = "Intermediate"
 difficult_label = "Difficult"
+units_label = "Units"
 
 # style for the text in filter and output 
 #font-weight: bold; 
@@ -85,10 +88,14 @@ difficult_label = "Difficult"
 #margin-right: auto;
 st.markdown("""
     <style> 
-    .diff-title {
+    .toggle-title {
         margin-bottom: 0px; 
         font-size: 20px; 
     }
+    div[class*="stRadio"] > label > div[data-testid="stMarkdownContainer"] > p {
+        font-size: 20px;
+        margin-bottom: 0px; 
+    } 
     .route-name {
         font-size: 21px; 
         margin-bottom: 0px; 
@@ -108,6 +115,9 @@ st.markdown("""
         width: 100%;
         height: 180px;
         object-fit: cover;
+    }
+    div.stButton {
+        margin-bottom: 4px; 
     }
     div.stButton > button:first-child {
         background-color: green;
@@ -129,13 +139,13 @@ st.markdown("""
 # create the filter container for location and difficulty
 with filter_container:
     col1, col2 = st.columns(2, gap="small") 
-    col3, col4 = st.columns(2, gap="small") 
+    col3, col4 = st.columns([1, 1]) 
     with col1: 
         loc_label = "Location" 
         location = st.text_input(loc_label, placeholder="Your city/town")
     with col2:
         diff_label = "Difficulty" 
-        st.markdown('<p class="diff-title">Difficulty</p>', unsafe_allow_html=True)
+        st.markdown('<p class="toggle-title">Difficulty</p>', unsafe_allow_html=True)
         
         col11,col12 = st.columns(2, gap="small")
         col21,col22 = st.columns(2, gap="small")
@@ -146,8 +156,11 @@ with filter_container:
         with col21: 
             difficult = st.toggle(difficult_label)
     with col3:
-        # Need to disable button during the actual searching 
+        st.write("") 
         st.button(':white[Search]', on_click=run_search, disabled=st.session_state.searching)
+    with col4: 
+        units = st.radio("Units", ["Imperial", "Metric"], horizontal=True)
+    
     user_message = st.empty()
 
 # run the search when search button clicked
@@ -174,7 +187,7 @@ if st.session_state.search_click:
         loc_arr = [] 
         if location != "":
             loc_arr = location.split(',')
-        
+
         # create the condition dict based on fields
         if location == '' and not diff_arr:
             conditions = {} 
@@ -264,8 +277,10 @@ if st.session_state.trail_content:
             summary1 = val1['summary']
             trail_images = val1['trail_images']
             trailImage1 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
-            print(f"Trail img 1 = {trailImage1}") 
             trailStats1 = val1['trail_stats']
+            
+            # use the trail utility to parse the trail stats
+            routeDetails1 = trailUtility.createTrailStats(trailStats1, units) 
 
             # get the data from i+1th object
             if (i+1) < num_rows: 
@@ -276,8 +291,10 @@ if st.session_state.trail_content:
                 summary2 = val2['summary']
                 trail_images = val2['trail_images']
                 trailImage2 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
-                print(f"Trail img 2 = {trailImage2}") 
-                trailStats2 = val1['trail_stats']
+                trailStats2 = val2['trail_stats']
+
+                # use the trail utility to parse the trail stats
+                routeDetails2 = trailUtility.createTrailStats(trailStats2, units) 
            
             # two columns of trail details 
             cc1, cc2 = st.columns(2) 
@@ -287,11 +304,7 @@ if st.session_state.trail_content:
                 with cc1.container(height=height):
                     st.markdown(f'<p class="route-name"><a href="#">{route_name1}</a></p>', unsafe_allow_html=True) 
                     st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)}, Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
-                    st.markdown(f"<p class='route-details'>10mi - 2,345' Up - 2,123' Down</p>", unsafe_allow_html=True) 
-                    # TODO: Make this distance, elevation up/down 
-                    #st.markdown(f'<p class="route-details">Trail rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
-                    #st.image(img, width=320)
-                    #st.image(image,use_column_width="always") 
+                    st.markdown(f"<p class='route-details'>{routeDetails1}</p>", unsafe_allow_html=True) 
                     st.markdown(f'<div class="trail-image-container"><a href="/trail_details" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
                     st.markdown(summary1) 
                
@@ -300,9 +313,7 @@ if st.session_state.trail_content:
                     with cc2.container(height=height): 
                         st.markdown(f'<p class="route-name"><a href="#">{route_name2}</a></p>', unsafe_allow_html=True) 
                         st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)}, Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
-                        st.markdown(f"<p class='route-details'>10mi - 2,345' Up - 2,123' Down</p>", unsafe_allow_html=True) 
-                        # TODO: Make this distance, elevation up/down 
-                        #st.markdown(f'<p class="route-details">Trail rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                        st.markdown(f"<p class='route-details'>{routeDetails2}</p>", unsafe_allow_html=True) 
                         st.markdown(f'<div class="trail-image-container"><a href="#"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
                         st.markdown(summary2) 
 
