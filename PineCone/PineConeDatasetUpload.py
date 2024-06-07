@@ -2,7 +2,6 @@ from pinecone import Pinecone
 from tqdm.auto import tqdm
 import os
 import pickle
-from dotenv import dotenv_values
 import re
 
 # load the data from a pickle file
@@ -17,17 +16,15 @@ print(dataset[10])
 print("\n")
 
 # connect to the pine cone api
-config = dotenv_values("../.env")
-env_key = config["PINE_CONE_ENV_KEY"]
-api_key = config["PINE_CONE_API_KEY"]
-index_name = config["INDEX_NAME"]
+env_key = os.environ["PINE_CONE_ENV_KEY"]
+api_key = os.environ["PINE_CONE_API_KEY"]
+index_name = os.environ["INDEX_NAME"]
 print(f"env_key = {env_key}")
 print(f"api_key = {api_key}")
 print(f"index_name = {index_name}")
 print("\n")
 
 # initialize pinecone, create the index
-#    environment=env_key
 pc = Pinecone(api_key=api_key)
 
 # create pinecone index for searching trailz ai

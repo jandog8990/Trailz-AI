@@ -2,11 +2,11 @@ from pymongo import MongoClient
 from pymongo import TEXT
 from pymongo.errors import BulkWriteError
 from pymongo.server_api import ServerApi
-from dotenv import dotenv_values
 from pandas import DataFrame
 import json
 import logging
 import sys
+import os
 
 # -----------------------------------------------------
 # ---- PyMongo DB INSERT/GET/DELETE ----
@@ -27,9 +27,8 @@ class MTBTrailMongoDB:
 
     # get the database 
     def get_database(self):
-        config = dotenv_values("../.env")
-        URL_STRING = config["ATLAS_URI"]
-        DB_NAME = config["DB_NAME"]
+        URL_STRING = os.environ["ATLAS_URI"]
+        DB_NAME = os.environ["DB_NAME"]
 
         # connect to MongoDB client
         client = MongoClient(URL_STRING, server_api=ServerApi('1'))

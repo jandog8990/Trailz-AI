@@ -68,8 +68,6 @@ print(f"Result len = {len(res)}")
 
 # trail data tuples
 trailDataTuples = [t for t in res if t]
-print(trailDataTuples)
-print("\n")
 print(f"Trail data tuples len = {len(trailDataTuples)}")
 print("\n")
 
@@ -88,9 +86,6 @@ print(f"OG MTB trail route descriptions len = {len(mtbTrailRouteDescriptions)}")
 missingIndices = [i for i in range(len(mtbTrailRouteDescriptions))
     if len(mtbTrailRouteDescriptions[i]) == 0]
 missingTrailRoutes = np.take(mtbTrailRoutes, missingIndices)
-print(missingIndices)
-print("Missing trail data tuple 0:")
-print(trailDataTuples[missingIndices[0]])
 print(f"Missing indices len = {len(missingIndices)}")
 
 # remove the missing elements

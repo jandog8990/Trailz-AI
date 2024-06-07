@@ -1,7 +1,6 @@
 import os
 import sys
 from datasets import Dataset
-from dotenv import dotenv_values
 from sentence_transformers import SentenceTransformer
 import pinecone
 from tqdm.auto import tqdm
@@ -9,28 +8,24 @@ import time
 import pickle
 import json
 
+# import the MongoDB path
+sys.path.append('../MongoDB')
+from MTBTrailMongoDB import MTBTrailMongoDB 
+
 # This class creates the routes, descriptions and metdata to 
 # be used in a pkl file, which is then imported by
 # PineConeDatasetUpload to upload to PC Index
 
-# HuggingFace tokenizer parallelism
-#os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
 # get the configuration from local env
-config = dotenv_values("../.env")
-embed_model_id = config["EMBED_MODEL_ID"]
+embed_model_id = os.environ["EMBED_MODEL_ID"]
 print(f"Embedding model id = {embed_model_id}")
-print("\n")
 
-# load the data
-pkl_data = '../pkl_data'
-with open(pkl_data+'/mtb_routes.pkl', 'rb') as f:
-    mtb_routes = pickle.load(f)
-with open(pkl_data+'/mtb_descs.pkl', 'rb') as f:
-    mtb_descs = pickle.load(f)
-
+# load the data from the MongoDB
+trailMongoDB = MTBTrailMongoDB()
+(mtb_routes, mtb_descs) = trailMongoDB.find_mtb_trail_data()
 print(f"OG MTB routes len = {len(mtb_routes)}")
 print(f"OG MTB descs len = {len(mtb_descs)}")
+print("\n")
 
 # append to the area lists if the elements exist
 def append_area_lists(areaObj, areaNames, areaRefs): 
@@ -124,10 +119,6 @@ for route in mtb_routes:
 
 # create datasets from list
 mtbRouteDataset = Dataset.from_list(mainMTBRoutes)
-print("\n")
-print(f"First routes dataset (len = {len(mtbRouteDataset)}):")
-print(mtbRouteDataset[0])
-print("\n")
 
 # create embeddings of the main text for the mtb routes
 model = SentenceTransformer(embed_model_id)
@@ -138,6 +129,12 @@ mtbRouteDataset = mtbRouteDataset.map(
         'vector': model.encode(x['mainText']).tolist()
     }, batched=True, batch_size=16)
 
+print(f"MTB dataset len = {len(mtbRouteDataset)}:")
+print(mtbRouteDataset[0])
+print("\n")
+
 # let's save the dataset as a pkl file for use later
+print("Writing dataset to pkl file...")
+pkl_data = "../pkl_data"
 with open(pkl_data+'/mtb_route_dataset.pkl', 'wb') as f:
     pickle.dump(mtbRouteDataset, f)

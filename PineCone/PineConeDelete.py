@@ -1,10 +1,8 @@
 import pinecone
-from dotenv import dotenv_values
 
 # connect to the pine cone api
-config = dotenv_values(".env")
-env_key = config["PINE_CONE_ENV_KEY"]
-api_key = config["PINE_CONE_API_KEY"]
+env_key = os.environ["PINE_CONE_ENV_KEY"]
+api_key = os.environ["PINE_CONE_API_KEY"]
 print(f"env_key = {env_key}")
 print(f"api_key = {api_key}")
 print("\n")

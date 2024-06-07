@@ -2,6 +2,7 @@ import requests
 from requests.adapters import HTTPAdapter, Retry
 from bs4 import BeautifulSoup
 import cssutils
+import logging
 from MTBTrailParser import MTBTrailParser
 
 # Read in the given trail item and parse the contents
@@ -11,9 +12,12 @@ from MTBTrailParser import MTBTrailParser
 import re
 
 class MTBTrailUrlParser:
+    logging.basicConfig(filename='mtbparser.log', filemode='w', level=logging.INFO) 
+    
     def __init__(self):
+        # 429 
         self.session = requests.Session()
-        retries = Retry(total=6, backoff_factor=2, status_forcelist=[429,500,502,503,504])
+        retries = Retry(total=5, backoff_factor=2, status_forcelist=[429,500,502,503,504])
         self.session.mount('https://www.mtbproject.com', HTTPAdapter(max_retries=retries))
 
     # parse the image from photo link
@@ -27,14 +31,9 @@ class MTBTrailUrlParser:
             return imgUrl
         else:
             return None
-
-    def parseTrailItem(self, trailItem):
-        # get the trail id and url from the elem
-        trail_id = trailItem[0]
-        trail_url = trailItem[1]
-        
-        # URL parsing for MTB articles
-        page = self.session.get(trail_url) 
+    
+    # parse the mtb page
+    def parseMTBPage(self, page, trail_id, trail_url):
         soup = BeautifulSoup(page.content, "html.parser")
 
         # initialize the mtb trail parser obj
@@ -113,3 +112,16 @@ class MTBTrailUrlParser:
       
         print(".", end="", flush=True) 
         return (mtbTrailRoute, mtbTrailRouteDescriptions)
+
+    def parseTrailItem(self, trailItem):
+        # get the trail id and url from the elem
+        trail_id = trailItem[0]
+        trail_url = trailItem[1]
+        
+        # URL parsing for MTB articles
+        try: 
+            page = self.session.get(trail_url)
+            return self.parseMTBPage(page, trail_id, trail_url)
+        except Exception as e:
+            logging.error("Failed to download url = " + trail_url + ":" + str(e))
+            return None 

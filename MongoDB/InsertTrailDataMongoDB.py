@@ -12,6 +12,10 @@ with open(pklDir+'/mtb_routes.pkl', 'rb') as f:
 with open(pklDir+'/mtb_descs.pkl', 'rb') as f:
     mtb_descs = pickle.load(f)
 
+print(f"Routes len = {len(mtb_routes)}")
+print(f"Descs len = {len(mtb_descs)}")
+print("\n")
+
 # init mongo db
 trailMongoDB = MTBTrailMongoDB()
 
