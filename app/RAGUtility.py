@@ -21,10 +21,6 @@ class RAGUtility:
 
         # create the main mtb routes from the trail data
         mainMTBRoutes = trailCreator.create_mtb_routes(trailRoutes, trailDescs)
-        print(f"Trail routes (len = {len(trailRoutes)})")
-        print(f"Trail Descs (len = {len(trailDescs)})")
-        print(f"Main MTB routes (len = {len(mainMTBRoutes)})")
-        print("\n")
 
         return mainMTBRoutes 
 
@@ -33,12 +29,8 @@ class RAGUtility:
         # TODO: sort depending on if the user specified a trail difficulty (if not sort on rating)
 
         # TODO: parse the results from the MongoDB and sort based on difficulty and rating if user specifies
-        #final_results = sorted(self.query_(results).values(), key=lambda x: x['metadata']['average_rating'], reverse=True)
         final_results = self.query_mongodb_data(results)
-        print(f"Final trail results (len = {len(final_results)})")
-        for res in final_results:
-            print(res)
-            print("\n")
+        final_results = sorted(final_results, key=lambda x: x['average_rating'], reverse=True)
 
         # send the contexts of main text to RAG
         contexts = [x['mainText'] for x in final_results]

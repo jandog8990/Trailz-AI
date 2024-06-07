@@ -271,6 +271,7 @@ if st.session_state.trail_content:
             # need: route name, trail rating, trail dist/elev,
             # trail summary, trail image
             val1 = trail_list[i]
+            url1 = val1['trail_url'] 
             route_name1 = val1['route_name']
             difficulty1 = val1['trail_rating']
             average_rating1 = val1['average_rating']
@@ -285,6 +286,7 @@ if st.session_state.trail_content:
             # get the data from i+1th object
             if (i+1) < num_rows: 
                 val2 = trail_list[i+1]
+                url2 = val2['trail_url'] 
                 route_name2 = val2['route_name']
                 difficulty2 = val2['trail_rating']
                 average_rating2 = val2['average_rating']
@@ -302,7 +304,7 @@ if st.session_state.trail_content:
             with st.container():    # row container 
                 # column 1 trail details 
                 with cc1.container(height=height):
-                    st.markdown(f'<p class="route-name"><a href="#">{route_name1}</a></p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-name"><a href="{url1}">{route_name1}</a></p>', unsafe_allow_html=True) 
                     st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)}, Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
                     st.markdown(f"<p class='route-details'>{routeDetails1}</p>", unsafe_allow_html=True) 
                     st.markdown(f'<div class="trail-image-container"><a href="/trail_details" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
@@ -311,7 +313,7 @@ if st.session_state.trail_content:
                 # column 2 trail details (check if we are in bounds)
                 if (i+1) < num_rows: 
                     with cc2.container(height=height): 
-                        st.markdown(f'<p class="route-name"><a href="#">{route_name2}</a></p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-name"><a href="{url2}">{route_name2}</a></p>', unsafe_allow_html=True) 
                         st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)}, Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
                         st.markdown(f"<p class='route-details'>{routeDetails2}</p>", unsafe_allow_html=True) 
                         st.markdown(f'<div class="trail-image-container"><a href="#"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
