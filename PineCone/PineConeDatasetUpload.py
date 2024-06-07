@@ -11,8 +11,6 @@ with open(pklData+"/mtb_route_dataset.pkl", 'rb') as f:
 
 print(f"Dataset type = {type(dataset)}")
 print(f"Dataset len = {len(dataset)}")
-print("Example dataset:")
-print(dataset[10])
 print("\n")
 
 # connect to the pine cone api
