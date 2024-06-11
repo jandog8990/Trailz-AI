@@ -50,13 +50,6 @@ class MTBTrailMongoDB:
     # -----------------------------------------------------
     
     def serialize_mtb_trail_route_data(self, mtbTrailRoutes):
-        
-        '''
-        stateArea = mtbTrailRoute["trail_area"]["state"]
-        stateAreaJson = json.dumps(stateArea.__dict__)
-        print(stateAreaJson)
-        print("\n")
-        ''' 
       
         # loop through the mtb trail routes and serialize the trail area 
         for mtbTrailRoute in mtbTrailRoutes: 

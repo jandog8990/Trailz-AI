@@ -15,8 +15,8 @@ print("\n")
 pc = Pinecone(api_key=api_key)
 
 # create pinecone index for searching trailz ai
-pc.create_index(name="trailz-ai-v2",
-    dimension=384,
+pc.create_index(name="trailz-ai-semantic",
+    dimension=1536,
     metric="cosine",
     spec=ServerlessSpec(
         cloud="aws",

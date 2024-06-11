@@ -26,11 +26,14 @@ class RAGUtility:
 
     # Results is a list of trail contexts from the VectorDB
     def parse_rag_contexts(self, results):
-        # TODO: sort depending on if the user specified a trail difficulty (if not sort on rating)
-
-        # TODO: parse the results from the MongoDB and sort based on difficulty and rating if user specifies
+        # TODO: parse/sort results from MongoDB based on difficulty and rating 
         final_results = self.query_mongodb_data(results)
-        final_results = sorted(final_results, key=lambda x: x['average_rating'], reverse=True)
+        #final_results = sorted(final_results, key=lambda x: x['average_rating'], reverse=True)
+
+        # sort based on distance
+        print("Final results sample:")
+        print(final_results[0])
+        print("\n")
 
         # send the contexts of main text to RAG
         contexts = [x['mainText'] for x in final_results]
@@ -44,7 +47,7 @@ class RAGUtility:
         models:
         - type: main
           engine: openai
-          model: gpt-4-turbo 
+          model: gpt-4-turbo
         """
 
         # colang content for defining boundaries and return vars 
@@ -63,10 +66,10 @@ class RAGUtility:
             "right wing"
 
         define bot answer politics
-            "I'm a personal assistant, I don't like to talk politics."
+            "I'm a personal trail assistant, I don't like to talk politics. Please ask me about trails you may be interested in discovering!"
 
         define bot answer porn
-            "I'm a personal assistant, I don't like to talk of porn."
+            "I'm a personal trail assistant, I don't like to talk porn. Please ask me about trails you may be interested in discovering!"
 
         define flow politics
             user ask politics
@@ -81,6 +84,19 @@ class RAGUtility:
         # define RAG intents and flow
         define user ask mtb
             "find mtb trails"
+            "trails with"
+            "trails"
+            "find trails"
+            "steep trails"
+            "flow"
+            "easy"
+            "intermediate"
+            "advanced"
+            "difficult"
+            "tech"
+            "techy"
+            "mtb"
+            "mtb trails"
             "what are some good mtb trails?"
             "where are some steep mtb trails?"
             "tell me about some good trails"

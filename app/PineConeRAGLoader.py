@@ -16,16 +16,15 @@ class PineConeRAGLoader:
         self.metadataSet = None
         self.rag_rails = None 
         self.index = None
-        self.model = None
+        self.embed_model = None
         self.result_holder = None
     
     @st.cache_resource
     def load_embed_model(_self):
         # create the embedding transformer
         print("Loading embedding model...") 
-        model_id = os.environ["EMBED_MODEL_ID"] 
-        print(f"Model id = {model_id}") 
-        _self.model = SentenceTransformer(model_id, cache_folder="./.model")
+        embed_model_id = os.environ["EMBED_MODEL_ID"] 
+        _self.embed_model = SentenceTransformer(embed_model_id, cache_folder="./.model")
 
     @st.cache_resource
     def load_openai_client(_self):
@@ -72,15 +71,11 @@ class PineConeRAGLoader:
         # NOTE: The query and conditions are passed as json role objects
         self.md_obj = st.empty() 
         self.md_obj.markdown(self.load_markdown(), unsafe_allow_html=True)
-
-        print("Retrieve handler:")
-        print(f"Query = {query}")
-        print(f"Conditions = {conditions}")
-        print("\n")
+        print(f"Retrieve query = {query}")
 
         # retrieve from PineCone using embedded query
         cond_dict = json.loads(conditions) 
-        embed_query = self.model.encode(query) 
+        embed_query = self.embed_model.encode(query) 
 
         # issue query to PC to get context vectors
         if not cond_dict:
@@ -94,43 +89,41 @@ class PineConeRAGLoader:
     # rag function taht receives context from PC and 
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
-        model_id = os.environ["OPENAI_MODEL_ID"]
-        print("RAG handler:")
-        print(f"Query = {query}")
+        openai_model_id = os.environ["OPENAI_MODEL_ID"]
+        print(f"RAG OpenAI model id = {openai_model_id}")
 
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
-        context_str = "\n".join(contexts)
-        print(f"Contexts len = {len(contexts)}")
-        print(f"Trail list len = {len(trail_list)}")
+        context_str = "".join(contexts)
+
+        print(f"Contexts len: {len(contexts)}")
+        print(f"Query = {query}")
         print("\n")
 
         # place the user query and contexts into RAG prompt
-        system_msg = "You are a helpful assistant, below is a query from a user and some relevant contexts." 
-        user_msg = f"""Answer the question given the information in those
-        contexts. If you cannot find the answer to the question, say "I don't know".
+        system_msg = "You are a helpful assistant."
+        user_msg = f"""
+        Given the following trail descriptions, please provide trail recommendations for the prompt.
 
-        Contexts: {context_str}
+        Trail Descriptions: {context_str}
 
-        Query: {query}
-
-        Answer: """
+        Prompt: {query}
+        """
        
         # create the messages to send
         messages = [
             {"role": "system", "content": system_msg},
             {"role": "user", "content": user_msg}
         ]
-        
+
         # generate the RAG client completions 
         #NOTE: higher temp means more randomness 
-        """ 
         stream = self.client.chat.completions.create(
-            model=model_id,
+            model=openai_model_id,
             messages=messages,
             temperature=1.0,
             stream=True,
-            max_tokens=1000)
+            max_tokens=500)
        
         # show the results from the RAG response using Stream 
         self.result_holder = st.empty() 
@@ -138,11 +131,8 @@ class PineConeRAGLoader:
             st.header("Trail Recommendations", divider='rainbow')
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
-        """ 
-        self.md_obj.empty()
 
         # return the trail list from the PineCone query and RAG output 
-        stream_output = "I don't know." 
         bot_answer = {
             'trail_list': trail_list, 
             'stream_output': stream_output

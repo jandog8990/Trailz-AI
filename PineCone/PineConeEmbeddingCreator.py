@@ -7,6 +7,8 @@ from tqdm.auto import tqdm
 import time
 import pickle
 import json
+from semantic_router.encoders import OpenAIEncoder
+from semantic_chunkers import StatisticalChunker
 
 # import the MongoDB path
 sys.path.append('../MongoDB')
@@ -17,15 +19,15 @@ from MTBTrailMongoDB import MTBTrailMongoDB
 # PineConeDatasetUpload to upload to PC Index
 
 # get the configuration from local env
-embed_model_id = os.environ["EMBED_MODEL_ID"]
+#embed_model_id = os.environ["EMBED_MODEL_ID"]
+embed_model_id = "text-embedding-3-small" 
 print(f"Embedding model id = {embed_model_id}")
 
 # load the data from the MongoDB
 trailMongoDB = MTBTrailMongoDB()
 (mtb_routes, mtb_descs) = trailMongoDB.find_mtb_trail_data()
-print(f"OG MTB routes len = {len(mtb_routes)}")
-print(f"OG MTB descs len = {len(mtb_descs)}")
-print("\n")
+mtb_routes = mtb_routes[0:10]
+mtb_descs = mtb_descs[0:100]
 
 # append to the area lists if the elements exist
 def append_area_lists(areaObj, areaNames, areaRefs): 
@@ -119,7 +121,24 @@ for route in mtb_routes:
 
 # create datasets from list
 mtbRouteDataset = Dataset.from_list(mainMTBRoutes)
+#mtbRouteDataset = mtbRouteDataset[0:2]
 
+print(f"MTB dataset len = {len(mtbRouteDataset)}:")
+print(mtbRouteDataset[0])
+print("\n")
+
+# stat chunking using OpenAI
+encoder = OpenAIEncoder(name=embed_model_id)
+chunker = StatisticalChunker(encoder=encoder)
+content = mtbRouteDataset[0]['mainText']
+chunks = chunker(docs=[content])
+print(f"Chunker output (len = {len(chunks)})")
+chunker.print(chunks[0])
+print("\n")
+print(chunks)
+print("\n")
+
+"""
 # create embeddings of the main text for the mtb routes
 model = SentenceTransformer(embed_model_id)
 
@@ -129,12 +148,9 @@ mtbRouteDataset = mtbRouteDataset.map(
         'vector': model.encode(x['mainText']).tolist()
     }, batched=True, batch_size=16)
 
-print(f"MTB dataset len = {len(mtbRouteDataset)}:")
-print(mtbRouteDataset[0])
-print("\n")
-
 # let's save the dataset as a pkl file for use later
 print("Writing dataset to pkl file...")
 pkl_data = "../pkl_data"
 with open(pkl_data+'/mtb_route_dataset.pkl', 'wb') as f:
     pickle.dump(mtbRouteDataset, f)
+"""

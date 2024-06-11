@@ -73,11 +73,9 @@ class TrailMongoDB:
         # let's pull all of the trail route ids from the route data 
         #trailIds = routeDataFrame.loc[:, '_id'].tolist()
         trailIds = [frame['_id'] for frame in trailRoutes] 
-        print(f"Trail ids len = {len(trailIds)}")
 
         # let's get the descriptions using the list of trail ids
         trailDescriptions = self.find_mtb_trail_descriptions_by_ids(trailIds) 
-        print(f"Trail desc len = {len(trailDescriptions)}")
         return (trailRoutes, trailDescriptions)
     
     # method for getting data frames for trail routes and descriptions
@@ -87,9 +85,7 @@ class TrailMongoDB:
         
         # let's pull all of the trail route ids from the route data 
         trailIds = [frame['_id'] for frame in trailRoutes] 
-        print(f"Trail routes len = {len(trailRoutes)}")
 
         # let's get the descriptions using the list of trail ids
         trailDescriptions = self.find_mtb_trail_descriptions_by_ids(trailIds) 
-        print(f"Trail desc len = {len(trailDescriptions)}")
         return (trailRoutes, trailDescriptions)
