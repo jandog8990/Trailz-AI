@@ -19,6 +19,7 @@ class MTBTrailCreator:
     # ----- Create MTB Trail Route metadata ----- 
     # -------------------------------------------
     def create_trail_metadata(self, route):
+        # TODO: Trim this down to have metadata for front page vs details page 
         newRouteObj = {}
         newRouteObj['_id'] = route['_id']
         newRouteObj['trail_url'] = route["trail_url"] 
@@ -145,7 +146,9 @@ class MTBTrailCreator:
             # create the preface, summary and main text 
             preface = self.create_trail_preface(newRouteObj)
             newRouteObj['summary'] = self.create_trail_summary(routeDescs, preface)
-            newRouteObj['mainText'] = self.create_trail_main_text(routeDescs, preface)
+            
+            # TODO: This will be used primarily for the details page
+            #newRouteObj['mainText'] = self.create_trail_main_text(routeDescs, preface)
 
             mainMTBRoutes.append(newRouteObj)
 

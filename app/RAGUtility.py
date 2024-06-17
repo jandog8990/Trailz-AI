@@ -33,6 +33,10 @@ class RAGUtility:
         # parse/sort results from MongoDB based on route distance 
         trail_list = self.query_mongodb_data(trail_metadata)
         trail_list = sorted(trail_list, key=self.sort_distance, reverse=True)
+        print("Trail list sample [0]:")
+        print(trail_list[0])
+        print("\n")
+
         return trail_list
 
     def get_rag_config(self):
