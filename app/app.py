@@ -1,6 +1,5 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from sentence_transformers import SentenceTransformer
 import pinecone
 import time
 from dotenv import dotenv_values
@@ -22,7 +21,7 @@ def load_search_data():
     data_loader = PineConeRAGLoader()
     data_loader.load_pinecone_index()
     data_loader.load_openai_client()
-    data_loader.load_embed_model()
+    data_loader.load_encoder()
     data_loader.load_rag_rails() 
 
     return data_loader

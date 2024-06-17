@@ -5,7 +5,7 @@ import json
 import base64
 import os
 from openai import OpenAI
-from sentence_transformers import SentenceTransformer
+from semantic_router.encoders import OpenAIEncoder
 from RAGUtility import RAGUtility
 
 # Loads all necessary objects for PineCone and RAG
@@ -16,15 +16,15 @@ class PineConeRAGLoader:
         self.metadataSet = None
         self.rag_rails = None 
         self.index = None
-        self.embed_model = None
+        self.encoder = None
         self.result_holder = None
     
     @st.cache_resource
-    def load_embed_model(_self):
+    def load_encoder(_self):
         # create the embedding transformer
-        print("Loading embedding model...") 
-        embed_model_id = os.environ["EMBED_MODEL_ID"] 
-        _self.embed_model = SentenceTransformer(embed_model_id, cache_folder="./.model")
+        print("Loading encoder...") 
+        encoder_id = os.environ["ENCODER_ID"] 
+        _self.encoder = OpenAIEncoder(name=encoder_id) 
 
     @st.cache_resource
     def load_openai_client(_self):
@@ -38,7 +38,7 @@ class PineConeRAGLoader:
         print("Loading PineCone index...") 
         env_key = os.environ["PINE_CONE_ENV_KEY"]
         api_key = os.environ["PINE_CONE_API_KEY"]
-        index_name = os.environ["INDEX_NAME"]
+        pc_index_name = os.environ["PC_INDEX_NAME"]
 
         # initialize pinecone, create the index
         pc = Pinecone(
@@ -47,7 +47,7 @@ class PineConeRAGLoader:
 
         # create pinecone index for searching trailz ai
         #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
-        _self.index = pc.Index(index_name)
+        _self.index = pc.Index(pc_index_name)
 
     def load_markdown(self):
         with open("media/hackbird.GIF", "rb") as f:
@@ -66,25 +66,45 @@ class PineConeRAGLoader:
                 count = count + 1 
                 yield content
 
-    # retrieve data from PC index using embedding 
+    # retrieve data from PC index using encoder 
     async def retrieve(self, query: str, conditions: str) -> (list, list):
         # NOTE: The query and conditions are passed as json role objects
         self.md_obj = st.empty() 
         self.md_obj.markdown(self.load_markdown(), unsafe_allow_html=True)
 
-        # retrieve from PineCone using embedded query
+        # retrieve from PineCone using encoded query
         cond_dict = json.loads(conditions) 
-        embed_query = self.embed_model.encode(query) 
+        encoded_query = self.encoder([query])[0] 
 
         # issue query to PC to get context vectors
         # include_metadata=True 
         if not cond_dict:
-            results = self.index.query(vector=[embed_query.tolist()], top_k=20)
+            results = self.index.query(
+                vector=encoded_query,
+                top_k=12,
+                include_metadata=True)
         else:
-            results = self.index.query(vector=[embed_query.tolist()], top_k=20, filter=cond_dict)
+            results = self.index.query(
+                vector=encoded_query,
+                top_k=12,
+                filter=cond_dict,
+                include_metadata=True)
+        
+        matches = results['matches'] 
+        trail_metadata = [trail['metadata'] for trail in matches] 
+        print("\n")
+        print(f"PC Trail Results (len = {len(trail_metadata)})")
+        for trail in trail_metadata:
+            print(trail)
+            print("\n")
 
-        # returns a tuple of contexts and trail results
-        return self.ragUtility.parse_rag_contexts(results)
+        # using the trail_metadata create text contexts 
+        contexts = []
+
+        # returns a tuple of contexts and trail data 
+        trail_list = self.ragUtility.query_trail_list(trail_metadata)
+
+        return (contexts, trail_list)
 
     # rag function taht receives context from PC and 
     # queries user query from open ai model
@@ -98,7 +118,6 @@ class PineConeRAGLoader:
 
         print(f"Contexts len: {len(contexts)}")
         print(f"Query = {query}")
-        print("\n")
 
         # place the user query and contexts into RAG prompt
         system_msg = "You are a helpful assistant."
@@ -116,6 +135,7 @@ class PineConeRAGLoader:
             {"role": "user", "content": user_msg}
         ]
 
+        """
         # generate the RAG client completions 
         #NOTE: higher temp means more randomness 
         stream = self.client.chat.completions.create(
@@ -131,6 +151,9 @@ class PineConeRAGLoader:
             st.header("Trail Recommendations", divider='rainbow')
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
+        """
+        stream_output = "I don't know." 
+        self.md_obj.empty()
 
         # return the trail list from the PineCone query and RAG output 
         bot_answer = {

@@ -1,6 +1,7 @@
 import streamlit as st
 from TrailMongoDB import TrailMongoDB
 from MTBTrailCreator import MTBTrailCreator
+import re
 
 # RAG utility class for config and extra work
 class RAGUtility:
@@ -8,13 +9,15 @@ class RAGUtility:
         print("RAGUtility.init()...") 
         self.mongoDB = TrailMongoDB() 
     
-    # get the final results using MongoDB query 
-    def query_mongodb_data(self, results):
-        # NOTE: This gets data from the mainText and metadata of the PC PKL file 
-        #return self.loadData.get_final_results(results, self.metadataSet)
-        
+    # get the final results using MongoDB query using trail metadata 
+    def query_mongodb_data(self, trail_metadata):
+        # pull the trail ids from the metadata 
         trailCreator = MTBTrailCreator()
-        trail_ids = [obj['id'] for obj in results['matches']]
+        trail_ids = [obj['route_id'] for obj in trail_metadata] 
+        print(f"Trail ids len = {len(trail_ids)}")
+        for trail_id in trail_ids:
+            print(trail_id)
+        print("\n")
 
         # query the mongodb for trail routes/descriptions
         (trailRoutes, trailDescs) = self.mongoDB.find_mtb_trail_data_by_ids(trail_ids)
@@ -24,22 +27,27 @@ class RAGUtility:
 
         return mainMTBRoutes 
 
+    # sort the results based on distance function
+    def sort_distance(self, trail):
+        distance_str = trail['trail_stats']['distance']['imperial']
+        return float(re.findall("\d+\.\d+", distance_str)[0])
+
     # Results is a list of trail contexts from the VectorDB
-    def parse_rag_contexts(self, results):
-        # TODO: parse/sort results from MongoDB based on difficulty and rating 
-        final_results = self.query_mongodb_data(results)
-        #final_results = sorted(final_results, key=lambda x: x['average_rating'], reverse=True)
+    def query_trail_list(self, trail_metadata):
+        # parse/sort results from MongoDB based on difficulty and rating 
+        trail_list = self.query_mongodb_data(trail_metadata)
+        trail_list = sorted(trail_list, key=self.sort_distance, reverse=True)
+        
+        print(f"Trail list len = {len(trail_list)}") 
 
-        # sort based on distance
-        print("Final results sample:")
-        print(final_results[0])
-        print("\n")
+        # send the contexts of main text to RAG 
+        #contexts = [x['mainText'] for x in trail_list]
 
-        # send the contexts of main text to RAG
-        contexts = [x['mainText'] for x in final_results]
+        # TODO: contexts need to be pulled from Pinecone to give more accurate results
 
         # set the trail map for contexts and  
-        return (contexts, final_results)
+        #return (contexts, trail_list)
+        return trail_list
 
     def get_rag_config(self):
         # the RAG config for LLMRails 
