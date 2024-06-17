@@ -1,7 +1,6 @@
 import os
 import sys
 from datasets import Dataset
-from sentence_transformers import SentenceTransformer
 import pinecone
 from tqdm.auto import tqdm
 import time
@@ -9,25 +8,38 @@ import pickle
 import json
 from semantic_router.encoders import OpenAIEncoder
 from semantic_chunkers import StatisticalChunker
+from semantic_chunkers.schema import Chunk
+from pinecone import Pinecone
 
 # import the MongoDB path
 sys.path.append('../MongoDB')
 from MTBTrailMongoDB import MTBTrailMongoDB 
 
-# This class creates the routes, descriptions and metdata to 
-# be used in a pkl file, which is then imported by
-# PineConeDatasetUpload to upload to PC Index
+# ---------------------------------------------------------
+# SemanticChunking class creates the routes, descriptions 
+# and metadata chunks to upload semantics to PineCone 
+# ---------------------------------------------------------
 
 # get the configuration from local env
-#embed_model_id = os.environ["EMBED_MODEL_ID"]
-embed_model_id = "text-embedding-3-small" 
-print(f"Embedding model id = {embed_model_id}")
+encoder_id = os.environ["ENCODER_ID"]
+api_key = os.environ["PINE_CONE_API_KEY"]
+pc_index_name = os.environ["PC_INDEX_NAME"]
+print(f"Encoder id = {encoder_id}")
+
+# initialize the pinecone db, encoder and stat chunker 
+encoder = OpenAIEncoder(name=encoder_id)
+chunker = StatisticalChunker(encoder=encoder)
+pc = Pinecone(api_key=api_key)
+pc_index = pc.Index(pc_index_name)
+print("PC Index:")
+print(pc_index.describe_index_stats())
+print("\n")
 
 # load the data from the MongoDB
 trailMongoDB = MTBTrailMongoDB()
 (mtb_routes, mtb_descs) = trailMongoDB.find_mtb_trail_data()
-mtb_routes = mtb_routes[0:10]
-mtb_descs = mtb_descs[0:100]
+#mtb_routes = mtb_routes[0:10]
+#mtb_descs = mtb_descs[0:500]
 
 # append to the area lists if the elements exist
 def append_area_lists(areaObj, areaNames, areaRefs): 
@@ -37,8 +49,11 @@ def append_area_lists(areaObj, areaNames, areaRefs):
         areaRefs.append(areaObj["areaRef"]) 
     return (areaNames, areaRefs)
 
+# --------------------------------------------------------------------
 # Create the main mtb routes objects by combining routes/descriptions
+# --------------------------------------------------------------------
 mainMTBRoutes = [] 
+print("Create MTB Trail Routes...")
 for route in mtb_routes:
     # create the new route object from route and desc 
     newRouteObj = {} 
@@ -117,40 +132,110 @@ for route in mtb_routes:
     newRouteObj['mainText'] = mainText 
 
     # append to the main routes list
+    print(".", end="", flush=True) 
     mainMTBRoutes.append(newRouteObj)
 
 # create datasets from list
 mtbRouteDataset = Dataset.from_list(mainMTBRoutes)
-#mtbRouteDataset = mtbRouteDataset[0:2]
-
-print(f"MTB dataset len = {len(mtbRouteDataset)}:")
-print(mtbRouteDataset[0])
+print("\n")
+print(f"MTB Route Dataset len = {len(mtbRouteDataset)}")
 print("\n")
 
-# stat chunking using OpenAI
-encoder = OpenAIEncoder(name=embed_model_id)
-chunker = StatisticalChunker(encoder=encoder)
+# disable stats
+chunker.enable_statistics = False 
+chunker.plot_chunks = False
+
+# ---------------------------------------
+# -------- Test Area Chunking -----------
+# ---------------------------------------
+# lets loop through content and observe shit
 content = mtbRouteDataset[0]['mainText']
+print("Test Dataset Content:")
+print(content)
+print("\n")
+
+# go through chunker and check splits
 chunks = chunker(docs=[content])
+chunks = chunks[0]
 print(f"Chunker output (len = {len(chunks)})")
-chunker.print(chunks[0])
-print("\n")
-print(chunks)
-print("\n")
+chunker.print(chunks[:3])
+print("--------------\n")
+# ---------------------------------------
 
-"""
-# create embeddings of the main text for the mtb routes
-model = SentenceTransformer(embed_model_id)
+# -------------------------------------
+# Build the metadata for each chunk
+# -------------------------------------
+def build_metadata_chunks(doc: dict, doc_chunks: list[Chunk]):
+   
+    # create the metadata fields 
+    route_id = doc['_id']
+    metadata = doc['metadata']
+    route_name = metadata['route_name']
+    route_difficulty = metadata['difficulty']
+    trail_rating = metadata['trail_rating']
+    average_rating = metadata['average_rating']
+    num_ratings = metadata['num_ratings']
+    areaNames = metadata['areaNames']
+    areaRefs = metadata['areaRefs']
+   
+    # create the content chunks and text
+    metadata_chunks = [] 
+    for i, chunk in enumerate(doc_chunks): 
+        # get id, previous and next chunks (context for LLM)
+        chunk_id = f"{route_id}#{i}"
+        prechunk_id = "" if i == 0 else f"{route_id}#{i-1}"
+        postchunk_id = "" if i+1 == len(doc_chunks) else f"{route_id}#{i+1}"
 
-# create vector using text embeddings
-mtbRouteDataset = mtbRouteDataset.map(
-    lambda x: {
-        'vector': model.encode(x['mainText']).tolist()
-    }, batched=True, batch_size=16)
+        # TODO: Make changes to the LLM to pull the route_id from 
+        # the returned docs from PineCone
+        # create dict and append to metadata list
+        metadata_chunks.append({
+            "id": chunk_id,
+            "route_id": route_id,
+            "route_name": route_name,
+            "difficulty": route_difficulty,
+            "trail_rating": trail_rating,
+            "average_rating": average_rating,
+            "num_ratings": num_ratings,
+            "areaNames": areaNames,
+            "areaRefs": areaRefs,
+            "prechunk_id": prechunk_id,
+            "postchunk_id": postchunk_id,
+            "content": chunk.content
+        })
 
-# let's save the dataset as a pkl file for use later
-print("Writing dataset to pkl file...")
-pkl_data = "../pkl_data"
-with open(pkl_data+'/mtb_route_dataset.pkl', 'wb') as f:
-    pickle.dump(mtbRouteDataset, f)
-"""
+    return metadata_chunks
+
+# ----------------------------------------------------
+# -------- Loop through chunks/create vectors --------
+# ----------------------------------------------------
+batch_size = 100
+mtbRouteSemanticDataset = []
+print(f"Embedding {len(mtbRouteDataset)} chunked records using semantics...")
+for doc in tqdm(mtbRouteDataset):
+    # create chunks on curr doc
+    content = doc['mainText']
+    chunks = chunker(docs=[content])
+    chunks = chunks[0] 
+
+    # create the metadata from chunks
+    metadata_chunks = build_metadata_chunks(doc=doc, doc_chunks=chunks)
+    
+    # loop through current chunks using batches
+    for i in range(0, len(chunks), batch_size):
+        # for each chunk convert to embeddings using content 
+        i_end = min(len(chunks), i+batch_size)
+
+        # get batch of data for current doc
+        metadata_batch = metadata_chunks[i:i_end]
+        
+        # get the unique ids for each chunk in batch
+        ids_batch = [m["id"] for m in metadata_batch]
+       
+        # get the content for the current chunk (vectors)
+        content_batch = [m["content"] for m in metadata_batch]
+
+        # embed the content batch to upload
+        embeddings_batch = encoder(content_batch)
+        
+        pc_index.upsert(vectors=zip(ids_batch, embeddings_batch, metadata_batch))

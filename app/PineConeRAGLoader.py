@@ -71,13 +71,13 @@ class PineConeRAGLoader:
         # NOTE: The query and conditions are passed as json role objects
         self.md_obj = st.empty() 
         self.md_obj.markdown(self.load_markdown(), unsafe_allow_html=True)
-        print(f"Retrieve query = {query}")
 
         # retrieve from PineCone using embedded query
         cond_dict = json.loads(conditions) 
         embed_query = self.embed_model.encode(query) 
 
         # issue query to PC to get context vectors
+        # include_metadata=True 
         if not cond_dict:
             results = self.index.query(vector=[embed_query.tolist()], top_k=20)
         else:

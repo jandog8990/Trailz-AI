@@ -4,6 +4,8 @@ import os
 import pickle
 import re
 
+# TODO: Figure out if this can be deleted
+
 # load the data from a pickle file
 pklData="../pkl_data"
 with open(pklData+"/mtb_route_dataset.pkl", 'rb') as f:
@@ -14,10 +16,8 @@ print(f"Dataset len = {len(dataset)}")
 print("\n")
 
 # connect to the pine cone api
-env_key = os.environ["PINE_CONE_ENV_KEY"]
 api_key = os.environ["PINE_CONE_API_KEY"]
 index_name = os.environ["INDEX_NAME"]
-print(f"env_key = {env_key}")
 print(f"api_key = {api_key}")
 print(f"index_name = {index_name}")
 print("\n")
