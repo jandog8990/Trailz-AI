@@ -66,6 +66,33 @@ class PineConeRAGLoader:
                 count = count + 1 
                 yield content
 
+    # create trail contexts for OpenAI chat model
+    def create_trail_contexts(self, trail_metadata):
+        contexts = []
+        for trail in trail_metadata:
+            content = trail['content']
+            route_name = trail['route_name']
+            pre_id = trail['prechunk_id']
+            post_id = trail['postchunk_id']
+            
+            # combine pre/post chunks to form context
+            try:
+                other_chunks = self.index.fetch(ids=[pre_id, post_id])["vectors"]
+                prechunk = other_chunks[pre_id]["metadata"]["content"]
+                postchunk = other_chunks[post_id]["metadata"]["content"]
+                context = f"""# {route_name}
+
+                {prechunk[-500:]}
+                {content}
+                {postchunk[:500]}\n"""
+            except Exception as e:
+                context = f"""# {route_name}
+
+                {content}\n"""
+            contexts.append(context)
+    
+        return contexts
+
     # retrieve data from PC index using encoder 
     async def retrieve(self, query: str, conditions: str) -> (list, list):
         # NOTE: The query and conditions are passed as json role objects
@@ -92,15 +119,10 @@ class PineConeRAGLoader:
         
         matches = results['matches'] 
         trail_metadata = [trail['metadata'] for trail in matches] 
-        print("\n")
-        print(f"PC Trail Results (len = {len(trail_metadata)})")
-        for trail in trail_metadata:
-            print(trail)
-            print("\n")
-
-        # using the trail_metadata create text contexts 
-        contexts = []
-
+        
+        # create trail contexts for the open ai model
+        contexts = self.create_trail_contexts(trail_metadata)
+        
         # returns a tuple of contexts and trail data 
         trail_list = self.ragUtility.query_trail_list(trail_metadata)
 
@@ -110,14 +132,10 @@ class PineConeRAGLoader:
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
         openai_model_id = os.environ["OPENAI_MODEL_ID"]
-        print(f"RAG OpenAI model id = {openai_model_id}")
 
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
-        context_str = "".join(contexts)
-
-        print(f"Contexts len: {len(contexts)}")
-        print(f"Query = {query}")
+        context_str = "\n".join(contexts)
 
         # place the user query and contexts into RAG prompt
         system_msg = "You are a helpful assistant."
@@ -135,7 +153,6 @@ class PineConeRAGLoader:
             {"role": "user", "content": user_msg}
         ]
 
-        """
         # generate the RAG client completions 
         #NOTE: higher temp means more randomness 
         stream = self.client.chat.completions.create(
@@ -151,9 +168,6 @@ class PineConeRAGLoader:
             st.header("Trail Recommendations", divider='rainbow')
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
-        """
-        stream_output = "I don't know." 
-        self.md_obj.empty()
 
         # return the trail list from the PineCone query and RAG output 
         bot_answer = {

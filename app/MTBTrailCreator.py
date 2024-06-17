@@ -98,10 +98,10 @@ class MTBTrailCreator:
         summaryArr.insert(0, preface)
         summaryText = " ".join(summaryArr)
         
-        # get the first four sentences from the text
+        # get the first 5 sentences from the text
         delim = "." 
         summaryArr =  [s+delim for s in summaryText.split(delim) if s]
-        summaryArr = summaryArr[:4] 
+        summaryArr = summaryArr[:6] 
         summaryText = "".join(summaryArr) 
         
         return summaryText 

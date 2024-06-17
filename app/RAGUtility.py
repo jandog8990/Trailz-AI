@@ -14,10 +14,6 @@ class RAGUtility:
         # pull the trail ids from the metadata 
         trailCreator = MTBTrailCreator()
         trail_ids = [obj['route_id'] for obj in trail_metadata] 
-        print(f"Trail ids len = {len(trail_ids)}")
-        for trail_id in trail_ids:
-            print(trail_id)
-        print("\n")
 
         # query the mongodb for trail routes/descriptions
         (trailRoutes, trailDescs) = self.mongoDB.find_mtb_trail_data_by_ids(trail_ids)
@@ -34,19 +30,9 @@ class RAGUtility:
 
     # Results is a list of trail contexts from the VectorDB
     def query_trail_list(self, trail_metadata):
-        # parse/sort results from MongoDB based on difficulty and rating 
+        # parse/sort results from MongoDB based on route distance 
         trail_list = self.query_mongodb_data(trail_metadata)
         trail_list = sorted(trail_list, key=self.sort_distance, reverse=True)
-        
-        print(f"Trail list len = {len(trail_list)}") 
-
-        # send the contexts of main text to RAG 
-        #contexts = [x['mainText'] for x in trail_list]
-
-        # TODO: contexts need to be pulled from Pinecone to give more accurate results
-
-        # set the trail map for contexts and  
-        #return (contexts, trail_list)
         return trail_list
 
     def get_rag_config(self):
