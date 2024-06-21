@@ -10,6 +10,7 @@ import asyncio
 import json
 from PineConeRAGLoader import PineConeRAGLoader
 from TrailUtility import TrailUtility 
+from streamlit_session_browser_storage import SessionStorage
 
 # Main Trailz AI app for searching the PineCone DB for
 # recommended trailz around my area
@@ -33,15 +34,16 @@ def run_retrieval_norag():
 
     return results 
 
-# set the session state vars
-if 'search_click' not in st.session_state:
-    st.session_state.search_click = False
-if 'searching' not in st.session_state:
-    st.session_state.searching = False
-if 'rag_query' not in st.session_state:
-    st.session_state.rag_query = ""
-if 'trail_content' not in st.session_state: 
-    st.session_state.trail_content = ""
+# TODO: make this a function for loading state
+def load_session_state():
+    if 'search_click' not in st.session_state:
+        st.session_state['search_click'] = False
+    if 'searching' not in st.session_state:
+        st.session_state['searching'] = False
+    if 'rag_query' not in st.session_state:
+        st.session_state['rag_query'] = ""
+    if 'trail_content' not in st.session_state: 
+        st.session_state['trail_content'] = ""
 
 def run_search():
     st.session_state.search_click = True
@@ -50,11 +52,29 @@ def run_search():
 def enable_query():
     st.session_state.search_click = False 
     st.session_state.searching = False
-
+    
 # get the search loader object
 trailUtility = TrailUtility()
-data_loader = load_search_data()
 trailzAIImg = os.environ["TRAILZ_AI_IMG"]
+load_session_state()
+sessionStorage = SessionStorage()
+data_loader = load_search_data()
+#sessionStorage.deleteAll()
+
+# check the session state for previous vars
+print("Session state begin:")
+print(st.session_state)
+print("\n")
+
+# TODO: Somehow parse this and communicate that we have cache?!
+# TODO: Potential solutions:
+# 1. Compare the new search query with the previous
+# 2. If anything exists in the session storage than show it
+# 3. Do we need to requery or have separate templates?? 
+contents = sessionStorage.getAll()
+print("Session Storage Contents:") 
+print(contents)
+print("\n")
 
 # main Trailz AI titles
 st.title("Explore Your Trailz...")
@@ -245,6 +265,10 @@ if st.session_state.trail_content:
         # need to parse both outputs
         trail_list = resp_map['trail_list']
         stream_output = resp_map['stream_output']
+       
+        # TODO: This needs to use new local storage (see below post-rendering)
+        st.session_state["stream_output"] = "This is another test"
+        st.session_state["trail_list"] = json.dumps(trail_list)
 
         # let's create the rows of columns
         num_rows = len(trail_list)
@@ -309,7 +333,7 @@ if st.session_state.trail_content:
                         st.markdown(f'<p class="route-name"><a href="{url1}">{route_name1}</a></p>', unsafe_allow_html=True) 
                         st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)}, Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
                         st.markdown(f"<p class='route-details'>{routeDetails1}</p>", unsafe_allow_html=True) 
-                        st.markdown(f'<div class="trail-image-container"><a href="/trail_details?id={id1}" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                        st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id1}" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
                         st.markdown(summary1) 
                    
                     # column 2 trail details (check if we are in bounds)
@@ -318,13 +342,30 @@ if st.session_state.trail_content:
                             st.markdown(f'<p class="route-name"><a href="{url2}">{route_name2}</a></p>', unsafe_allow_html=True) 
                             st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)}, Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
                             st.markdown(f"<p class='route-details'>{routeDetails2}</p>", unsafe_allow_html=True) 
-                            st.markdown(f'<div class="trail-image-container"><a href="/trail_details?id={id2}"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                            st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id2}"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
                             st.markdown(summary2) 
     except Exception as e:
+        # TODO: When to clear the local storage? after each query? or
+        # when the query changes per search?
         with filter_container: 
             err_msg = st.error(trail_content)
             time.sleep(6)
             err_msg.empty()
+
+# TODO: This was giving problems with duplicate widget IDs keep an eye 
+try:
+    if "stream_output" in st.session_state:
+        if st.session_state["stream_output"] != "":
+            #sessionStorage.deleteItem("stream_output_sesh", key="stream_output_sesh_1")
+            sessionStorage.setItem("stream_output1", st.session_state["stream_output"], key="stream_output_sesh1") 
+            print("Local storage saved STREAM OUTPUT!")
+    if "trail_list" in st.session_state:
+        if len(st.session_state["trail_list"]) != 0:
+            #sessionStorage.deleteItem("trail_list_sesh", key="trail_list_sesh_1") 
+            sessionStorage.setItem("trail_list_sesh1", st.session_state["trail_list"], key="trail_list_sesh1") 
+            print("Local storage saved TRAIL LIST!")
+except Exception as e:
+    print(f"Error: {e}")
 
 components.html(
     f"""

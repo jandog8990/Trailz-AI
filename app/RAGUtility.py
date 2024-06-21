@@ -6,23 +6,35 @@ import re
 # RAG utility class for config and extra work
 class RAGUtility:
     def __init__(self):
-        print("RAGUtility.init()...") 
         self.mongoDB = TrailMongoDB() 
+        self.trailCreator = MTBTrailCreator()
     
     # get the final results using MongoDB query using trail metadata 
-    def query_mongodb_data(self, trail_metadata):
+    def query_mongodb_trail_list(self, trail_metadata):
         # pull the trail ids from the metadata 
-        trailCreator = MTBTrailCreator()
         trail_ids = [obj['route_id'] for obj in trail_metadata] 
 
         # query the mongodb for trail routes/descriptions
         (trailRoutes, trailDescs) = self.mongoDB.find_mtb_trail_data_by_ids(trail_ids)
 
         # create the main mtb routes from the trail data
-        mainMTBRoutes = trailCreator.create_mtb_routes(trailRoutes, trailDescs)
+        mainMTBRoutes = self.trailCreator.create_mtb_routes(trailRoutes, trailDescs)
 
         return mainMTBRoutes 
 
+    # get trail route based on given ID
+    def query_mongodb_trail_detail(self, trail_id):
+        # query the mongodb for trail routes/descriptions
+        (trailRoutes, trailDescs) = self.mongoDB.find_mtb_trail_data_by_ids([trail_id])
+       
+        print(f"Trail routes len = {len(trailRoutes)}")
+        print(f"Trail descs len = {len(trailDescs)}")
+        print("\n")
+        print(trailRoutes)
+        print("\n")
+        print(trailDescs)
+        print("\n")
+         
     # sort the results based on distance function
     def sort_distance(self, trail):
         distance_str = trail['trail_stats']['distance']['imperial']
@@ -30,8 +42,9 @@ class RAGUtility:
 
     # Results is a list of trail contexts from the VectorDB
     def query_trail_list(self, trail_metadata):
+
         # parse/sort results from MongoDB based on route distance 
-        trail_list = self.query_mongodb_data(trail_metadata)
+        trail_list = self.query_mongodb_trail_list(trail_metadata)
         trail_list = sorted(trail_list, key=self.sort_distance, reverse=True)
         print("Trail list sample [0]:")
         print(trail_list[0])
