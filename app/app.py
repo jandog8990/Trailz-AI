@@ -34,7 +34,7 @@ def run_retrieval_norag():
 
     return results 
 
-# TODO: make this a function for loading state
+# initialize the local state 
 def load_session_state():
     if 'search_click' not in st.session_state:
         st.session_state['search_click'] = False
@@ -42,8 +42,10 @@ def load_session_state():
         st.session_state['searching'] = False
     if 'rag_query' not in st.session_state:
         st.session_state['rag_query'] = ""
-    if 'trail_content' not in st.session_state: 
-        st.session_state['trail_content'] = ""
+    if 'trail_list' not in st.session_state: 
+        st.session_state['trail_list'] = ""
+    if 'stream_output' not in st.session_state: 
+        st.session_state['stream_output'] = ""
 
 def run_search():
     st.session_state.search_click = True
@@ -66,23 +68,18 @@ print("Session state begin:")
 print(st.session_state)
 print("\n")
 
-# TODO: Somehow parse this and communicate that we have cache?!
-# TODO: Potential solutions:
+# NOTE: Somehow parse this and communicate that we have cache?!
 # 1. Compare the new search query with the previous
 # 2. If anything exists in the session storage than show it
 # 3. Do we need to requery or have separate templates?? 
-contents = sessionStorage.getAll()
-print("Session Storage Contents:") 
-print(contents)
-print("\n")
+storageContents = sessionStorage.getAll()
+if "stream_output_sesh1" in storageContents:
+    st.session_state["stream_output"] = storageContents["stream_output_sesh1"]
+if "trail_list_sesh1" in storageContents:
+    st.session_state["trail_list"] = storageContents["trail_list_sesh1"]
 
 # main Trailz AI titles
 st.title("Explore Your Trailz...")
-
-# TODO: These images will be retrieved from the query to MongoDB
-#img = "https://mtbproject.com/assets/photos/mtb/4525152_medium_1554328039.jpg"
-img = "https://mtbproject.com/assets/photos/mtb/5962430_medium_1554390092.jpg"
-#img = "https://mtbproject.com/assets/photos/mtb/598984_medium_1554221930.jpg" 
 
 # placeholder for loading data bar
 main_placeholder = st.empty()
@@ -101,10 +98,9 @@ intermediate_label = "Intermediate"
 difficult_label = "Difficult"
 units_label = "Units"
 
-# style for the text in filter and output 
-#font-weight: bold; 
-#margin-left: auto;
-#margin-right: auto;
+# ----------------------------------------
+# Style for the text in filter and output 
+# ----------------------------------------
 st.markdown("""
     <style> 
     .toggle-title {
@@ -182,7 +178,9 @@ with filter_container:
     
     user_message = st.empty()
 
-# run the search when search button clicked
+# --------------------------------------------------------
+# Run the Pinecone/RAG search when search button clicked
+# --------------------------------------------------------
 if st.session_state.search_click:
     
     if not query:
@@ -243,7 +241,7 @@ if st.session_state.search_click:
        
             # set the trail content to show the user 
             trail_content = resp['content'] 
-            st.session_state.trail_content = trail_content 
+            #st.session_state.trail_content = trail_content 
         else:
             # previous query matches current query 
             with filter_container: 
@@ -253,111 +251,123 @@ if st.session_state.search_click:
                 time.sleep(3)
                 user_message.empty()
 
-# Only show trail_content results if we have them 
-err_md = st.empty() 
-enable_query() 
-if st.session_state.trail_content: 
-    trail_content = st.session_state.trail_content 
-    err_md.empty() 
-    try: 
-        resp_map = json.loads(trail_content)   
-    
-        # need to parse both outputs
-        trail_list = resp_map['trail_list']
-        stream_output = resp_map['stream_output']
-       
-        # TODO: This needs to use new local storage (see below post-rendering)
-        st.session_state["stream_output"] = "This is another test"
-        st.session_state["trail_list"] = json.dumps(trail_list)
-
-        # let's create the rows of columns
-        num_rows = len(trail_list)
-        height = 320
-
-        # display the stream results in the recommendation section
-        if data_loader.result_holder: 
-            data_loader.result_holder.empty()
-            with st.container():
-                st.header("Trail Recommendations", divider='rainbow') 
-                if stream_output == "I don't know.":
-                    stream_output = '''
-                    Sorry, I couldn't recommend any specific trailz for you.
-                    However, below I've found some trailz that I think you 
-                    might enjoy. Or, you can try another search! 
-                    '''
-                st.write(stream_output)
-
-        # display the trail_list results in the details section 
-        with st.container():
-            st.header("Trail Details", divider='rainbow')
-            for i in range(0, num_rows, 2): 
-                # get the data from ith object
-                # need: route name, trail rating, trail dist/elev,
-                # trail summary, trail image
-                val1 = trail_list[i]
-                id1 = val1['_id'] 
-                url1 = val1['trail_url'] 
-                route_name1 = val1['route_name']
-                difficulty1 = val1['trail_rating']
-                average_rating1 = val1['average_rating']
-                summary1 = val1['summary']
-                trail_images = val1['trail_images']
-                trailImage1 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
-                trailStats1 = val1['trail_stats']
-                
-                # use the trail utility to parse the trail stats
-                routeDetails1 = trailUtility.createTrailStats(trailStats1, units) 
-
-                # get the data from i+1th object
-                if (i+1) < num_rows: 
-                    val2 = trail_list[i+1]
-                    id2 = val2['_id'] 
-                    url2 = val2['trail_url'] 
-                    route_name2 = val2['route_name']
-                    difficulty2 = val2['trail_rating']
-                    average_rating2 = val2['average_rating']
-                    summary2 = val2['summary']
-                    trail_images = val2['trail_images']
-                    trailImage2 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
-                    trailStats2 = val2['trail_stats']
-
-                    # use the trail utility to parse the trail stats
-                    routeDetails2 = trailUtility.createTrailStats(trailStats2, units) 
+        # ---------------------------------------------------------
+        # Parse trail_content results from the Pinecone/RAG Model 
+        # ---------------------------------------------------------
+        err_md = st.empty() 
+        enable_query() 
+        if trail_content: 
+            #trail_content = st.session_state.trail_content 
+            err_md.empty() 
+            try: 
+                resp_map = json.loads(trail_content)   
+            
+                # need to parse both outputs
+                trail_list = resp_map['trail_list']
+                stream_output = resp_map['stream_output']
                
-                # two columns of trail details 
-                cc1, cc2 = st.columns(2) 
+                # Store stream output and trail list in session state 
+                st.session_state["stream_output"] = stream_output 
+                st.session_state["trail_list"] = json.dumps(trail_list)
+            except Exception as e:
+                # TODO: When to clear the local storage? after each query? or
+                # when the query changes per search?
+                with filter_container: 
+                    err_msg = st.error(trail_content)
+                    time.sleep(6)
+                    err_msg.empty()
 
-                with st.container():    # row container 
-                    # column 1 trail details 
-                    with cc1.container(height=height):
-                        st.markdown(f'<p class="route-name"><a href="{url1}">{route_name1}</a></p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)}, Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
-                        st.markdown(f"<p class='route-details'>{routeDetails1}</p>", unsafe_allow_html=True) 
-                        st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id1}" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
-                        st.markdown(summary1) 
-                   
-                    # column 2 trail details (check if we are in bounds)
-                    if (i+1) < num_rows: 
-                        with cc2.container(height=height): 
-                            st.markdown(f'<p class="route-name"><a href="{url2}">{route_name2}</a></p>', unsafe_allow_html=True) 
-                            st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)}, Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
-                            st.markdown(f"<p class='route-details'>{routeDetails2}</p>", unsafe_allow_html=True) 
-                            st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id2}"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
-                            st.markdown(summary2) 
-    except Exception as e:
-        # TODO: When to clear the local storage? after each query? or
-        # when the query changes per search?
-        with filter_container: 
-            err_msg = st.error(trail_content)
-            time.sleep(6)
-            err_msg.empty()
+# --------------------------------------------------------
+# Results container for the stream output and trail list 
+# --------------------------------------------------------
+if st.session_state.trail_list: 
+    stream_output = st.session_state["stream_output"]
+    trail_list = json.loads(st.session_state["trail_list"])
+    
+    # let's create the rows of columns
+    trail_list_len = len(trail_list)
+    container_height = 320
 
-# TODO: This was giving problems with duplicate widget IDs keep an eye 
+    # display the stream results in the recommendation section
+    if data_loader.result_holder: 
+        data_loader.result_holder.empty()
+        with st.container():
+            st.header("Trail Recommendations", divider='rainbow') 
+            if stream_output == "I don't know.":
+                stream_output = '''
+                Sorry, I couldn't recommend any specific trailz for you.
+                However, below I've found some trailz that I think you 
+                might enjoy. Or, you can try another search! 
+                '''
+            st.write(stream_output)
+
+    # display the trail_list results in the details section 
+    with st.container():
+        st.header("Trail Details", divider='rainbow')
+        for i in range(0, trail_list_len, 2): 
+            # get the data from ith object
+            # need: route name, trail rating, trail dist/elev,
+            # trail summary, trail image
+            val1 = trail_list[i]
+            id1 = val1['_id'] 
+            url1 = val1['trail_url'] 
+            route_name1 = val1['route_name']
+            difficulty1 = val1['trail_rating']
+            average_rating1 = val1['average_rating']
+            summary1 = val1['summary']
+            trail_images = val1['trail_images']
+            trailImage1 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
+            trailStats1 = val1['trail_stats']
+            
+            # use the trail utility to parse the trail stats
+            routeDetails1 = trailUtility.createTrailStats(trailStats1, units) 
+
+            # get the data from i+1th object
+            if (i+1) < trail_list_len: 
+                val2 = trail_list[i+1]
+                id2 = val2['_id'] 
+                url2 = val2['trail_url'] 
+                route_name2 = val2['route_name']
+                difficulty2 = val2['trail_rating']
+                average_rating2 = val2['average_rating']
+                summary2 = val2['summary']
+                trail_images = val2['trail_images']
+                trailImage2 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
+                trailStats2 = val2['trail_stats']
+
+                # use the trail utility to parse the trail stats
+                routeDetails2 = trailUtility.createTrailStats(trailStats2, units) 
+           
+            # two columns of trail details 
+            cc1, cc2 = st.columns(2) 
+
+            with st.container():    # row container 
+                # column 1 trail details 
+                with cc1.container(height=container_height):
+                    st.markdown(f'<p class="route-name"><a href="{url1}">{route_name1}</a></p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)}, Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
+                    st.markdown(f"<p class='route-details'>{routeDetails1}</p>", unsafe_allow_html=True) 
+                    st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id1}" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                    st.markdown(summary1) 
+               
+                # column 2 trail details (check if we are in bounds)
+                if (i+1) < trail_list_len: 
+                    with cc2.container(height=container_height): 
+                        st.markdown(f'<p class="route-name"><a href="{url2}">{route_name2}</a></p>', unsafe_allow_html=True) 
+                        st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)}, Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                        st.markdown(f"<p class='route-details'>{routeDetails2}</p>", unsafe_allow_html=True) 
+                        st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id2}"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                        st.markdown(summary2) 
+
+# ------------------------------------------------------------------
+# Set the stream output and trail list cache using session storage 
+# ------------------------------------------------------------------
+# NOTE: This was giving problems with duplicate widget IDs keep an eye 
 try:
     if "stream_output" in st.session_state:
         if st.session_state["stream_output"] != "":
             #sessionStorage.deleteItem("stream_output_sesh", key="stream_output_sesh_1")
-            sessionStorage.setItem("stream_output1", st.session_state["stream_output"], key="stream_output_sesh1") 
+            sessionStorage.setItem("stream_output_sesh1", st.session_state["stream_output"], key="stream_output_sesh1") 
             print("Local storage saved STREAM OUTPUT!")
     if "trail_list" in st.session_state:
         if len(st.session_state["trail_list"]) != 0:
@@ -365,8 +375,11 @@ try:
             sessionStorage.setItem("trail_list_sesh1", st.session_state["trail_list"], key="trail_list_sesh1") 
             print("Local storage saved TRAIL LIST!")
 except Exception as e:
-    print(f"Error: {e}")
+    print(f"Cache exception: {e}")
 
+# -------------------------------------
+# Label styling for queries and result
+# -------------------------------------
 components.html(
     f"""
     <script>

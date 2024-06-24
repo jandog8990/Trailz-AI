@@ -9,15 +9,6 @@ for k, v in st.session_state.to_dict().items():
     print(f"key = {k}") 
     st.session_state[k] = v
 
-"""
-st.session_state.update(st.session_state)
-if 'ragUtility' in st.session_state:
-    ragUtility = st.session_state.ragUtility
-    print("Trail Detail - RAG Utility:")
-    print(ragUtility)
-    print("\n")
-"""
-
 import numpy as np
 import time
 
