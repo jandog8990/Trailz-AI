@@ -26,15 +26,13 @@ class RAGUtility:
     def query_mongodb_trail_detail(self, trail_id):
         # query the mongodb for trail routes/descriptions
         (trailRoutes, trailDescs) = self.mongoDB.find_mtb_trail_data_by_ids([trail_id])
-       
-        print(f"Trail routes len = {len(trailRoutes)}")
-        print(f"Trail descs len = {len(trailDescs)}")
-        print("\n")
-        print(trailRoutes)
-        print("\n")
-        print(trailDescs)
-        print("\n")
-         
+      
+        trailRoute = trailRoutes[0]
+        
+        mtbRouteDetail = self.trailCreator.create_mtb_route_detail(trailRoute, trailDescs)
+   
+        return mtbRouteDetail
+
     # sort the results based on distance function
     def sort_distance(self, trail):
         distance_str = trail['trail_stats']['distance']['imperial']
@@ -46,9 +44,6 @@ class RAGUtility:
         # parse/sort results from MongoDB based on route distance 
         trail_list = self.query_mongodb_trail_list(trail_metadata)
         trail_list = sorted(trail_list, key=self.sort_distance, reverse=True)
-        print("Trail list sample [0]:")
-        print(trail_list[0])
-        print("\n")
 
         return trail_list
 

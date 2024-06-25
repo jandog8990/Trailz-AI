@@ -101,8 +101,8 @@ class MTBTrailCreator:
         
         # get the first 5 sentences from the text
         delim = "." 
-        summaryArr =  [s+delim for s in summaryText.split(delim) if s]
-        summaryArr = summaryArr[:6] 
+        summaryArr = [s+delim for s in summaryText.split(delim) if s]
+        summaryArr = summaryArr[:5]
         summaryText = "".join(summaryArr) 
         
         return summaryText 
@@ -112,11 +112,21 @@ class MTBTrailCreator:
     # --------------------------------------
     def create_trail_main_text(self, routeDescs, preface):
         # create the main text from all descriptions
-        textArr = [desc['text'] for desc in routeDescs] 
-        textArr.insert(0, preface)
-        mainText = " ".join(textArr)
+        descMap = {} 
+        descMap["Preface"] = preface 
+        for desc in routeDescs:
+            descMap[desc["key"]] = desc["text"]
+        #textArr = [desc['text'] for desc in routeDescs] 
+        #textArr.insert(0, preface)
+        #mainText = "".join(textArr)
 
-        return mainText
+        # create the main text arr
+        #delim = "."
+        #textArr = [s+delim for s in mainText.split(delim) if s]
+        #mainText = "".join(textArr) 
+        
+        #return mainText
+        return descMap 
 
     # ------------------------------------------
     # ----- Create MTB Trail Route Preview ----- 
@@ -146,9 +156,6 @@ class MTBTrailCreator:
             # create the preface, summary and main text 
             preface = self.create_trail_preface(newRouteObj)
             newRouteObj['summary'] = self.create_trail_summary(routeDescs, preface)
-            
-            # TODO: This will be used primarily for the details page
-            #newRouteObj['mainText'] = self.create_trail_main_text(routeDescs, preface)
 
             mainMTBRoutes.append(newRouteObj)
 
@@ -166,6 +173,18 @@ class MTBTrailCreator:
     # 5. Trail image 
     # 6. Trail driving directions 
     # 7. Trail gpx map file 
-    #def create_route_detail(self):
+    def create_mtb_route_detail(self, mtb_route, mtb_descs):
+
+        # create the new route object from route and descs 
+        routeDetail = self.create_trail_metadata(mtb_route)
+        (areaNames, areaRefs) = self.create_trail_areas(mtb_route['trail_area'])
+        routeDetail['areaNames'] = areaNames
+        routeDetail['areaRefs'] = areaRefs 
+
+        # create the preface and main text 
+        preface = self.create_trail_preface(routeDetail)
+        routeDetail['descMap'] = self.create_trail_main_text(mtb_descs, preface)
+
+        return routeDetail 
 
 
