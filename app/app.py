@@ -61,7 +61,6 @@ def load_session_storage():
     # 1. Compare the new search query with the previous
     # 2. If anything exists in the session storage than show it
     # 3. Do we need to requery or have separate templates?? 
-    #sessionStorage.deleteAll()
     storageContents = sessionStorage.getAll()
     if "stream_output_sesh1" in storageContents:
         st.session_state["stream_output"] = storageContents["stream_output_sesh1"]
@@ -97,6 +96,7 @@ load_session_state()
 sessionStorage = SessionStorage()
 data_loader = load_search_data()
 load_session_storage()
+#sessionStorage.deleteAll()
 
 # main Trailz AI titles
 st.title("Explore Your Trailz...")
@@ -108,7 +108,6 @@ main_placeholder = st.empty()
 query_label = "What type of trails are you looking for?"
 queryVal = st.session_state["query"] if "query" in st.session_state else ""
 query = main_placeholder.text_input(query_label, value=queryVal, placeholder="Fast and flowy with some jumps")
-
 
 # TODO: make this a geo location that gets users location
 filter_container = st.container(border=True)
@@ -299,8 +298,6 @@ if st.session_state.search_click:
                 # Store stream output and trail list in session state 
                 st.session_state["stream_output"] = stream_output 
                 st.session_state["trail_list"] = json.dumps(trail_list)
-                st.session_state["query"] = query 
-                st.session_state["location"] = location 
             except Exception as e:
                 # TODO: When to clear the local storage? after each query? or
                 # when the query changes per search?
@@ -315,7 +312,9 @@ if st.session_state.search_click:
 if st.session_state.trail_list: 
     stream_output = st.session_state["stream_output"]
     trail_list = json.loads(st.session_state["trail_list"])
-    
+    st.session_state["location"] = location 
+    st.session_state["query"] = query 
+
     # let's create the rows of columns
     trail_list_len = len(trail_list)
     container_height = 320
@@ -393,6 +392,33 @@ if st.session_state.trail_list:
                         st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id2}&units={units}" target="_self"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
                         st.markdown(summary2) 
 
+# -------------------------------------
+# Label styling for queries and result
+# -------------------------------------
+components.html(
+    f"""
+    <script>
+        var elems = window.parent.document.querySelectorAll('div[class*="stTextInput"] p');
+        var elem1 = Array.from(elems).find(x => x.innerText == '{query_label}');
+        var elem2 = Array.from(elems).find(x => x.innerText == '{loc_label}');
+        elem1.style.fontSize = '18px'; 
+        elem2.style.fontSize = '18px';
+    </script>
+    """
+)
+components.html(
+    """
+    <script>
+        var inelems = window.parent.document.querySelectorAll('input[class*="st-ae"]');
+        input_elems = Array.from(inelems);
+        for(var i = 0; i < input_elems.length; i++) {
+            var elem = input_elems[i]; 
+            elem.style.fontSize = '18px'; 
+        }
+    </script>
+    """
+)
+
 # ------------------------------------------------------------------
 # Set the stream output and trail list cache using session storage 
 # ------------------------------------------------------------------
@@ -454,31 +480,4 @@ try:
                 st.session_state["units"], key="units_sesh1") 
 except Exception as e:
     print(f"Cache exception: {e}")
-
-# -------------------------------------
-# Label styling for queries and result
-# -------------------------------------
-components.html(
-    f"""
-    <script>
-        var elems = window.parent.document.querySelectorAll('div[class*="stTextInput"] p');
-        var elem1 = Array.from(elems).find(x => x.innerText == '{query_label}');
-        var elem2 = Array.from(elems).find(x => x.innerText == '{loc_label}');
-        elem1.style.fontSize = '18px'; 
-        elem2.style.fontSize = '18px';
-    </script>
-    """
-)
-components.html(
-    """
-    <script>
-        var inelems = window.parent.document.querySelectorAll('input[class*="st-ae"]');
-        input_elems = Array.from(inelems);
-        for(var i = 0; i < input_elems.length; i++) {
-            var elem = input_elems[i]; 
-            elem.style.fontSize = '18px'; 
-        }
-    </script>
-    """
-)
 

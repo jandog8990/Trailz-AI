@@ -82,10 +82,11 @@ class TrailMongoDB:
     def find_mtb_trail_data_by_ids(self, ids):
         # let's pull tables and collections using the route ids 
         trailRoutes = self.find_mtb_trail_routes_by_ids(ids)
-        
+
         # let's pull all of the trail route ids from the route data 
         trailIds = [frame['_id'] for frame in trailRoutes] 
 
         # let's get the descriptions using the list of trail ids
         trailDescriptions = self.find_mtb_trail_descriptions_by_ids(trailIds) 
+
         return (trailRoutes, trailDescriptions)
