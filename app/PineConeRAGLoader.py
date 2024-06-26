@@ -119,7 +119,7 @@ class PineConeRAGLoader:
         
         matches = results['matches'] 
         trail_metadata = [trail['metadata'] for trail in matches] 
-        
+
         # create trail contexts for the open ai model
         contexts = self.create_trail_contexts(trail_metadata)
         

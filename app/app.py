@@ -102,18 +102,12 @@ load_session_storage()
 st.title("Explore Your Trailz...")
 
 # placeholder for loading data bar
+main_placeholder = st.empty()
 
 # prompt the user for a trail recommendation query
 query_label = "What type of trails are you looking for?"
-@st.experimental_fragment
-def app_query() -> None:
-    main_placeholder = st.empty()
-    queryVal = st.session_state["query"] if "query" in st.session_state else ""
-    query = main_placeholder.text_input(query_label, value=queryVal, placeholder="Fast and flowy with some jumps")
-    return query
-
-with st.container():
-    query = app_query()
+queryVal = st.session_state["query"] if "query" in st.session_state else ""
+query = main_placeholder.text_input(query_label, value=queryVal, placeholder="Fast and flowy with some jumps")
 
 # TODO: make this a geo location that gets users location
 filter_container = st.container(border=True)
@@ -176,20 +170,15 @@ st.markdown("""
         color: white !important; 
     }
     </style>""", unsafe_allow_html=True) 
-    
-loc_label = "Location" 
-@st.experimental_fragment
-def render_location():
-    locationVal = st.session_state["location"] if "location" in st.session_state else ""
-    location = st.text_input(loc_label, value=locationVal, placeholder="Your city/town")
-    return location
 
 # create the filter container for location and difficulty
 with filter_container:
     col1, col2 = st.columns(2, gap="small") 
     col3, col4 = st.columns([1, 1]) 
     with col1: 
-        location = render_location()    
+        loc_label = "Location" 
+        locationVal = st.session_state["location"] if "location" in st.session_state else ""
+        location = st.text_input(loc_label, value=locationVal, placeholder="Your city/town")
     with col2:
         diff_label = "Difficulty" 
         st.markdown('<p class="toggle-title">Difficulty</p>', unsafe_allow_html=True)
@@ -255,7 +244,7 @@ if st.session_state.search_click:
             }
         else: 
             conditions = {
-                "areaNames": {"$in": [location]},
+                "areaNames": {"$in": loc_arr},
                 "difficulty": {"$in": diff_arr}
             }
 
