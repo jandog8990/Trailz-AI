@@ -6,7 +6,7 @@
 **/pkl_data
 pkl_data/
 jl_data/
-gpx/
+gpx/**.gpx
 logs/
 **/**pycache**
 **/*.log

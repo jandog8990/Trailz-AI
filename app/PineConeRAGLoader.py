@@ -153,7 +153,6 @@ class PineConeRAGLoader:
             {"role": "user", "content": user_msg}
         ]
 
-        """
         # generate the RAG client completions 
         #NOTE: higher temp means more randomness 
         stream = self.client.chat.completions.create(
@@ -169,9 +168,6 @@ class PineConeRAGLoader:
             st.header("Trail Recommendations", divider='rainbow')
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
-        """
-        stream_output = "I don't know." 
-        self.md_obj.empty()
 
         # return the trail list from the PineCone query and RAG output 
         bot_answer = {
