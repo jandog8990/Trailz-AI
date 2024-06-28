@@ -223,7 +223,7 @@ if trailDetail and len(trailDetail) > 0:
         """, height=390)
    
     # trail map container using mapbox
-    #with st.container():
+    with st.container():
 
 
     # lower container trail details 

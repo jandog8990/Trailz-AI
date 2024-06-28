@@ -17,6 +17,10 @@ class PineConeRAGLoader:
         self.rag_rails = None 
         self.index = None
         self.encoder = None
+        with open("media/hackbird.GIF", "rb") as f:
+            hack = f.read()
+        hack_url = base64.b64encode(hack).decode("utf-8")
+        self.hack_gif = f'<img src="data:image/gif;base64,{hack_url}" alt="hack gif">'
     
     @st.cache_resource
     def load_encoder(_self):
@@ -48,13 +52,13 @@ class PineConeRAGLoader:
         #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
         _self.index = pc.Index(pc_index_name)
 
-    def load_markdown(self):
-        with open("media/hackbird.GIF", "rb") as f:
-            hack = f.read()
-        hack_url = base64.b64encode(hack).decode("utf-8")
-        hack_gif = f'<img src="data:image/gif;base64,{hack_url}" alt="hack gif">'
+    def load_retrieve_markdown(self):
         load_txt = '<span style="font-size:20px;color: #32CD32;">  Finding your trailz...</span>'
-        return hack_gif+load_txt
+        return self.hack_gif+load_txt
+    
+    def load_rag_markdown(self):
+        load_txt = '<span style="font-size:20px;color: #32CD32;">  Creating trail recommendations...</span>'
+        return self.hack_gif+load_txt
 
     def stream_chunks(self, stream):
         count = 0 
@@ -96,7 +100,7 @@ class PineConeRAGLoader:
     async def retrieve(self, query: str, conditions: str) -> (list, list):
         # NOTE: The query and conditions are passed as json role objects
         self.md_obj = st.empty() 
-        self.md_obj.markdown(self.load_markdown(), unsafe_allow_html=True)
+        self.md_obj.markdown(self.load_retrieve_markdown(), unsafe_allow_html=True)
 
         # retrieve from PineCone using encoded query
         cond_dict = json.loads(conditions) 
@@ -125,6 +129,7 @@ class PineConeRAGLoader:
         
         # returns a tuple of contexts and trail data 
         trail_list = self.ragUtility.query_trail_list(trail_metadata)
+        self.md_obj.empty()
 
         return (contexts, trail_list)
 
@@ -137,38 +142,42 @@ class PineConeRAGLoader:
         trail_list = trail_tuple[1]
         context_str = "\n".join(contexts)
 
-        # place the user query and contexts into RAG prompt
-        system_msg = "You are a helpful assistant."
-        user_msg = f"""
-        Given the following trail descriptions, please provide trail recommendations for the prompt.
+        if len(trail_list) == 0:
+            stream_output = "No trailz found."
+        else:
+            # place the user query and contexts into RAG prompt
+            self.md_obj.markdown(self.load_rag_markdown(), unsafe_allow_html=True)
+            system_msg = "You are a helpful assistant."
+            user_msg = f"""
+            Given the following trail descriptions, please provide trail recommendations for the prompt.
 
-        Trail Descriptions: {context_str}
+            Trail Descriptions: {context_str}
 
-        Prompt: {query}
-        """
-       
-        # create the messages to send
-        messages = [
-            {"role": "system", "content": system_msg},
-            {"role": "user", "content": user_msg}
-        ]
+            Prompt: {query}
+            """
+           
+            # create the messages to send
+            messages = [
+                {"role": "system", "content": system_msg},
+                {"role": "user", "content": user_msg}
+            ]
 
-        # generate the RAG client completions 
-        #NOTE: higher temp means more randomness 
-        stream = self.client.chat.completions.create(
-            model=openai_model_id,
-            messages=messages,
-            temperature=0.9,
-            stream=True,
-            max_tokens=300)
-       
-        # show the results from the RAG response using Stream 
-        result_holder = st.empty() 
-        with result_holder.container(): 
-            st.header("Trail Recommendations", divider='rainbow')
-            stream_output = st.write_stream(self.stream_chunks(stream))
-            self.md_obj.empty()
-        result_holder.empty()
+            # generate the RAG client completions 
+            #NOTE: higher temp means more randomness 
+            stream = self.client.chat.completions.create(
+                model=openai_model_id,
+                messages=messages,
+                temperature=0.9,
+                stream=True,
+                max_tokens=300)
+           
+            # show the results from the RAG response using Stream 
+            result_holder = st.empty() 
+            with result_holder.container(): 
+                st.header("Trail Recommendations", divider='rainbow')
+                stream_output = st.write_stream(self.stream_chunks(stream))
+                self.md_obj.empty()
+            result_holder.empty()
 
         # return the trail list from the PineCone query and RAG output 
         bot_answer = {

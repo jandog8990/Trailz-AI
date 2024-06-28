@@ -262,7 +262,9 @@ if st.session_state.search_click:
 # --------------------------------------------------------
 # Results container for the stream output and trail list 
 # --------------------------------------------------------
-if st.session_state.trail_list: 
+
+# display the stream output from rag rails
+if st.session_state["stream_output"] != "": 
     stream_output = st.session_state["stream_output"]
     trail_list = st.session_state["trail_list"]
 
@@ -274,14 +276,24 @@ if st.session_state.trail_list:
     with st.container():
         st.header("Trail Recommendations", divider='rainbow') 
         if stream_output == "I don't know.":
+            # this happens when OpenAI can't recommend trailz 
             stream_output = '''
             Sorry, I couldn't recommend any specific trailz for you.
-            However, below I've found some trailz that I think you 
+            However, below I've found some trailz that I think you
             might enjoy. Or, you can try another search! 
             '''
+        elif stream_output == "No trailz found.":
+            # this happens when Pinecone can't find trailz
+            stream_output = '''
+            Sorry, I couldn't find any specific trailz for you.
+            Please try another location or description, I'm still
+            learning how to find and recommend mtb trails.
+            '''
+             
         st.markdown(stream_output)
 
-    # display the trail_list results in the details section 
+# display the trail_list results in the details section 
+if len(st.session_state["trail_list"]) > 0: 
     with st.container():
         st.header("Trail Details", divider='rainbow')
         for i in range(0, trail_list_len, 2): 
