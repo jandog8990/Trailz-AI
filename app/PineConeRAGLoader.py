@@ -17,7 +17,6 @@ class PineConeRAGLoader:
         self.rag_rails = None 
         self.index = None
         self.encoder = None
-        self.result_holder = None
     
     @st.cache_resource
     def load_encoder(_self):
@@ -116,7 +115,8 @@ class PineConeRAGLoader:
                 top_k=12,
                 filter=cond_dict,
                 include_metadata=True)
-        
+
+        # TODO: Filter out based on id
         matches = results['matches'] 
         trail_metadata = [trail['metadata'] for trail in matches] 
 
@@ -158,16 +158,17 @@ class PineConeRAGLoader:
         stream = self.client.chat.completions.create(
             model=openai_model_id,
             messages=messages,
-            temperature=1.0,
+            temperature=0.9,
             stream=True,
-            max_tokens=500)
+            max_tokens=300)
        
         # show the results from the RAG response using Stream 
-        self.result_holder = st.empty() 
-        with self.result_holder.container(): 
+        result_holder = st.empty() 
+        with result_holder.container(): 
             st.header("Trail Recommendations", divider='rainbow')
             stream_output = st.write_stream(self.stream_chunks(stream))
             self.md_obj.empty()
+        result_holder.empty()
 
         # return the trail list from the PineCone query and RAG output 
         bot_answer = {

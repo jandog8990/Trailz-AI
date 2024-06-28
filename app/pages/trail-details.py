@@ -20,7 +20,7 @@ ragUtility = RAGUtility()
 trailUtility = TrailUtility()
 sessionStorage = SessionStorage()
 #sessionStorage.deleteAll()
-storageContents = sessionStorage.getAll()
+#storageContents = sessionStorage.getAll()
 
 # create the description list from text
 def parse_text(text):
@@ -49,8 +49,10 @@ if trailDetail and len(trailDetail) > 0:
     descMap = trailDetail["descMap"]
     trailImages = trailDetail["trail_images"]
     trailStats = trailDetail["trail_stats"]
+    gpxFile = trailDetail["gpx_file"] 
     routeDetails = trailUtility.createTrailStats(trailStats, units)
-       
+    print(f"GPX file = {gpxFile}")
+
     imageElements = "" 
     dotElements = "" 
     count = 0 
@@ -66,13 +68,14 @@ if trailDetail and len(trailDetail) > 0:
           <span class="dot" onclick="currentSlide({count})"></span>
         """
 
-    # top container with trail name and images
+    # top container with trail name and info 
     with st.container():
         st.title(routeName) 
         st.markdown(f'<p class="route-details">Difficulty: {str(difficulty)} - Rating: {str(average_rating)}</p>', unsafe_allow_html=True) 
         st.markdown(f"<p class='route-details'>{routeDetails}</p>", unsafe_allow_html=True) 
         st.markdown("<br>", unsafe_allow_html=True)
-    
+   
+    # image carousel container
     with st.container():
 
         components.html("""
@@ -218,8 +221,12 @@ if trailDetail and len(trailDetail) > 0:
         </body>
         </html>
         """, height=390)
-    
-    # lower container trail description
+   
+    # trail map container using mapbox
+    #with st.container():
+
+
+    # lower container trail details 
     with st.container():
         st.header("Trail Details", divider='rainbow') 
         if "Preface" in descMap: 

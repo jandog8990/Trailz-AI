@@ -42,45 +42,16 @@ def load_session_state():
         st.session_state['searching'] = False
     if 'rag_query' not in st.session_state:
         st.session_state['rag_query'] = ""
-    if 'easy' not in st.session_state:
-        st.session_state['easy'] = False 
-    if 'intermediate' not in st.session_state:
-        st.session_state['intermediate'] = False 
-    if 'difficult' not in st.session_state:
-        st.session_state['difficult'] = False 
     if 'trail_list' not in st.session_state: 
-        st.session_state['trail_list'] = ""
+        st.session_state['trail_list'] = [] 
     if 'stream_output' not in st.session_state: 
         st.session_state['stream_output'] = ""
-    if 'units' not in st.session_state: 
-        st.session_state['units'] = "Imperial"
 
 # initialize the local storage if exists
-def load_session_storage():
-    # NOTE: Somehow parse this and communicate that we have cache?!
-    # 1. Compare the new search query with the previous
-    # 2. If anything exists in the session storage than show it
-    # 3. Do we need to requery or have separate templates?? 
-    storageContents = sessionStorage.getAll()
-    if "stream_output_sesh1" in storageContents:
-        st.session_state["stream_output"] = storageContents["stream_output_sesh1"]
-    if "trail_list_sesh1" in storageContents:
-        st.session_state["trail_list"] = storageContents["trail_list_sesh1"]
-    if "query_sesh1" in storageContents:
-        st.session_state["query"] = storageContents["query_sesh1"]
-    if "location_sesh1" in storageContents:
-        st.session_state["location"] = storageContents["location_sesh1"]
-    if "rag_query_sesh1" in storageContents:
-        st.session_state["rag_query"] = storageContents["rag_query_sesh1"]
-    if "easy_sesh1" in storageContents:
-        st.session_state["easy"] = storageContents["easy_sesh1"]
-    if "intermediate_sesh1" in storageContents:
-        st.session_state["intermediate"] = storageContents["intermediate_sesh1"]
-    if "difficult_sesh1" in storageContents:
-        st.session_state["difficult"] = storageContents["difficult_sesh1"]
-    if "units_sesh1" in storageContents:
-        st.session_state["units"] = storageContents["units_sesh1"]
-
+def load_session_storage(sessionStorage):
+    st.session_state["stream_output"] = sessionStorage.getItem("stream_output") if sessionStorage.getItem("stream_output") else ""
+    st.session_state["trail_list"] = sessionStorage.getItem("trail_list") if sessionStorage.getItem("trail_list") else []
+    
 def run_search():
     st.session_state.search_click = True
     st.session_state.searching = True 
@@ -95,19 +66,15 @@ trailzAIImg = os.environ["TRAILZ_AI_IMG"]
 load_session_state()
 sessionStorage = SessionStorage()
 data_loader = load_search_data()
-load_session_storage()
 #sessionStorage.deleteAll()
+load_session_storage(sessionStorage)
 
 # main Trailz AI titles
 st.title("Explore Your Trailz...")
 
-# placeholder for loading data bar
-main_placeholder = st.empty()
-
 # prompt the user for a trail recommendation query
 query_label = "What type of trails are you looking for?"
-queryVal = st.session_state["query"] if "query" in st.session_state else ""
-query = main_placeholder.text_input(query_label, value=queryVal, placeholder="Fast and flowy with some jumps")
+query = st.text_input(query_label, placeholder="Fast and flowy with some jumps")
 
 # TODO: make this a geo location that gets users location
 filter_container = st.container(border=True)
@@ -177,8 +144,7 @@ with filter_container:
     col3, col4 = st.columns([1, 1]) 
     with col1: 
         loc_label = "Location" 
-        locationVal = st.session_state["location"] if "location" in st.session_state else ""
-        location = st.text_input(loc_label, value=locationVal, placeholder="Your city/town")
+        location = st.text_input(loc_label, placeholder="Your city/town")
     with col2:
         diff_label = "Difficulty" 
         st.markdown('<p class="toggle-title">Difficulty</p>', unsafe_allow_html=True)
@@ -186,24 +152,17 @@ with filter_container:
         col11,col12 = st.columns(2, gap="small")
         col21,col22 = st.columns(2, gap="small")
         with col11: 
-            easyVal = st.session_state["easy"] if "easy" in st.session_state else False 
-            easy = st.toggle(easy_label, value=easyVal)
+            easy = st.toggle(easy_label)
         with col12: 
-            intermediateVal = st.session_state["intermediate"] if "intermediate" in st.session_state else False 
-            intermediate = st.toggle(intermediate_label, value=intermediateVal)
+            intermediate = st.toggle(intermediate_label)
         with col21: 
-            difficultVal = st.session_state["difficult"] if "difficult" in st.session_state else False 
-            difficult = st.toggle(difficult_label, value=difficultVal)
+            difficult = st.toggle(difficult_label)
     with col3:
         st.write("") 
         st.button(':white[Search]', on_click=run_search, disabled=st.session_state.searching)
     with col4: 
-        unitsIndex = 0 if st.session_state["units"] == "Imperial" else 1
-        units = st.radio("Units", ["Imperial", "Metric"], index=unitsIndex, horizontal=True)
-        st.session_state.units = units
+        units = st.radio("Units", ["Imperial", "Metric"], horizontal=True)
     
-    user_message = st.empty()
-
 # --------------------------------------------------------
 # Run the Pinecone/RAG search when search button clicked
 # --------------------------------------------------------
@@ -260,17 +219,13 @@ if st.session_state.search_click:
         # Check that the user is not issuing the same query as their previous
         if rag_query != st.session_state.rag_query: 
             st.session_state.rag_query = rag_query
-            st.session_state.easy = easy
-            st.session_state.intermediate = intermediate
-            st.session_state.difficult = difficult
 
             # run the PineCone and RAG model for generating trails
-            rag_rails = data_loader.rag_rails
-            resp = asyncio.run(rag_rails.generate_async(messages=messages))
+            #resp = asyncio.run(data_loader.rag_rails.generate_async(messages=messages))
+            resp = data_loader.rag_rails.generate(messages=messages)
        
             # set the trail content to show the user 
             trail_content = resp['content'] 
-            #st.session_state.trail_content = trail_content 
         else:
             # previous query matches current query 
             trail_content = None 
@@ -284,10 +239,8 @@ if st.session_state.search_click:
         # ---------------------------------------------------------
         # Parse trail_content results from the Pinecone/RAG Model 
         # ---------------------------------------------------------
-        err_md = st.empty() 
         enable_query() 
         if trail_content: 
-            err_md.empty() 
             try: 
                 resp_map = json.loads(trail_content)   
             
@@ -297,7 +250,7 @@ if st.session_state.search_click:
                
                 # Store stream output and trail list in session state 
                 st.session_state["stream_output"] = stream_output 
-                st.session_state["trail_list"] = json.dumps(trail_list)
+                st.session_state["trail_list"] = trail_list
             except Exception as e:
                 # TODO: When to clear the local storage? after each query? or
                 # when the query changes per search?
@@ -311,26 +264,22 @@ if st.session_state.search_click:
 # --------------------------------------------------------
 if st.session_state.trail_list: 
     stream_output = st.session_state["stream_output"]
-    trail_list = json.loads(st.session_state["trail_list"])
-    st.session_state["location"] = location 
-    st.session_state["query"] = query 
+    trail_list = st.session_state["trail_list"]
 
     # let's create the rows of columns
     trail_list_len = len(trail_list)
     container_height = 320
 
     # display the stream results in the recommendation section
-    if data_loader.result_holder: 
-        data_loader.result_holder.empty()
-        with st.container():
-            st.header("Trail Recommendations", divider='rainbow') 
-            if stream_output == "I don't know.":
-                stream_output = '''
-                Sorry, I couldn't recommend any specific trailz for you.
-                However, below I've found some trailz that I think you 
-                might enjoy. Or, you can try another search! 
-                '''
-            st.write(stream_output)
+    with st.container():
+        st.header("Trail Recommendations", divider='rainbow') 
+        if stream_output == "I don't know.":
+            stream_output = '''
+            Sorry, I couldn't recommend any specific trailz for you.
+            However, below I've found some trailz that I think you 
+            might enjoy. Or, you can try another search! 
+            '''
+        st.markdown(stream_output)
 
     # display the trail_list results in the details section 
     with st.container():
@@ -352,7 +301,7 @@ if st.session_state.trail_list:
             
             # use the trail utility to parse the trail stats
             routeDetails1 = trailUtility.createTrailStats(trailStats1, units) 
-
+            
             # get the data from i+1th object
             if (i+1) < trail_list_len: 
                 val2 = trail_list[i+1]
@@ -372,25 +321,24 @@ if st.session_state.trail_list:
             # two columns of trail details 
             cc1, cc2 = st.columns(2) 
 
-            with st.container():    # row container 
-                # column 1 trail details 
+            # column 1 trail details 
+            # TODO: Set the href to our custom page once we have it ready 
+            with cc1.container(height=container_height):
+                st.markdown(f'<p class="route-name"><a href="{url1}">{route_name1}</a></p>', unsafe_allow_html=True) 
+                st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)} - Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
+                st.markdown(f"<p class='route-details'>{routeDetails1}</p>", unsafe_allow_html=True) 
+                st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id1}&units={units}" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                st.markdown(summary1) 
+            
+            # column 2 trail details (check if we are in bounds)
+            if route_name2: 
                 # TODO: Set the href to our custom page once we have it ready 
-                with cc1.container(height=container_height):
-                    st.markdown(f'<p class="route-name"><a href="{url1}">{route_name1}</a></p>', unsafe_allow_html=True) 
-                    st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)} - Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
-                    st.markdown(f"<p class='route-details'>{routeDetails1}</p>", unsafe_allow_html=True) 
-                    st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id1}&units={units}" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
-                    st.markdown(summary1) 
-               
-                # column 2 trail details (check if we are in bounds)
-                if (i+1) < trail_list_len: 
-                    # TODO: Set the href to our custom page once we have it ready 
-                    with cc2.container(height=container_height): 
-                        st.markdown(f'<p class="route-name"><a href="{url2}">{route_name2}</a></p>', unsafe_allow_html=True) 
-                        st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)} - Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
-                        st.markdown(f"<p class='route-details'>{routeDetails2}</p>", unsafe_allow_html=True) 
-                        st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id2}&units={units}" target="_self"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
-                        st.markdown(summary2) 
+                with cc2.container(height=container_height): 
+                    st.markdown(f'<p class="route-name"><a href="{url2}">{route_name2}</a></p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)} - Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
+                    st.markdown(f"<p class='route-details'>{routeDetails2}</p>", unsafe_allow_html=True) 
+                    st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id2}&units={units}" target="_self"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                    st.markdown(summary2) 
 
 # -------------------------------------
 # Label styling for queries and result
@@ -426,58 +374,21 @@ components.html(
 #sessionStorage.deleteItem("stream_output_sesh", key="stream_output_sesh_1")
 try:
     # Step 1: Store stream output in storage 
+    streamOutputSesh = sessionStorage.getItem("stream_output") if sessionStorage.getItem("stream_output") else ""
+    trailListSesh = sessionStorage.getItem("trail_list") if sessionStorage.getItem("trail_list") else []    
+
     if "stream_output" in st.session_state:
-        if st.session_state["stream_output"] != "":
-            sessionStorage.setItem("stream_output_sesh1",
-                st.session_state["stream_output"], key="stream_output_sesh1") 
-    
+        if st.session_state["stream_output"] != "" and st.session_state["stream_output"] != streamOutputSesh:
+            sessionStorage.setItem("stream_output",
+                st.session_state["stream_output"], key="trailz-ai-sesh1") 
+
     # Step 2: Store trail list in storage 
     if "trail_list" in st.session_state:
-        if len(st.session_state["trail_list"]) != 0:
-            sessionStorage.setItem("trail_list_sesh1", 
-                st.session_state["trail_list"], key="trail_list_sesh1") 
-    
-    # Step 3: Store query in storage 
-    if "query" in st.session_state:
-        if st.session_state["query"] != "":
-            sessionStorage.setItem("query_sesh1",
-                st.session_state["query"], key="query_sesh1") 
-    
-    # Step 4: Store location in storage 
-    if "location" in st.session_state:
-        if st.session_state["location"] != "":
-            sessionStorage.setItem("location_sesh1",
-                st.session_state["location"], key="location_sesh1") 
-    
-    # Step 5: Store in rag query storage 
-    if "rag_query" in st.session_state:
-        if st.session_state["rag_query"] != "":
-            sessionStorage.setItem("rag_query_sesh1",
-                st.session_state["rag_query"], key="rag_query_sesh1") 
-    
-    # Step 6: Store in easy storage 
-    if "easy" in st.session_state:
-        if st.session_state["easy"] != "":
-            sessionStorage.setItem("easy_sesh1",
-                st.session_state["easy"], key="easy_sesh1") 
-    
-    # Step 7: Store in intermediate storage 
-    if "intermediate" in st.session_state:
-        if st.session_state["intermediate"] != "":
-            sessionStorage.setItem("intermediate_sesh1",
-                st.session_state["intermediate"], key="intermediate_sesh1") 
-    
-    # Step 8: Store in difficult storage 
-    if "difficult" in st.session_state:
-        if st.session_state["difficult"] != "":
-            sessionStorage.setItem("difficult_sesh1",
-                st.session_state["difficult"], key="difficult_sesh1") 
-    
-    # Step 9: Store in units storage 
-    if "units" in st.session_state:
-        if st.session_state["units"] != "":
-            sessionStorage.setItem("units_sesh1",
-                st.session_state["units"], key="units_sesh1") 
+        if len(st.session_state["trail_list"]) != 0 and st.session_state["trail_list"] != trailListSesh:
+            sessionStorage.setItem("trail_list", 
+                st.session_state["trail_list"], key="trailz-ai-sesh2") 
 except Exception as e:
-    print(f"Cache exception: {e}")
+    print("Cache exception:")
+    print(e)
+    print("\n")
 
