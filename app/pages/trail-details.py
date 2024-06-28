@@ -5,6 +5,7 @@ import re
 from RAGUtility import RAGUtility
 from TrailUtility import TrailUtility
 from streamlit_session_browser_storage import SessionStorage
+import base64
 
 # get environment and query params
 defaultImg = os.environ["TRAILZ_AI_IMG"]
@@ -21,6 +22,14 @@ trailUtility = TrailUtility()
 sessionStorage = SessionStorage()
 #sessionStorage.deleteAll()
 #storageContents = sessionStorage.getAll()
+        
+with open("media/hackbird.GIF", "rb") as f:
+    hack = f.read()
+hack_url = base64.b64encode(hack).decode("utf-8")
+hack_gif = f'<img src="data:image/gif;base64,{hack_url}" alt="hack gif">'
+load_txt = '<span style="font-size:20px;color: #32CD32;">  Loading trail details...</span>'
+md_obj = st.empty() 
+md_obj.markdown(hack_gif+load_txt, unsafe_allow_html=True)
 
 # create the description list from text
 def parse_text(text):
@@ -40,6 +49,7 @@ if len(storageContents) > 0:
         else:            
             trailDetail = storageContents["trail_detail_sesh2"] if "trail_detail_sesh2" in storageContents else {}
 
+# display the trail details
 if trailDetail and len(trailDetail) > 0:
 
     # get the trail fields from the details
@@ -47,11 +57,16 @@ if trailDetail and len(trailDetail) > 0:
     difficulty = trailDetail["trail_rating"]
     average_rating = trailDetail["average_rating"]
     descMap = trailDetail["descMap"]
+    trailUrl = trailDetail["trail_url"]
+    drivingDirections = trailDetail["driving_directions"]
     trailImages = trailDetail["trail_images"]
     trailStats = trailDetail["trail_stats"]
     gpxFile = trailDetail["gpx_file"] 
     routeDetails = trailUtility.createTrailStats(trailStats, units)
-    print(f"GPX file = {gpxFile}")
+    #routeDF = trailUtility.parse_gpx_file(gpxFile) 
+    #print("Route DF:")
+    #print(routeDF.head())
+    #print("\n")
 
     imageElements = "" 
     dotElements = "" 
@@ -73,6 +88,8 @@ if trailDetail and len(trailDetail) > 0:
         st.title(routeName) 
         st.markdown(f'<p class="route-details">Difficulty: {str(difficulty)} - Rating: {str(average_rating)}</p>', unsafe_allow_html=True) 
         st.markdown(f"<p class='route-details'>{routeDetails}</p>", unsafe_allow_html=True) 
+        st.markdown(f"<p class='route-directions'>Find trail directions <a href={drivingDirections}>here</a></p>", unsafe_allow_html=True) 
+        st.markdown(f"<p class='route-directions'>See the full map <a href={trailUrl}>here</a></p>", unsafe_allow_html=True) 
         st.markdown("<br>", unsafe_allow_html=True)
    
     # image carousel container
@@ -221,10 +238,6 @@ if trailDetail and len(trailDetail) > 0:
         </body>
         </html>
         """, height=390)
-   
-    # trail map container using mapbox
-    with st.container():
-
 
     # lower container trail details 
     with st.container():
@@ -255,6 +268,11 @@ if trailDetail and len(trailDetail) > 0:
             margin-bottom: 0px; 
             margin-top: 0px; 
         }
+        .route-directions {
+            font-size: 19px; 
+            margin-bottom: 0px; 
+            margin-top: 0px; 
+        }
         .description {
             font-size: 18px; 
         }
@@ -265,3 +283,4 @@ if trailDetail and len(trailDetail) > 0:
         sessionStorage.setItem("trail_detail_sesh2", trailDetail, key="trail_detail_sesh2")
     except Exception as e:
         print(f"Cache exception: {e}")
+md_obj.empty()
