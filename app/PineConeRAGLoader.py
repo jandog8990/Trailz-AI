@@ -199,9 +199,13 @@ class PineConeRAGLoader:
         # return the trail list from the PineCone query and RAG output 
             # 'trail_map': sortedTrailMap, 
         bot_answer = {
-            'trail_list': trail_list, 
+            'trail_map': sortedTrailMap, 
             'stream_output': stream_output
         }
+
+        print("Bot answer:")
+        print(bot_answer)
+        print("\n") 
 
         return json.dumps(bot_answer) 
     

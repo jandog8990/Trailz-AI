@@ -44,15 +44,15 @@ def load_session_state():
         st.session_state['searching'] = False
     if 'rag_query' not in st.session_state:
         st.session_state['rag_query'] = ""
-    if 'trail_list' not in st.session_state: 
-        st.session_state['trail_list'] = [] 
+    if 'trail_map' not in st.session_state: 
+        st.session_state['trail_map'] = [] 
     if 'stream_output' not in st.session_state: 
         st.session_state['stream_output'] = ""
 
 # initialize the local storage if exists
 def load_session_storage(sessionStorage):
     st.session_state["stream_output"] = sessionStorage.getItem("stream_output") if sessionStorage.getItem("stream_output") else ""
-    st.session_state["trail_list"] = sessionStorage.getItem("trail_list") if sessionStorage.getItem("trail_list") else []
+    st.session_state["trail_map"] = sessionStorage.getItem("trail_map") if sessionStorage.getItem("trail_map") else []
     
 def run_search():
     st.session_state.search_click = True
@@ -267,12 +267,12 @@ if st.session_state.search_click:
                 resp_map = json.loads(trail_content)   
             
                 # need to parse both outputs
-                trail_list = resp_map['trail_list']
+                trail_map = resp_map['trail_map']
                 stream_output = resp_map['stream_output']
                
-                # Store stream output and trail list in session state 
+                # Store stream output and trail map in session state 
                 st.session_state["stream_output"] = stream_output 
-                st.session_state["trail_list"] = trail_list
+                st.session_state["trail_map"] = trail_map 
             except Exception as e:
                 # TODO: When to clear the local storage? after each query? or
                 # when the query changes per search?
@@ -282,16 +282,16 @@ if st.session_state.search_click:
                     err_msg.empty()
 
 # --------------------------------------------------------
-# Results container for the stream output and trail list 
+# Results container for the stream output and trail map 
 # --------------------------------------------------------
 
 # display the stream output from rag rails
 if st.session_state["stream_output"] != "": 
     stream_output = st.session_state["stream_output"]
-    trail_list = st.session_state["trail_list"]
+    trail_map = st.session_state["trail_map"]
 
     # let's create the rows of columns
-    trail_list_len = len(trail_list)
+    trail_map_len = len(trail_map)
     container_height = 320
 
     # display the stream results in the recommendation section
@@ -314,26 +314,23 @@ if st.session_state["stream_output"] != "":
              
         st.markdown(stream_output)
 
-# display the trail_list results in the details section 
-if len(st.session_state["trail_list"]) > 0: 
+# display the trail_map results in the details section 
+if len(st.session_state["trail_map"]) > 0: 
     with st.container():
         st.header("Trail Details", divider='rainbow')
         defaultImg = load_default_img() 
+       
+        print("Trail map APP:")
+        print(trail_map)
+        print("\n")
         
         # TODO: Update this method to iter through the trail map 
-        """
-        Block below will be replaced with the following:
-        
-        for i in range(1, tlen+1, 2):
-            print(i)    # curr trail
-            if (i+1) < tlen+1:
-                print(i+1)
-        """ 
-        for i in range(0, trail_list_len, 2): 
+        print(f"Trail map len = {trail_map_len}") 
+        for i in range(1, trail_map_len+1, 2): 
             # get the data from ith object
             # need: route name, trail rating, trail dist/elev,
             # trail summary, trail image
-            val1 = trail_list[i]
+            val1 = trail_map[str(i)]
             id1 = val1['_id'] 
             url1 = val1['trail_url'] 
             route_name1 = val1['route_name']
@@ -350,8 +347,8 @@ if len(st.session_state["trail_list"]) > 0:
             
             # get the data from i+1th object
             route_name2 = None 
-            if (i+1) < trail_list_len: 
-                val2 = trail_list[i+1]
+            if (i+1) < trail_map_len+1: 
+                val2 = trail_map[str(i+1)]
                 id2 = val2['_id'] 
                 url2 = val2['trail_url'] 
                 route_name2 = val2['route_name']
@@ -416,25 +413,25 @@ components.html(
 )
 
 # ------------------------------------------------------------------
-# Set the stream output and trail list cache using session storage 
+# Set the stream output and trail map cache using session storage 
 # ------------------------------------------------------------------
 # NOTE: This was giving problems with duplicate widget IDs keep an eye 
 #sessionStorage.deleteItem("stream_output_sesh", key="stream_output_sesh_1")
 try:
     # Step 1: Store stream output in storage 
     streamOutputSesh = sessionStorage.getItem("stream_output") if sessionStorage.getItem("stream_output") else ""
-    trailListSesh = sessionStorage.getItem("trail_list") if sessionStorage.getItem("trail_list") else []    
+    trailMapSesh = sessionStorage.getItem("trail_map") if sessionStorage.getItem("trail_map") else []    
 
     if "stream_output" in st.session_state:
         if st.session_state["stream_output"] != "" and st.session_state["stream_output"] != streamOutputSesh:
             sessionStorage.setItem("stream_output",
                 st.session_state["stream_output"], key="trailz-ai-sesh1") 
 
-    # Step 2: Store trail list in storage 
-    if "trail_list" in st.session_state:
-        if len(st.session_state["trail_list"]) != 0 and st.session_state["trail_list"] != trailListSesh:
-            sessionStorage.setItem("trail_list", 
-                st.session_state["trail_list"], key="trailz-ai-sesh2") 
+    # Step 2: Store trail map in storage 
+    if "trail_map" in st.session_state:
+        if len(st.session_state["trail_map"]) != 0 and st.session_state["trail_map"] != trailMapSesh:
+            sessionStorage.setItem("trail_map", 
+                st.session_state["trail_map"], key="trailz-ai-sesh2") 
 except Exception as e:
     print("Cache exception:")
     print(e)
