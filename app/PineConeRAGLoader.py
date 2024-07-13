@@ -135,14 +135,9 @@ class PineConeRAGLoader:
         
         # create trail contexts for the open ai model
         contexts = self.create_trail_contexts(trail_metadata)
-        print(f"Contexts len = {len(contexts)}") 
-        print(f"Unique trail ids to query (len = {len(trail_ids)}):")
-        print(trail_ids)
-        print("\n") 
         
         # returns a tuple of contexts and trail data 
         trail_list = self.ragUtility.query_trail_list(trail_ids)
-        print(f"Unique trail list len = {len(trail_list)}") 
         self.md_obj.empty()
 
         return (contexts, trail_list)
@@ -203,10 +198,6 @@ class PineConeRAGLoader:
             'stream_output': stream_output
         }
 
-        print("Bot answer:")
-        print(bot_answer)
-        print("\n") 
-
         return json.dumps(bot_answer) 
     
     @st.cache_resource
@@ -214,28 +205,14 @@ class PineConeRAGLoader:
         import asyncio 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        #import warnings
-        #from langchain._api import LangChainDeprecationWarning
-        #warnings.simplefilter("ignore", category=LangChainDeprecationWarning)
         from nemoguardrails import LLMRails, RailsConfig
 
         print("Loading RAG rails...") 
 
         # create the rails using config
         config = RailsConfig.from_path("./config")
-        #config = RailsConfig.from_content(
-        #    colang_content=rag_colang_content,
-        #    yaml_content=yaml_content)
-        print(f"Rails Config:")
-        print(config) 
-        print("\n")
        
-        print("Instantiate LLM Rails...") 
-        #_self.rag_rails = LLMRails(config, verbose=True)
         _self.rag_rails = LLMRails(config)
-        print("RAG Rails:")
-        print(_self.rag_rails)
-        print("\n")
 
         # register the actions in RAG rails obj
         _self.rag_rails.register_action(action=_self.retrieve, name="retrieve")

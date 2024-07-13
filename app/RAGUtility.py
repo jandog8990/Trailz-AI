@@ -27,9 +27,9 @@ class RAGUtility:
         trailRoute = trailRoutes[0]
         
         mtbRouteDetail = self.trailCreator.create_mtb_route_detail(trailRoute, trailDescs)
-        print("MTB Trail Route detail:")
-        print(mtbRouteDetail)
-        print("\n")
+        #print("MTB Trail Route detail:")
+        #print(mtbRouteDetail)
+        #print("\n")
         
         return mtbRouteDetail
 
@@ -73,28 +73,10 @@ class RAGUtility:
             if len(matching) > 0: 
                 # if match -> ordered trail map will contain the objs 
                 rank = int(re.findall(r'\d+', matching[0])[0])
-                #foundIndex = trail_list.index({"route_name": id})
-                #orderedTrailMap[rank] = key 
-                #orderedTrailMap[rank] = trail_list[foundIndex] 
                 orderedTrailMap[rank] = trailMap.pop(id) 
             else:
                 # get the index of the non-mathing elem
-                #missingIndex = trail_list.index({"route_name": id})
-                #del trailObjs[missingIndex] 
-                #missingTrails.append(trail_list.pop(missingIndex));
                 missingTrails.append(trailMap.pop(id));
-
-        print(f"Original trail ids (len = {len(trailIds)}):")
-        print(trailIds)
-        print("\n")
-        
-        print(f"Missing trails (len = {len(missingTrails)}):")
-        print(missingTrails)
-        print("\n") 
-    
-        print(f"Remaining trail map (len = {len(trailMap)}):") 
-        print(trailMap)
-        print("\n") 
          
         # The missing trails will need to be appended in order to the map 
         mapLen = len(orderedTrailMap) 
@@ -102,12 +84,5 @@ class RAGUtility:
         end = mapLen+len(missingTrails)+1
         for i in range(start, end):
             orderedTrailMap[i] = missingTrails.pop(0)
-       
-        print("New ordered trail map:") 
-        mapLen = len(orderedTrailMap) 
-        print(f"New map len = {len(orderedTrailMap)}")
-        for i in range(1, len(orderedTrailMap)+1):
-            print(str(i) + ": " + str(orderedTrailMap[i]))
-        print("\n") 
         
         return orderedTrailMap 

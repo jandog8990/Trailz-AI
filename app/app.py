@@ -319,13 +319,8 @@ if len(st.session_state["trail_map"]) > 0:
     with st.container():
         st.header("Trail Details", divider='rainbow')
         defaultImg = load_default_img() 
-       
-        print("Trail map APP:")
-        print(trail_map)
-        print("\n")
         
         # TODO: Update this method to iter through the trail map 
-        print(f"Trail map len = {trail_map_len}") 
         for i in range(1, trail_map_len+1, 2): 
             # get the data from ith object
             # need: route name, trail rating, trail dist/elev,
