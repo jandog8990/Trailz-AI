@@ -38,6 +38,15 @@ def parse_text(text):
 def load_trail_detail(trail_id):
     return ragUtility.query_mongodb_trail_detail(trail_id)
 
+def load_default_img():
+    #trailzAIImg = os.environ["TRAILZ_AI_IMG"]
+    trailzAIImg = "./media/TFTT.jpg" 
+    file_ = open(trailzAIImg, "rb")
+    contents = file_.read()
+    data_url = base64.b64encode(contents).decode("utf-8")
+    file_.close()
+    return f"data:image/jpg;base64,{data_url}"
+
 storageContents = sessionStorage.getAll() 
 trailDetail = {}
 if len(storageContents) > 0:
@@ -64,9 +73,9 @@ if trailDetail and len(trailDetail) > 0:
     gpxFile = trailDetail["gpx_file"] 
     routeDetails = trailUtility.createTrailStats(trailStats, units)
     #routeDF = trailUtility.parse_gpx_file(gpxFile) 
-    #print("Route DF:")
-    #print(routeDF.head())
-    #print("\n")
+
+    if len(trailImages) == 0:
+        trailImages.append(load_default_img())
 
     imageElements = "" 
     dotElements = "" 

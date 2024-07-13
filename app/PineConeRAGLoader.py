@@ -96,6 +96,14 @@ class PineConeRAGLoader:
     
         return contexts
 
+    # create trail ids using the matches from vector db
+    def create_trail_ids(self, trail_metadata):
+        trail_ids = set()
+        for meta in trail_metadata:
+            trail_ids.add(meta["route_id"])
+        
+        return list(trail_ids) 
+    
     # retrieve data from PC index using encoder 
     async def retrieve(self, query: str, conditions: str) -> (list, list):
         # NOTE: The query and conditions are passed as json role objects
@@ -111,24 +119,30 @@ class PineConeRAGLoader:
         if not cond_dict:
             results = self.index.query(
                 vector=encoded_query,
-                top_k=12,
+                top_k=15,
                 include_metadata=True)
         else:
             results = self.index.query(
                 vector=encoded_query,
-                top_k=12,
+                top_k=15,
                 filter=cond_dict,
                 include_metadata=True)
 
-        # TODO: Filter out based on id
+        # from the result matches create the trail meta 
         matches = results['matches'] 
         trail_metadata = [trail['metadata'] for trail in matches] 
-
+        trail_ids = self.create_trail_ids(trail_metadata)
+        
         # create trail contexts for the open ai model
         contexts = self.create_trail_contexts(trail_metadata)
+        print(f"Contexts len = {len(contexts)}") 
+        print(f"Unique trail ids to query (len = {len(trail_ids)}):")
+        print(trail_ids)
+        print("\n") 
         
         # returns a tuple of contexts and trail data 
-        trail_list = self.ragUtility.query_trail_list(trail_metadata)
+        trail_list = self.ragUtility.query_trail_list(trail_ids)
+        print(f"Unique trail list len = {len(trail_list)}") 
         self.md_obj.empty()
 
         return (contexts, trail_list)
@@ -169,7 +183,7 @@ class PineConeRAGLoader:
                 messages=messages,
                 temperature=0.9,
                 stream=True,
-                max_tokens=300)
+                max_tokens=500)
            
             # show the results from the RAG response using Stream 
             result_holder = st.empty() 
@@ -192,16 +206,28 @@ class PineConeRAGLoader:
         import asyncio 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        #import warnings
+        #from langchain._api import LangChainDeprecationWarning
+        #warnings.simplefilter("ignore", category=LangChainDeprecationWarning)
         from nemoguardrails import LLMRails, RailsConfig
 
         print("Loading RAG rails...") 
-        (yaml_content, rag_colang_content) = _self.ragUtility.get_rag_config()
 
         # create the rails using config
-        config = RailsConfig.from_content(
-            colang_content=rag_colang_content,
-            yaml_content=yaml_content)
+        config = RailsConfig.from_path("./config")
+        #config = RailsConfig.from_content(
+        #    colang_content=rag_colang_content,
+        #    yaml_content=yaml_content)
+        print(f"Rails Config:")
+        print(config) 
+        print("\n")
+       
+        print("Instantiate LLM Rails...") 
+        #_self.rag_rails = LLMRails(config, verbose=True)
         _self.rag_rails = LLMRails(config)
+        print("RAG Rails:")
+        print(_self.rag_rails)
+        print("\n")
 
         # register the actions in RAG rails obj
         _self.rag_rails.register_action(action=_self.retrieve, name="retrieve")

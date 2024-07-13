@@ -34,7 +34,65 @@ class MTBTrailCreator:
         newRouteObj['trail_images'] = route['trail_images']
         
         return newRouteObj
-    
+  
+    def parse_trail_recommendations(self):
+        import re 
+        text = """
+        For a fast and flowy mountain biking experience based on the trail descriptions provided, I recommend the following trails:
+
+1. Schultz Creek Trail
+
+This trail offers a smooth ride with playful features like berms and opportunities to get a bit of air. It's known for its flow and is a popular choice among bikers looking for a fast ride. However, be aware of hikers, bikers, and dog walkers on the trail.
+2. Schultz Pass Loop
+
+Similar to Schultz Creek Trail, this loop includes flowing trails with berms and fun descents while providing a moderate workout. It’s a good choice for those looking for a bit of a challenge without exhausting themselves, perfect for maintaining momentum and speed.
+3. Two Lost Souls Loop
+
+This trail features a thrilling downhill section along Schultz Creek, ideal for those looking to enjoy a fast descent through scenic surroundings. It combines a variety of terrain, making the ride exciting and enjoyable.
+4. Flagstaff Loop Trail: West to Fort Tuthill
+
+Offering semi-flowy singletrack that includes some smooth sections perfect for a fast ride. The trail passes through beautiful landscapes and is well-suited for those looking for a relatively easy ride with bits of challenge.
+5. Cosnino Loop
+
+This is another trail that combines flowing sections through forests with wide-open views and tunnel crossings, offering a somewhat adventurous ride that remains fast and enjoyable.
+These trails are well-su
+        """
+        
+        textList = text.splitlines()
+        print("Text list split:")
+        print(textList)
+        print("\n")
+       
+        recTrails = []
+        trailz = {"Example Trail 2": {}, "Two Lost Souls Loop": {}, "Example Trail 3": {}, 
+                  "Schultz Creek Trail": {}, "Cosnino Loop": {}, "Schultz Pass Loop": {}, 
+                  "Flagstaff Loop Trail: West to Fort Tuthill": {}} 
+        for line in textList:
+            hasNum = bool(re.search(r'\d.', line))
+            if hasNum:
+                # res = ''.join([i for i in line if not r'\d.']) 
+                recTrails.append(line)
+        print("Recc Trails:")
+        print(recTrails)
+        print("\n")
+       
+        orderedTrailMap = {} 
+        for key in trailz.keys():
+            matching = [s for s in recTrails if key in s]
+            if len(matching) > 0: 
+                print(f"Trail = {key}")
+                print(f"Matching = {matching}")
+                rank = int(re.findall(r'\d+', matching[0])[0])
+                print(f"Rank = {rank}") 
+                orderedTrailMap[rank] = key 
+            print("\n")
+        print(f"Ordered Trail Map (len = {len(orderedTrailMap)}")
+        print(orderedTrailMap)
+        print("\n") 
+   
+        mapLen = len(orderedTrailMap) 
+        for i in range(1, mapLen+1):
+            print(str(i) + ": " + orderedTrailMap[i])
     # ----------------------------------
     # ----- Create MTB Trail Areas ----- 
     # ----------------------------------

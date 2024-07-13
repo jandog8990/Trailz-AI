@@ -11,6 +11,8 @@ import json
 from PineConeRAGLoader import PineConeRAGLoader
 from TrailUtility import TrailUtility 
 from streamlit_session_browser_storage import SessionStorage
+import base64
+import re
 
 # Main Trailz AI app for searching the PineCone DB for
 # recommended trailz around my area
@@ -59,10 +61,32 @@ def run_search():
 def enable_query():
     st.session_state.search_click = False 
     st.session_state.searching = False
-    
+
+def load_default_img():
+    #trailzAIImg = os.environ["TRAILZ_AI_IMG"]
+    trailzAIImg = "./media/TFTT.jpg" 
+    file_ = open(trailzAIImg, "rb")
+    contents = file_.read()
+    data_url = base64.b64encode(contents).decode("utf-8")
+    file_.close()
+    return f"data:image/jpg;base64,{data_url}"
+
+def parse_loc_arr(loc_arr):
+    print("Original loc arr:")
+    print(loc_arr)
+    # for each elem in the location capitalize the first letters
+    for i, elem in enumerate(loc_arr):
+        y = re.sub(' +', ' ', elem)
+        loc = y.strip()
+        loc_arr[i] = loc.title()
+    print("New loc arr:")
+    print(loc_arr)
+    print("\n")
+
+    return loc_arr
+
 # get the search loader object
 trailUtility = TrailUtility()
-trailzAIImg = os.environ["TRAILZ_AI_IMG"]
 load_session_state()
 sessionStorage = SessionStorage()
 data_loader = load_search_data()
@@ -194,6 +218,8 @@ if st.session_state.search_click:
         if location == '' and not diff_arr:
             conditions = {} 
         elif not diff_arr: 
+            # TODO: parse the location array and lower than upper 
+            parse_loc_arr(loc_arr)
             conditions = {
                 "areaNames": {"$in": loc_arr}
             }
@@ -202,6 +228,7 @@ if st.session_state.search_click:
                 "difficulty": {"$in": diff_arr}
             }
         else: 
+            parse_loc_arr(loc_arr)
             conditions = {
                 "areaNames": {"$in": loc_arr},
                 "difficulty": {"$in": diff_arr}
@@ -296,6 +323,7 @@ if st.session_state["stream_output"] != "":
 if len(st.session_state["trail_list"]) > 0: 
     with st.container():
         st.header("Trail Details", divider='rainbow')
+        defaultImg = load_default_img() 
         for i in range(0, trail_list_len, 2): 
             # get the data from ith object
             # need: route name, trail rating, trail dist/elev,
@@ -308,13 +336,15 @@ if len(st.session_state["trail_list"]) > 0:
             average_rating1 = val1['average_rating']
             summary1 = val1['summary']
             trail_images = val1['trail_images']
-            trailImage1 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
+            trailImage1 = trail_images[0] if (len(trail_images) > 0) else defaultImg 
             trailStats1 = val1['trail_stats']
-            
+
             # use the trail utility to parse the trail stats
+            trail_url1 = f"/trail-details?id={id1}&units={units}"
             routeDetails1 = trailUtility.createTrailStats(trailStats1, units) 
             
             # get the data from i+1th object
+            route_name2 = None 
             if (i+1) < trail_list_len: 
                 val2 = trail_list[i+1]
                 id2 = val2['_id'] 
@@ -324,10 +354,11 @@ if len(st.session_state["trail_list"]) > 0:
                 average_rating2 = val2['average_rating']
                 summary2 = val2['summary']
                 trail_images = val2['trail_images']
-                trailImage2 = trail_images[0] if (len(trail_images) > 0) else trailzAIImg 
+                trailImage2 = trail_images[0] if (len(trail_images) > 0) else defaultImg 
                 trailStats2 = val2['trail_stats']
 
                 # use the trail utility to parse the trail stats
+                trail_url2 = f"/trail-details?id={id2}&units={units}"
                 routeDetails2 = trailUtility.createTrailStats(trailStats2, units) 
            
             # two columns of trail details 
@@ -336,20 +367,20 @@ if len(st.session_state["trail_list"]) > 0:
             # column 1 trail details 
             # TODO: Set the href to our custom page once we have it ready 
             with cc1.container(height=container_height):
-                st.markdown(f'<p class="route-name"><a href="{url1}">{route_name1}</a></p>', unsafe_allow_html=True) 
+                st.markdown(f'<p class="route-name"><a href="{trail_url1}" target="_self">{route_name1}</a></p>', unsafe_allow_html=True) 
                 st.markdown(f'<p class="route-details">Difficulty: {str(difficulty1)} - Rating: {str(average_rating1)}</p>', unsafe_allow_html=True) 
                 st.markdown(f"<p class='route-details'>{routeDetails1}</p>", unsafe_allow_html=True) 
-                st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id1}&units={units}" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                st.markdown(f'<div class="trail-image-container"><a href="{trail_url1}" target="_self"><img src={trailImage1} class="trail-image"></a></div>', unsafe_allow_html=True) 
                 st.markdown(summary1) 
             
             # column 2 trail details (check if we are in bounds)
             if route_name2: 
                 # TODO: Set the href to our custom page once we have it ready 
                 with cc2.container(height=container_height): 
-                    st.markdown(f'<p class="route-name"><a href="{url2}">{route_name2}</a></p>', unsafe_allow_html=True) 
+                    st.markdown(f'<p class="route-name"><a href="{trail_url2}" target="_self">{route_name2}</a></p>', unsafe_allow_html=True) 
                     st.markdown(f'<p class="route-details">Difficulty: {str(difficulty2)} - Rating: {str(average_rating2)}</p>', unsafe_allow_html=True) 
                     st.markdown(f"<p class='route-details'>{routeDetails2}</p>", unsafe_allow_html=True) 
-                    st.markdown(f'<div class="trail-image-container"><a href="/trail-details?id={id2}&units={units}" target="_self"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
+                    st.markdown(f'<div class="trail-image-container"><a href="{trail_url2}" target="_self"><img src={trailImage2} class="trail-image"></a></div>', unsafe_allow_html=True) 
                     st.markdown(summary2) 
 
 # -------------------------------------

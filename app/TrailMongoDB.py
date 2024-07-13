@@ -29,7 +29,8 @@ class TrailMongoDB:
         DB_NAME = os.environ["DB_NAME"]
 
         # connect to MongoDB client
-        client = MongoClient(URL_STRING, server_api=ServerApi('1'))
+        #client = MongoClient(URL_STRING, server_api=ServerApi('1'))
+        client = MongoClient(URL_STRING) 
         mtb_db = client[DB_NAME]
         return mtb_db
 
@@ -65,6 +66,9 @@ class TrailMongoDB:
     # ---------------------------------------------------
     # ----- Find MTB Trail Data Routes/Descriptions -----
     # ---------------------------------------------------
+    # TODO: Create queries for the trail area, refs, state (this will give
+    # more flexibility to the end user
+    
     # method for playing with data frame data between trail route and descriptions
     def find_mtb_trail_data(self):
         # let's pull tables and collections using the route ids 
