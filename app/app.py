@@ -72,16 +72,11 @@ def load_default_img():
     return f"data:image/jpg;base64,{data_url}"
 
 def parse_loc_arr(loc_arr):
-    print("Original loc arr:")
-    print(loc_arr)
     # for each elem in the location capitalize the first letters
     for i, elem in enumerate(loc_arr):
         y = re.sub(' +', ' ', elem)
         loc = y.strip()
         loc_arr[i] = loc.title()
-    print("New loc arr:")
-    print(loc_arr)
-    print("\n")
 
     return loc_arr
 

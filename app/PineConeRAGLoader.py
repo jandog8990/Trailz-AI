@@ -119,12 +119,12 @@ class PineConeRAGLoader:
         if not cond_dict:
             results = self.index.query(
                 vector=encoded_query,
-                top_k=15,
+                top_k=12,
                 include_metadata=True)
         else:
             results = self.index.query(
                 vector=encoded_query,
-                top_k=15,
+                top_k=12,
                 filter=cond_dict,
                 include_metadata=True)
 
@@ -197,8 +197,9 @@ class PineConeRAGLoader:
         sortedTrailMap = self.ragUtility.sort_trail_map(trail_list, stream_output); 
         
         # return the trail list from the PineCone query and RAG output 
+            # 'trail_map': sortedTrailMap, 
         bot_answer = {
-            'trail_map': sortedTrailMap, 
+            'trail_list': trail_list, 
             'stream_output': stream_output
         }
 
