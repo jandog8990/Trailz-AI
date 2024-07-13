@@ -193,9 +193,12 @@ class PineConeRAGLoader:
                 self.md_obj.empty()
             result_holder.empty()
 
+        # TODO: Update this with ordering the trail list from mtb trail creator
+        sortedTrailMap = self.ragUtility.sort_trail_map(trail_list, stream_output); 
+        
         # return the trail list from the PineCone query and RAG output 
         bot_answer = {
-            'trail_list': trail_list, 
+            'trail_map': sortedTrailMap, 
             'stream_output': stream_output
         }
 

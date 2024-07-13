@@ -324,6 +324,16 @@ if len(st.session_state["trail_list"]) > 0:
     with st.container():
         st.header("Trail Details", divider='rainbow')
         defaultImg = load_default_img() 
+        
+        # TODO: Update this method to iter through the trail map 
+        """
+        Block below will be replaced with the following:
+        
+        for i in range(1, tlen+1, 2):
+            print(i)    # curr trail
+            if (i+1) < tlen+1:
+                print(i+1)
+        """ 
         for i in range(0, trail_list_len, 2): 
             # get the data from ith object
             # need: route name, trail rating, trail dist/elev,

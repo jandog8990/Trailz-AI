@@ -1,4 +1,3 @@
-import streamlit as st
 from TrailMongoDB import TrailMongoDB
 from MTBTrailCreator import MTBTrailCreator
 import re
@@ -49,3 +48,24 @@ class RAGUtility:
         trail_list = sorted(trail_list, key=self.sort_distance, reverse=True)
 
         return trail_list
+
+    # sort the incoming trail list using stream output
+    def sort_trail_map(self, trail_list, stream_output):
+        # split the stream output based on new lines 
+        streamList = stream_output.splitlines()
+        print(f"Stream list split (len = {len(streamList)}")
+        print(streamList)
+        print("\n")
+        
+        # create the recommended trail list
+        openAITrails = []
+        for line in streamList:
+            hasNum = bool(re.search(r'\d.', line))
+            if hasNum:
+                openAITrails.append(line)
+        print(f"OpenAI Recommended Trails (len = {len(openAITrails)}):")
+        print(openAITrails)
+        print("\n")
+        
+         
+                

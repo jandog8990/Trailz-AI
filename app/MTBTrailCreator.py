@@ -63,10 +63,23 @@ These trails are well-su
         print(textList)
         print("\n")
        
+        # example trailz, this is the actual input trail list from PineCone 
+        trailz = ["Example Trail 4", "Two Lost Souls Loop", "Example Trail 2",
+                  "Schultz Creek Trail", "Cosnino Loop", "Example Trail 9",
+                  "Schultz Pass Loop", "Flagstaff Loop Trail: West to Fort Tuthill"] 
+        trailObjs = [{"id": trail} for trail in trailz] 
+        trailIds = [obj["id"] for obj in trailObjs] 
+        
+        print(f"Trailz len = {len(trailz)}") 
+        print(trailz)
+        print("\n") 
+        print(f"Trail ids len = {len(trailIds)}")
+        print(trailIds) 
+        print(f"Trail objs len = {len(trailObjs)}")
+        print(trailObjs)
+        print("\n")
+         
         recTrails = []
-        trailz = {"Example Trail 2": {}, "Two Lost Souls Loop": {}, "Example Trail 3": {}, 
-                  "Schultz Creek Trail": {}, "Cosnino Loop": {}, "Schultz Pass Loop": {}, 
-                  "Flagstaff Loop Trail: West to Fort Tuthill": {}} 
         for line in textList:
             hasNum = bool(re.search(r'\d.', line))
             if hasNum:
@@ -77,22 +90,49 @@ These trails are well-su
         print("\n")
        
         orderedTrailMap = {} 
-        for key in trailz.keys():
+        missingTrails = [] 
+        for key in trailIds: 
             matching = [s for s in recTrails if key in s]
             if len(matching) > 0: 
                 print(f"Trail = {key}")
                 print(f"Matching = {matching}")
                 rank = int(re.findall(r'\d+', matching[0])[0])
                 print(f"Rank = {rank}") 
-                orderedTrailMap[rank] = key 
+                foundIndex = trailObjs.index({"id": key})
+                # TODO: The ordered trail map will contain the objs 
+                #orderedTrailMap[rank] = key 
+                orderedTrailMap[rank] = trailObjs[foundIndex] 
+            else:
+                # get the index of the non-mathing elem
+                missingIndex = trailObjs.index({"id": key})
+                #del trailObjs[missingIndex] 
+                missingTrails.append(trailObjs.pop(missingIndex));
+                print(f"Missing trail = {key}") 
+                print(f"Missing trail index = {missingIndex}")
+                print(f"Missing trails len = {len(missingTrails)}") 
+                print(missingTrails) 
             print("\n")
-        print(f"Ordered Trail Map (len = {len(orderedTrailMap)}")
-        print(orderedTrailMap)
+
+        print(f"Original trail ids (len = {len(trailIds)}):")
+        print(trailIds)
+        print("\n")
+        
+        print(f"Missing trails (len = {len(missingTrails)}):")
+        print(missingTrails)
         print("\n") 
-   
+      
+        # NOTE: The missing trails will need to be appended in order to the map 
         mapLen = len(orderedTrailMap) 
-        for i in range(1, mapLen+1):
-            print(str(i) + ": " + orderedTrailMap[i])
+        print(f"New map len = {mapLen}")
+        start = mapLen+1
+        end = mapLen+len(missingTrails)+1
+        for i in range(start, end):
+            orderedTrailMap[i] = missingTrails.pop(0)
+        print(f"New New map len = {len(orderedTrailMap)}")
+        for i in range(1, len(orderedTrailMap)+1):
+            print(str(i) + ": " + str(orderedTrailMap[i]))
+        return orderedTrailMap 
+     
     # ----------------------------------
     # ----- Create MTB Trail Areas ----- 
     # ----------------------------------
