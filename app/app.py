@@ -269,7 +269,7 @@ if st.session_state.search_click:
                 # need to parse both outputs
                 trail_map = resp_map['trail_map']
                 stream_output = resp_map['stream_output']
-               
+
                 # Store stream output and trail map in session state 
                 st.session_state["stream_output"] = stream_output 
                 st.session_state["trail_map"] = trail_map 
@@ -293,6 +293,10 @@ if st.session_state["stream_output"] != "":
     # let's create the rows of columns
     trail_map_len = len(trail_map)
     container_height = 320
+             
+    print(f"Trail map len = {len(trail_map)}")
+    print(trail_map)
+    print("\n")
 
     # display the stream results in the recommendation section
     with st.container():
@@ -325,6 +329,7 @@ if len(st.session_state["trail_map"]) > 0:
             # get the data from ith object
             # need: route name, trail rating, trail dist/elev,
             # trail summary, trail image
+            print(f"i = {i}") 
             val1 = trail_map[str(i)]
             id1 = val1['_id'] 
             url1 = val1['trail_url'] 
@@ -343,6 +348,7 @@ if len(st.session_state["trail_map"]) > 0:
             # get the data from i+1th object
             route_name2 = None 
             if (i+1) < trail_map_len+1: 
+                print(f"i+1 = {i+1}") 
                 val2 = trail_map[str(i+1)]
                 id2 = val2['_id'] 
                 url2 = val2['trail_url'] 
