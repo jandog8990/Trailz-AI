@@ -173,10 +173,11 @@ class PineConeRAGLoader:
 
             # generate the RAG client completions 
             #NOTE: higher temp means more randomness 
+            # try 0.7 ?? (more accurate) 
             stream = self.client.chat.completions.create(
                 model=openai_model_id,
                 messages=messages,
-                temperature=0.9,
+                temperature=0.7,
                 stream=True,
                 max_tokens=500)
            
@@ -190,7 +191,17 @@ class PineConeRAGLoader:
 
         # TODO: Update this with ordering the trail list from mtb trail creator
         sortedTrailMap = self.ragUtility.sort_trail_map(trail_list, stream_output); 
+        #jsonSortedMap = json.dumps(sortedTrailMap)
+        print(f"Final sorted trail map len = {len(sortedTrailMap)}:") 
+        for (key,val) in sortedTrailMap.items():
+            print(f"Key = {key}")
+            print(f"Val _id = {val['_id']}")
+            print("\n")
         
+        #print(f"Sorted trail map values (len = {len(sortedTrailMap)}):")
+        #print(sortedTrailMap.values())
+        #print("\n")
+
         # return the trail list from the PineCone query and RAG output 
             # 'trail_map': sortedTrailMap, 
         bot_answer = {
