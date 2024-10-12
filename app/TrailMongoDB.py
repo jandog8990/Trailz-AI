@@ -27,11 +27,21 @@ class TrailMongoDB:
     def get_database(self):
         URL_STRING = os.environ["ATLAS_URI"]
         DB_NAME = os.environ["DB_NAME"]
-
+        print("URL string = " + URL_STRING)
+        print("DB_NAME = " + DB_NAME)
+        
         # connect to MongoDB client
         #client = MongoClient(URL_STRING, server_api=ServerApi('1'))
         client = MongoClient(URL_STRING) 
         mtb_db = client[DB_NAME]
+        print("Mongo Client:")
+        print(client)
+        print("\n")
+        
+        print("Mongo DB:")
+        print(mtb_db)
+        print("\n")
+         
         return mtb_db
 
     # ------------------------------------------------

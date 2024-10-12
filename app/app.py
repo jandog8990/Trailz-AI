@@ -20,13 +20,16 @@ import re
 @st.cache_resource
 def load_search_data():
     # create the PineCone search loader
-    print("Initialize search data objects...") 
+    print("Initialize VectorDB and RAG...") 
     data_loader = PineConeRAGLoader()
     data_loader.load_pinecone_index()
     data_loader.load_openai_client()
+    data_loader.load_llm_rails()
     data_loader.load_encoder()
-    data_loader.load_rag_rails() 
-
+    #data_loader.register_llm_rails_actions() 
+    print("VectorDB and RAG initialized!")
+    print("\n")
+     
     return data_loader
 
 # retrieve the final json objects (replace with MongoDB)
@@ -85,6 +88,7 @@ trailUtility = TrailUtility()
 load_session_state()
 sessionStorage = SessionStorage()
 data_loader = load_search_data()
+#data_loader.register_llm_rails_actions() 
 #sessionStorage.deleteAll()
 load_session_storage(sessionStorage)
 
@@ -244,8 +248,13 @@ if st.session_state.search_click:
 
             # run the PineCone and RAG model for generating trails
             #resp = asyncio.run(data_loader.rag_rails.generate_async(messages=messages))
+            print("Data loader rag rails generate...")
+            print("messages = " + str(messages)) 
             resp = data_loader.rag_rails.generate(messages=messages)
-       
+            print("response:")
+            print(resp)
+            print("\n")
+             
             # set the trail content to show the user 
             trail_content = resp['content'] 
         else:
@@ -269,7 +278,10 @@ if st.session_state.search_click:
                 # need to parse both outputs
                 trail_map = resp_map['trail_map']
                 stream_output = resp_map['stream_output']
-
+                print("Stream output:")
+                print(stream_output)
+                print("\n")
+                
                 # Store stream output and trail map in session state 
                 st.session_state["stream_output"] = stream_output 
                 st.session_state["trail_map"] = trail_map 

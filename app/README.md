@@ -1,6 +1,6 @@
 ### Steps for running the app locally
 $ streamlit run app.py
-$ streamlit run --client.showSidebarNavigation=False app.py
+$ streamlit run --client.showSidebarNavigation=False app.py --server.port 8080
 
 ### Docker image and container install
 

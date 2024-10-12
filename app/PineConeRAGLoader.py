@@ -7,6 +7,7 @@ import os
 from openai import OpenAI
 from semantic_router.encoders import OpenAIEncoder
 from RAGUtility import RAGUtility
+from nemoguardrails import LLMRails, RailsConfig
 
 # Loads all necessary objects for PineCone and RAG
 class PineConeRAGLoader:
@@ -28,18 +29,23 @@ class PineConeRAGLoader:
         print("Loading encoder...") 
         encoder_id = os.environ["ENCODER_ID"] 
         _self.encoder = OpenAIEncoder(name=encoder_id) 
-
+        print(_self.encoder)
+        print("\n")
+        
     @st.cache_resource
     def load_openai_client(_self):
         print("Loading OpenAI client...") 
         openai_api_key = os.environ["OPENAI_API_KEY"]
         _self.client = OpenAI(api_key=openai_api_key)
-
+        print("OpenAI client:")
+        print("openai api key = " + openai_api_key)
+        print(_self.client)
+        print("\n")
+         
     @st.cache_resource
     def load_pinecone_index(_self):
         # connect to the pine cone api
         print("Loading PineCone index...") 
-        env_key = os.environ["PINE_CONE_ENV_KEY"]
         api_key = os.environ["PINE_CONE_API_KEY"]
         pc_index_name = os.environ["PC_INDEX_NAME"]
 
@@ -47,7 +53,11 @@ class PineConeRAGLoader:
         pc = Pinecone(
             api_key=api_key
         )
-
+        print("Pine cone index:")
+        print("api key = " + api_key)
+        print(pc)
+        print("\n")
+         
         # create pinecone index for searching trailz ai
         #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
         _self.index = pc.Index(pc_index_name)
@@ -105,11 +115,13 @@ class PineConeRAGLoader:
         return list(trail_ids) 
     
     # retrieve data from PC index using encoder 
-    async def retrieve(self, query: str, conditions: str) -> (list, list):
+    async def retrieve(self, query: str, conditions: str): #-> (list, list):
         # NOTE: The query and conditions are passed as json role objects
         self.md_obj = st.empty() 
         self.md_obj.markdown(self.load_retrieve_markdown(), unsafe_allow_html=True)
 
+        print("PineCone retrieve:")
+        
         # retrieve from PineCone using encoded query
         cond_dict = json.loads(conditions) 
         encoded_query = self.encoder([query])[0] 
@@ -127,7 +139,10 @@ class PineConeRAGLoader:
                 top_k=12,
                 filter=cond_dict,
                 include_metadata=True)
-
+        print("results:")
+        print(results)
+        print("\n")
+        
         # from the result matches create the trail meta 
         matches = results['matches'] 
         trail_metadata = [trail['metadata'] for trail in matches] 
@@ -144,7 +159,7 @@ class PineConeRAGLoader:
 
     # rag function taht receives context from PC and 
     # queries user query from open ai model
-    async def rag(self, query: str, trail_tuple: tuple) -> (str, list):
+    async def rag(self, query: str, trail_tuple: tuple): #-> (str, list):
         openai_model_id = os.environ["OPENAI_MODEL_ID"]
 
         contexts = trail_tuple[0]
@@ -199,20 +214,33 @@ class PineConeRAGLoader:
         return json.dumps(bot_answer) 
     
     @st.cache_resource
-    def load_rag_rails(_self):
-        import asyncio 
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        from nemoguardrails import LLMRails, RailsConfig
+    def load_llm_rails(_self):
 
         print("Loading RAG rails...") 
+        #import asyncio 
+        #loop = asyncio.new_event_loop()
+        #asyncio.set_event_loop(loop)
 
         # create the rails using config
-        config = RailsConfig.from_path("./config")
-       
-        _self.rag_rails = LLMRails(config)
-
-        # register the actions in RAG rails obj
+        railsConfig = RailsConfig.from_path("./config")
+        #print("Rails config:")
+        #print(railsConfig)
+        #print("\n")
+        
+        print("Creating LLM Rails...") 
+        _self.rag_rails = LLMRails(config=railsConfig) 
+        print("Rag rails created...") 
         _self.rag_rails.register_action(action=_self.retrieve, name="retrieve")
         _self.rag_rails.register_action(action=_self.rag, name="rag")
-
+        print("LLM rails actions registered...") 
+        #_self.rag_rails = LLMRails(config=railsConfig, llm=_self.client, verbose=True)
+        #_self.rag_rails = rag_rails
+        print(_self.rag_rails) 
+        print("\n")
+        
+    #@st.cache_resource
+    def register_llm_rails_actions(_self):
+        # register the actions in RAG rails obj
+        print("Registering LLM Rails actions...") 
+        _self.rag_rails.register_action(action=_self.retrieve, name="retrieve")
+        _self.rag_rails.register_action(action=_self.rag, name="rag")

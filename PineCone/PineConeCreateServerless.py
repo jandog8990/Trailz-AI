@@ -5,9 +5,7 @@ import pickle
 import re
 
 # connect to the pine cone api
-env_key = os.environ["PINE_CONE_ENV_KEY"]
 api_key = os.environ["PINE_CONE_API_KEY"]
-print(f"env_key = {env_key}")
 print(f"api_key = {api_key}")
 print("\n")
 
