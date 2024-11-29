@@ -7,7 +7,6 @@ import os
 from openai import OpenAI
 from semantic_router.encoders import OpenAIEncoder
 from RAGUtility import RAGUtility
-from nemoguardrails import LLMRails, RailsConfig
 
 # Loads all necessary objects for PineCone and RAG
 class PineConeRAGLoader:
@@ -15,7 +14,6 @@ class PineConeRAGLoader:
         print("PineConeRAGLoader.init()...") 
         self.ragUtility = RAGUtility() 
         self.metadataSet = None
-        self.rag_rails = None 
         self.index = None
         self.encoder = None
         with open("media/hackbird.GIF", "rb") as f:
@@ -113,14 +111,15 @@ class PineConeRAGLoader:
             trail_ids.add(meta["route_id"])
         
         return list(trail_ids) 
-    
+   
+    # NOTE: The retrieve() takes the messages array from app.py and parses them
+    # as a query string and a conditions json string 
     # retrieve data from PC index using encoder 
     async def retrieve(self, query: str, conditions: str): #-> (list, list):
+        print("PineCone retrieve:")
         # NOTE: The query and conditions are passed as json role objects
         self.md_obj = st.empty() 
         self.md_obj.markdown(self.load_retrieve_markdown(), unsafe_allow_html=True)
-
-        print("PineCone retrieve:")
         
         # retrieve from PineCone using encoded query
         cond_dict = json.loads(conditions) 
@@ -139,9 +138,6 @@ class PineConeRAGLoader:
                 top_k=12,
                 filter=cond_dict,
                 include_metadata=True)
-        print("results:")
-        print(results)
-        print("\n")
         
         # from the result matches create the trail meta 
         matches = results['matches'] 
@@ -157,6 +153,8 @@ class PineConeRAGLoader:
 
         return (contexts, trail_list)
 
+    # NOTE: The rag() method takes the query from the messages, and the (contexts, trail_list)
+    # tuple from the retrieve() method in order to call the LLM
     # rag function taht receives context from PC and 
     # queries user query from open ai model
     async def rag(self, query: str, trail_tuple: tuple): #-> (str, list):
@@ -212,35 +210,3 @@ class PineConeRAGLoader:
         }
 
         return json.dumps(bot_answer) 
-    
-    @st.cache_resource
-    def load_llm_rails(_self):
-
-        print("Loading RAG rails...") 
-        #import asyncio 
-        #loop = asyncio.new_event_loop()
-        #asyncio.set_event_loop(loop)
-
-        # create the rails using config
-        railsConfig = RailsConfig.from_path("./config")
-        #print("Rails config:")
-        #print(railsConfig)
-        #print("\n")
-        
-        print("Creating LLM Rails...") 
-        _self.rag_rails = LLMRails(config=railsConfig) 
-        print("Rag rails created...") 
-        _self.rag_rails.register_action(action=_self.retrieve, name="retrieve")
-        _self.rag_rails.register_action(action=_self.rag, name="rag")
-        print("LLM rails actions registered...") 
-        #_self.rag_rails = LLMRails(config=railsConfig, llm=_self.client, verbose=True)
-        #_self.rag_rails = rag_rails
-        print(_self.rag_rails) 
-        print("\n")
-        
-    #@st.cache_resource
-    def register_llm_rails_actions(_self):
-        # register the actions in RAG rails obj
-        print("Registering LLM Rails actions...") 
-        _self.rag_rails.register_action(action=_self.retrieve, name="retrieve")
-        _self.rag_rails.register_action(action=_self.rag, name="rag")

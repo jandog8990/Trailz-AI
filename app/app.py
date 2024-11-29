@@ -24,9 +24,7 @@ def load_search_data():
     data_loader = PineConeRAGLoader()
     data_loader.load_pinecone_index()
     data_loader.load_openai_client()
-    data_loader.load_llm_rails()
     data_loader.load_encoder()
-    #data_loader.register_llm_rails_actions() 
     print("VectorDB and RAG initialized!")
     print("\n")
      
@@ -88,7 +86,6 @@ trailUtility = TrailUtility()
 load_session_state()
 sessionStorage = SessionStorage()
 data_loader = load_search_data()
-#data_loader.register_llm_rails_actions() 
 #sessionStorage.deleteAll()
 load_session_storage(sessionStorage)
 
@@ -241,22 +238,32 @@ if st.session_state.search_click:
             {"role": "user", "content": query} 
         ]
         rag_query = str(messages) 
+        print("PC RAG Query:")
+        print(rag_query)
+        print("\n")
 
         # Check that the user is not issuing the same query as their previous
         if rag_query != st.session_state.rag_query: 
             st.session_state.rag_query = rag_query
 
-            # run the PineCone and RAG model for generating trails
-            #resp = asyncio.run(data_loader.rag_rails.generate_async(messages=messages))
+            # run the PineCone retrieval method for getting relevant trailz 
             print("Data loader rag rails generate...")
             print("messages = " + str(messages)) 
-            resp = data_loader.rag_rails.generate(messages=messages)
-            print("response:")
-            print(resp)
+            #resp = data_loader.rag_rails.generate(messages=messages)
+            trail_tuple = asyncio.run(data_loader.retrieve(query, cond_json)) 
+            print("PC Index Trailz Tuple:")
+            print(trail_tuple)
             print("\n")
+           
+            # run the OpenAI RAG method for generating recommended trailz 
+            resp = asyncio.run(data_loader.rag(query, trail_tuple))  
+            print("RAG Trailz Response:")
+            print(resp)
+            print("\n") 
              
             # set the trail content to show the user 
-            trail_content = resp['content'] 
+            #trail_content = resp['content'] 
+            trail_content = resp 
         else:
             # previous query matches current query 
             trail_content = None 
