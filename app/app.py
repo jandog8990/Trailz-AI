@@ -1,16 +1,15 @@
 import streamlit as st
 import streamlit.components.v1 as components
-import pinecone
 import time
 from dotenv import dotenv_values
-import pickle
 import re
-import os
 import asyncio
 import json
 from PineConeRAGLoader import PineConeRAGLoader
 from TrailUtility import TrailUtility 
 from streamlit_session_browser_storage import SessionStorage
+from guardrails.errors import ValidationError as InputValidationError
+from pydantic import ValidationError as PydanticValidationError
 import base64
 import re
 
@@ -25,6 +24,7 @@ def load_search_data():
     data_loader.load_pinecone_index()
     data_loader.load_openai_client()
     data_loader.load_encoder()
+    data_loader.load_guardrails() 
     print("VectorDB and RAG initialized!")
     print("\n")
      
@@ -238,32 +238,41 @@ if st.session_state.search_click:
             {"role": "user", "content": query} 
         ]
         rag_query = str(messages) 
-        print("PC RAG Query:")
-        print(rag_query)
-        print("\n")
 
         # Check that the user is not issuing the same query as their previous
         if rag_query != st.session_state.rag_query: 
             st.session_state.rag_query = rag_query
+            
+            try: 
+                print("Query:")
+                print(query)
+                print("\n") 
+                valid_query = data_loader.validate_query(query)
+                print("Validated Query:")
+                print(valid_query)
+                print("\n") 
 
-            # run the PineCone retrieval method for getting relevant trailz 
-            print("Data loader rag rails generate...")
-            print("messages = " + str(messages)) 
-            #resp = data_loader.rag_rails.generate(messages=messages)
-            trail_tuple = asyncio.run(data_loader.retrieve(query, cond_json)) 
-            print("PC Index Trailz Tuple:")
-            print(trail_tuple)
-            print("\n")
-           
-            # run the OpenAI RAG method for generating recommended trailz 
-            resp = asyncio.run(data_loader.rag(query, trail_tuple))  
-            print("RAG Trailz Response:")
-            print(resp)
-            print("\n") 
-             
-            # set the trail content to show the user 
-            #trail_content = resp['content'] 
-            trail_content = resp 
+                # run the PineCone retrieval method for getting relevant trailz 
+                trail_tuple = asyncio.run(data_loader.retrieve(valid_query, cond_json)) 
+                #trail_tuple = data_loader.retrieve(valid_query, cond_json)
+            
+                # run the OpenAI RAG method for generating recommended trailz 
+                resp = asyncio.run(data_loader.rag(valid_query, trail_tuple))  
+                #resp = data_loader.rag(valid_query, trail_tuple)
+                
+                # set the trail content to show the user 
+                #trail_content = resp['content'] 
+                trail_content = resp
+            except Exception as e:
+                trail_content = None 
+                if isinstance(e, InputValidationError) or isinstance(e, PydanticValidationError):
+                    eMsg = "The following error was found in your request:\n\n" + str(e) + ". \n\nPlease correct your query and re-ask to find your trailz!" 
+                else:
+                    eMsg = "Un unknown error was found in your request. \n\nPlease correct your query and re-ask to find your trailz!" 
+                with filter_container: 
+                    err_msg = st.error(eMsg)
+                    time.sleep(6)
+                    err_msg.empty()
         else:
             # previous query matches current query 
             trail_content = None 
@@ -285,9 +294,6 @@ if st.session_state.search_click:
                 # need to parse both outputs
                 trail_map = resp_map['trail_map']
                 stream_output = resp_map['stream_output']
-                print("Stream output:")
-                print(stream_output)
-                print("\n")
                 
                 # Store stream output and trail map in session state 
                 st.session_state["stream_output"] = stream_output 
@@ -295,6 +301,7 @@ if st.session_state.search_click:
             except Exception as e:
                 # TODO: When to clear the local storage? after each query? or
                 # when the query changes per search?
+                print("Stream Output Error: ", e) 
                 with filter_container: 
                     err_msg = st.error(trail_content)
                     time.sleep(6)

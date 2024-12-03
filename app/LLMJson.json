@@ -1,0 +1,13 @@
+{'TrailDetail': {'properties': {'name': {'description': 'The name of the trail.', 'title': 'Name', 'type': 'string'
+			}, 'location': {'description': 'The location of the trail.', 'title': 'Location', 'type': 'string'
+			}, 'difficulty': {'description': 'The difficulty of the trail.', 'title': 'Difficulty', 'type': 'string'
+			}, 'features': {'description': 'The trail features and details.', 'title': 'Features', 'type': 'string'
+			}
+		}, 'required': ['name', 'location', 'difficulty', 'features'
+		], 'title': 'TrailDetail', 'type': 'object'
+	}
+},
+{'trailz': {'items': {'$ref': '#/$defs/TrailDetail'
+		}, 'title': 'Trailz', 'type': 'array'
+	}
+}

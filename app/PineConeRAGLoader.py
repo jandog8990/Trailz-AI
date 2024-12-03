@@ -1,12 +1,14 @@
 import streamlit as st
 from pinecone import Pinecone
-import time
 import json
 import base64
 import os
 from openai import OpenAI
 from semantic_router.encoders import OpenAIEncoder
 from RAGUtility import RAGUtility
+from guardrails import Guard
+from guardrails.hub import ToxicLanguage, SensitiveTopic 
+from models.TrailDetail import TrailzList
 
 # Loads all necessary objects for PineCone and RAG
 class PineConeRAGLoader:
@@ -16,6 +18,8 @@ class PineConeRAGLoader:
         self.metadataSet = None
         self.index = None
         self.encoder = None
+        self.input_guard = None
+        self.output_guard = None
         with open("media/hackbird.GIF", "rb") as f:
             hack = f.read()
         hack_url = base64.b64encode(hack).decode("utf-8")
@@ -24,21 +28,14 @@ class PineConeRAGLoader:
     @st.cache_resource
     def load_encoder(_self):
         # create the embedding transformer
-        print("Loading encoder...") 
         encoder_id = os.environ["ENCODER_ID"] 
         _self.encoder = OpenAIEncoder(name=encoder_id) 
-        print(_self.encoder)
-        print("\n")
         
     @st.cache_resource
     def load_openai_client(_self):
         print("Loading OpenAI client...") 
         openai_api_key = os.environ["OPENAI_API_KEY"]
         _self.client = OpenAI(api_key=openai_api_key)
-        print("OpenAI client:")
-        print("openai api key = " + openai_api_key)
-        print(_self.client)
-        print("\n")
          
     @st.cache_resource
     def load_pinecone_index(_self):
@@ -51,15 +48,26 @@ class PineConeRAGLoader:
         pc = Pinecone(
             api_key=api_key
         )
-        print("Pine cone index:")
-        print("api key = " + api_key)
-        print(pc)
-        print("\n")
          
         # create pinecone index for searching trailz ai
         #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
         _self.index = pc.Index(pc_index_name)
 
+    @st.cache_resource
+    def load_guardrails(_self):
+        print("Loading Guardrails...")
+        _self.input_guard = Guard().use(
+            SensitiveTopic(sensitive_topics=["politics", "sexuality", "porn", "war", "economics"],
+                disable_classifier=False,
+                disable_llm=False,
+                on_fail="exception")
+        ).use(
+            ToxicLanguage(disable_classifier=False,
+                disable_llm=False,
+                on_fail="exception")
+        ) 
+        _self.output_guard = Guard().for_pydantic(output_class=TrailzList)
+    
     def load_retrieve_markdown(self):
         load_txt = '<span style="font-size:20px;color: #32CD32;">  Finding your trailz...</span>'
         return self.hack_gif+load_txt
@@ -111,12 +119,21 @@ class PineConeRAGLoader:
             trail_ids.add(meta["route_id"])
         
         return list(trail_ids) 
-   
-    # NOTE: The retrieve() takes the messages array from app.py and parses them
-    # as a query string and a conditions json string 
-    # retrieve data from PC index using encoder 
+ 
+    # validate the user input using Guardrails
+    def validate_query(self, query: str):
+        try:
+            rawQuery, validQuery, *restQuery = self.input_guard.parse(query)
+            print("Valid Query:")
+            print(validQuery)
+            print("\n") 
+       
+            return validQuery 
+        except Exception as e:
+            raise e 
+    
+    # retrieve data from PC index using query and conditions from user input 
     async def retrieve(self, query: str, conditions: str): #-> (list, list):
-        print("PineCone retrieve:")
         # NOTE: The query and conditions are passed as json role objects
         self.md_obj = st.empty() 
         self.md_obj.markdown(self.load_retrieve_markdown(), unsafe_allow_html=True)
