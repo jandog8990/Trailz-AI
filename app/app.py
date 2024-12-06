@@ -244,13 +244,8 @@ if st.session_state.search_click:
             st.session_state.rag_query = rag_query
             
             try: 
-                print("Query:")
-                print(query)
-                print("\n") 
+                # validate the user query based on guardrails 
                 valid_query = data_loader.validate_query(query)
-                print("Validated Query:")
-                print(valid_query)
-                print("\n") 
 
                 # run the PineCone retrieval method for getting relevant trailz 
                 trail_tuple = asyncio.run(data_loader.retrieve(valid_query, cond_json)) 
@@ -265,6 +260,7 @@ if st.session_state.search_click:
                 trail_content = resp
             except Exception as e:
                 trail_content = None 
+                print("Loader Exception: ", e) 
                 if isinstance(e, InputValidationError) or isinstance(e, PydanticValidationError):
                     eMsg = "The following error was found in your request:\n\n" + str(e) + ". \n\nPlease correct your query and re-ask to find your trailz!" 
                 else:
@@ -454,7 +450,5 @@ try:
             sessionStorage.setItem("trail_map", 
                 st.session_state["trail_map"], key="trailz-ai-sesh2") 
 except Exception as e:
-    print("Cache exception:")
-    print(e)
-    print("\n")
+    print("Cache exception: ", e)
 

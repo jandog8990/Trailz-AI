@@ -8,7 +8,9 @@ from semantic_router.encoders import OpenAIEncoder
 from RAGUtility import RAGUtility
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage, SensitiveTopic 
-from models.TrailDetail import TrailzList
+from models.TrailSummary import TrailSummary 
+
+from IPython.display import clear_output
 
 # Loads all necessary objects for PineCone and RAG
 class PineConeRAGLoader:
@@ -19,7 +21,7 @@ class PineConeRAGLoader:
         self.index = None
         self.encoder = None
         self.input_guard = None
-        self.output_guard = None
+        self.llm_guard = None
         with open("media/hackbird.GIF", "rb") as f:
             hack = f.read()
         hack_url = base64.b64encode(hack).decode("utf-8")
@@ -66,7 +68,7 @@ class PineConeRAGLoader:
                 disable_llm=False,
                 on_fail="exception")
         ) 
-        _self.output_guard = Guard().for_pydantic(output_class=TrailzList)
+        _self.llm_guard = Guard().for_pydantic(output_class=TrailSummary)
     
     def load_retrieve_markdown(self):
         load_txt = '<span style="font-size:20px;color: #32CD32;">  Finding your trailz...</span>'
@@ -78,13 +80,49 @@ class PineConeRAGLoader:
 
     def stream_chunks(self, stream):
         count = 0 
-
+        trailzList = [] 
         for chunk in stream:
+             
             content = chunk.choices[0].delta.content
+            """
+            content = chunk.validated_output
+            print("Chunk (count = " + str(count) + "):")
+            print("chunk trailz size = " + str(len(content['trailz']))) 
+            print(chunk)
+            print("\n")
+            """ 
+            
             if content is not None: 
-                count = count + 1 
-                yield content
-
+                count = count + 1
+                yield content 
+                """
+                if count == 0:
+                    yield content['intro']
+                currentTrail = content['trailz'][-1] 
+                if currentTrail not in trailzList:
+                    print("Adding current trail " + currentTrail['name']) 
+                    trailzList.append(currentTrail)
+                    print("Trailz list len = " + str(len(trailzList))) 
+                    print("Trail name = " + currentTrail["name"])
+                    print("Trail count = " + str(count) + "\n") 
+                    #trailTitle = "\n" + str(count+1) + ". **" + currentTrail["name"] + "**:\n" 
+                    trailName = "\n" + str(count+1) + ". **" + currentTrail["name"] + "**:" 
+                    trailLoc = "\n\t - **Location**: " + currentTrail["location"]
+                    trailDifficulty = "\n\t - **Difficulty**: " + currentTrail["difficulty"]
+                    trailFeatures = "\n\t - **Features**: " + currentTrail["features"]
+                    trailDescription = trailName + trailLoc + trailDifficulty + trailFeatures 
+                    yield trailDescription 
+                    count = count + 1 
+                """ 
+        """
+        trailOutro = "\n" + content['outro'] + "\n" 
+        yield trailOutro 
+        print("Final trailz list:")
+        print(trailzList)
+        print("\n") 
+        print("Final count = " + count) 
+        """
+    
     # create trail contexts for OpenAI chat model
     def create_trail_contexts(self, trail_metadata):
         contexts = []
@@ -124,10 +162,6 @@ class PineConeRAGLoader:
     def validate_query(self, query: str):
         try:
             rawQuery, validQuery, *restQuery = self.input_guard.parse(query)
-            print("Valid Query:")
-            print(validQuery)
-            print("\n") 
-       
             return validQuery 
         except Exception as e:
             raise e 
@@ -167,7 +201,7 @@ class PineConeRAGLoader:
         # returns a tuple of contexts and trail data 
         trail_list = self.ragUtility.query_trail_list(trail_ids)
         self.md_obj.empty()
-
+         
         return (contexts, trail_list)
 
     # NOTE: The rag() method takes the query from the messages, and the (contexts, trail_list)
@@ -186,29 +220,46 @@ class PineConeRAGLoader:
         else:
             # place the user query and contexts into RAG prompt
             self.md_obj.markdown(self.load_rag_markdown(), unsafe_allow_html=True)
-            system_msg = "You are a helpful assistant."
+            system_msg = "You are a helpful trail assistant."
+            #For the given prompt, structure the output in accordance with the pydantic model provided below.
             user_msg = f"""
-            Given the following trail descriptions, please provide trail recommendations for the prompt.
+            Given the following trail descriptions, please provide a list of detailed trail recommendations, that includes 
+            location, difficulty and detailed feature descriptions for each trail. 
 
             Trail Descriptions: {context_str}
 
             Prompt: {query}
             """
-           
+            
+            x = user_msg + "\n" + """
+            
+            ${gr.complete_json_suffix_v2} 
+            """ 
+            
             # create the messages to send
             messages = [
                 {"role": "system", "content": system_msg},
                 {"role": "user", "content": user_msg}
             ]
-
+            
             # generate the RAG client completions (0.7 could be too high) 
+            """
+            stream = self.llm_guard(
+                model=openai_model_id,
+                messages=messages,
+                temperature=0.7,
+                max_tokens=1024,
+                num_reasks=2, 
+                stream=True)
+            """ 
+            
             stream = self.client.chat.completions.create(
                 model=openai_model_id,
                 messages=messages,
                 temperature=0.7,
-                stream=True,
-                max_tokens=500)
-           
+                max_tokens=650,
+                stream=True)
+            
             # show the results from the RAG response using Stream 
             result_holder = st.empty() 
             with result_holder.container(): 
@@ -217,7 +268,7 @@ class PineConeRAGLoader:
                 self.md_obj.empty()
             result_holder.empty()
 
-        # TODO: Update this with ordering the trail list from mtb trail creator
+        # sort the stream output into a hashmap
         sortedTrailMap = self.ragUtility.sort_trail_map(trail_list, stream_output); 
         
         # return the trail list from the PineCone query and RAG output 
