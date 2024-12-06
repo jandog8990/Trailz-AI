@@ -11,6 +11,13 @@ COPY . /app
 # install all python requirements using pip3
 RUN pip3 install --no-cache-dir -r requirements.txt
 
+# download the nltk for tokenization during validation
+RUN python -m nltk.downloader -d /opt/nltk_data punkt
+
+# install guardrails hub modules
+RUN guardrails hub install hub://guardrails/toxic_language --quiet
+RUN guardrails hub install hub://guardrails/sensitive_topics --quiet
+
 # run command for loading/caching embed model
 #RUN python -c 'from sentence_transformers import SentenceTransformer; SentenceTransformer("sentence-transformers/all-MiniLM-L12-v2", cache_folder="./.model")'
 
