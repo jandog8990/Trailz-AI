@@ -10,8 +10,6 @@ from guardrails import Guard
 from guardrails.hub import ToxicLanguage, SensitiveTopic 
 from models.TrailSummary import TrailSummary 
 
-from IPython.display import clear_output
-
 # Loads all necessary objects for PineCone and RAG
 class PineConeRAGLoader:
     def __init__(self):
@@ -84,44 +82,10 @@ class PineConeRAGLoader:
         for chunk in stream:
              
             content = chunk.choices[0].delta.content
-            """
-            content = chunk.validated_output
-            print("Chunk (count = " + str(count) + "):")
-            print("chunk trailz size = " + str(len(content['trailz']))) 
-            print(chunk)
-            print("\n")
-            """ 
             
             if content is not None: 
                 count = count + 1
                 yield content 
-                """
-                if count == 0:
-                    yield content['intro']
-                currentTrail = content['trailz'][-1] 
-                if currentTrail not in trailzList:
-                    print("Adding current trail " + currentTrail['name']) 
-                    trailzList.append(currentTrail)
-                    print("Trailz list len = " + str(len(trailzList))) 
-                    print("Trail name = " + currentTrail["name"])
-                    print("Trail count = " + str(count) + "\n") 
-                    #trailTitle = "\n" + str(count+1) + ". **" + currentTrail["name"] + "**:\n" 
-                    trailName = "\n" + str(count+1) + ". **" + currentTrail["name"] + "**:" 
-                    trailLoc = "\n\t - **Location**: " + currentTrail["location"]
-                    trailDifficulty = "\n\t - **Difficulty**: " + currentTrail["difficulty"]
-                    trailFeatures = "\n\t - **Features**: " + currentTrail["features"]
-                    trailDescription = trailName + trailLoc + trailDifficulty + trailFeatures 
-                    yield trailDescription 
-                    count = count + 1 
-                """ 
-        """
-        trailOutro = "\n" + content['outro'] + "\n" 
-        yield trailOutro 
-        print("Final trailz list:")
-        print(trailzList)
-        print("\n") 
-        print("Final count = " + count) 
-        """
     
     # create trail contexts for OpenAI chat model
     def create_trail_contexts(self, trail_metadata):
@@ -243,16 +207,6 @@ class PineConeRAGLoader:
             ]
             
             # generate the RAG client completions (0.7 could be too high) 
-            """
-            stream = self.llm_guard(
-                model=openai_model_id,
-                messages=messages,
-                temperature=0.7,
-                max_tokens=1024,
-                num_reasks=2, 
-                stream=True)
-            """ 
-            
             stream = self.client.chat.completions.create(
                 model=openai_model_id,
                 messages=messages,

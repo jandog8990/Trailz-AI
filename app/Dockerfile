@@ -14,6 +14,10 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # download the nltk for tokenization during validation
 RUN python -m nltk.downloader -d /opt/nltk_data punkt
 
+# configure guardrails with metrics and token
+ARG GUARDRAILS_TOKEN
+RUN guardrails configure --enable-metrics --enable-remote-inferencing  --token $GUARDRAILS_TOKEN
+
 # install guardrails hub modules
 RUN guardrails hub install hub://guardrails/toxic_language --quiet
 RUN guardrails hub install hub://guardrails/sensitive_topics --quiet

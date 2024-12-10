@@ -264,7 +264,7 @@ if st.session_state.search_click:
                 if isinstance(e, InputValidationError) or isinstance(e, PydanticValidationError):
                     eMsg = "The following error was found in your request:\n\n" + str(e) + ". \n\nPlease correct your query and re-ask to find your trailz!" 
                 else:
-                    eMsg = "Un unknown error was found in your request. \n\nPlease correct your query and re-ask to find your trailz!" 
+                    eMsg = "An unknown error was found in your request. \n\nPlease correct your query and re-ask to find your trailz!" 
                 with filter_container: 
                     err_msg = st.error(eMsg)
                     time.sleep(6)
