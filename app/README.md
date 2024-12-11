@@ -13,6 +13,7 @@ $ streamlit run --client.showSidebarNavigation=False app.py --server.port 8080
 
 1. docker build -t trailzai .
 2. docker run --env-file ./env.list -p 8080:8080 trailzai 
+3. docker build -t trailzai --build-arg GUARDRAILS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJnb29nbGUtb2F1dGgyfDEwMTUxMTI2ODc1MTEwOTMxNDUxNCIsImFwaUtleUlkIjoiZWJkMDg4OGEtY2RjYS00ZTJhLTgxYzItODljNzkzZjRiNjc3IiwiaWF0IjoxNzI4NTMxODg2LCJleHAiOjE3MzYzMDc4ODZ9.MghnOti4s8EtRByVxeAwv_oHY6qoEP4h2awg08s7Q5o .
 
 ### General Gcloud commands
 
@@ -41,7 +42,10 @@ $ gcloud artifacts repositories create trailz-docker-repo --repository-format=do
 $ gcloud config get-value trailz-finder
 
 5. Deploy the Docker app to the Cloud Run repo
-$ gcloud builds submit --region=us-central1 --tag us-central1-docker.pkg.dev/trailz-finder/trailz-docker-repo/trailz-image:tag1
+    * Without a docker config file use this: 
+    $ gcloud builds submit --region=us-central1 --tag us-central1-docker.pkg.dev/trailz-finder/trailz-docker-repo/trailz-image:tag1
+    * With a cloudbuild.yaml containing docker config and build use this:
+    $ gcloud builds submit --region=us-west2 --config cloudbuild.yaml
 
 6. Check the installation in the Artifact Registry
 https://console.cloud.google.com/artifacts?referrer=search&hl=en&project=trailz-finder

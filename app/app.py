@@ -249,14 +249,11 @@ if st.session_state.search_click:
 
                 # run the PineCone retrieval method for getting relevant trailz 
                 trail_tuple = asyncio.run(data_loader.retrieve(valid_query, cond_json)) 
-                #trail_tuple = data_loader.retrieve(valid_query, cond_json)
             
                 # run the OpenAI RAG method for generating recommended trailz 
                 resp = asyncio.run(data_loader.rag(valid_query, trail_tuple))  
-                #resp = data_loader.rag(valid_query, trail_tuple)
                 
                 # set the trail content to show the user 
-                #trail_content = resp['content'] 
                 trail_content = resp
             except Exception as e:
                 trail_content = None 
@@ -284,13 +281,13 @@ if st.session_state.search_click:
         # ---------------------------------------------------------
         enable_query() 
         if trail_content: 
-            try: 
+            try:
                 resp_map = json.loads(trail_content)   
-            
+	
                 # need to parse both outputs
                 trail_map = resp_map['trail_map']
                 stream_output = resp_map['stream_output']
-                
+
                 # Store stream output and trail map in session state 
                 st.session_state["stream_output"] = stream_output 
                 st.session_state["trail_map"] = trail_map 
@@ -342,12 +339,12 @@ if len(st.session_state["trail_map"]) > 0:
         st.header("Trail Details", divider='rainbow')
         defaultImg = load_default_img() 
         
-        # TODO: Update this method to iter through the trail map 
         for i in range(1, trail_map_len+1, 2): 
             # get the data from ith object
             # need: route name, trail rating, trail dist/elev,
             # trail summary, trail image
-            val1 = trail_map[str(i)]
+            key1 = str(i)
+            val1 = trail_map[key1]
             id1 = val1['_id'] 
             url1 = val1['trail_url'] 
             route_name1 = val1['route_name']
@@ -364,8 +361,9 @@ if len(st.session_state["trail_map"]) > 0:
             
             # get the data from i+1th object
             route_name2 = None 
-            if (i+1) < trail_map_len+1: 
-                val2 = trail_map[str(i+1)]
+            if (i+1) < trail_map_len+1:
+                key2 = str(i+1)
+                val2 = trail_map[key2]
                 id2 = val2['_id'] 
                 url2 = val2['trail_url'] 
                 route_name2 = val2['route_name']

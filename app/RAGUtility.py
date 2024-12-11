@@ -34,7 +34,7 @@ class RAGUtility:
     # sort the results based on distance function
     def sort_distance(self, trail):
         distance_str = trail['trail_stats']['distance']['imperial']
-        return float(re.findall("\d+\.\d+", distance_str)[0])
+        return float(re.findall("\\d+\\.\\d+", distance_str)[0])
 
     # find similarity between two strings
     def similar(self, x, y):
@@ -59,13 +59,13 @@ class RAGUtility:
 
         # extract the trail ids
         trailIds = list(trailMap.keys()) 
-
+ 
         # create the recommended trail list
         openAITrails = []
         for line in streamList:
             hasNum = bool(re.search(r'\d.', line))
             if hasNum:
-                trailSplit = re.split("\*\*", line)
+                trailSplit = re.split("\\*\\*", line)
                 trailXX = trailSplit[0].strip() 
                 trailNum = trailXX[0] 
                 trailLine = bool(re.search(r'\d', trailNum)) 

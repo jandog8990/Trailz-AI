@@ -164,6 +164,7 @@ class PineConeRAGLoader:
         
         # returns a tuple of contexts and trail data 
         trail_list = self.ragUtility.query_trail_list(trail_ids)
+ 
         self.md_obj.empty()
          
         return (contexts, trail_list)
