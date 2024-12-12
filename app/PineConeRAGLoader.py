@@ -95,17 +95,40 @@ class PineConeRAGLoader:
             route_name = trail['route_name']
             pre_id = trail['prechunk_id']
             post_id = trail['postchunk_id']
-            
+             
             # combine pre/post chunks to form context
             try:
-                other_chunks = self.index.fetch(ids=[pre_id, post_id])["vectors"]
-                prechunk = other_chunks[pre_id]["metadata"]["content"]
-                postchunk = other_chunks[post_id]["metadata"]["content"]
-                context = f"""# {route_name}
+                prechunk = ""
+                postchunk = "" 
+                if pre_id:
+                    pre_vectors = self.index.fetch([pre_id])["vectors"]
+                    prechunk = pre_vectors[pre_id]["metadata"]["content"]
+                if post_id:
+                    post_vectors = self.index.fetch([post_id])["vectors"]
+                    postchunk = post_vectors[post_id]["metadata"]["content"]
+                
+                # create the context from chunks and content 
+                context = "" 
+                if prechunk and postchunk: 
+                    context = f"""# {route_name}
 
-                {prechunk[-500:]}
-                {content}
-                {postchunk[:500]}\n"""
+                    {prechunk[-500:]}
+                    {content}
+                    {postchunk[:500]}\n"""
+                elif prechunk and not postchunk:
+                    context = f"""# {route_name}
+
+                    {prechunk[-500:]}
+                    {content}\n"""
+                elif postchunk and not prechunk:
+                    context = f"""# {route_name}
+
+                    {content}
+                    {postchunk[:500]}\n"""
+                else:
+                    context = f"""# {route_name}
+
+                    {content}\n"""
             except Exception as e:
                 context = f"""# {route_name}
 
@@ -119,7 +142,7 @@ class PineConeRAGLoader:
         trail_ids = set()
         for meta in trail_metadata:
             trail_ids.add(meta["route_id"])
-        
+         
         return list(trail_ids) 
  
     # validate the user input using Guardrails
@@ -180,13 +203,18 @@ class PineConeRAGLoader:
         trail_list = trail_tuple[1]
         context_str = "\n".join(contexts)
 
+        print("Context string:")
+        print(context_str)
+        print("\n")
+
         if len(trail_list) == 0:
             stream_output = "No trailz found."
         else:
             # place the user query and contexts into RAG prompt
             self.md_obj.markdown(self.load_rag_markdown(), unsafe_allow_html=True)
             system_msg = "You are a helpful trail assistant."
-            #For the given prompt, structure the output in accordance with the pydantic model provided below.
+
+            # create the user message for the openai client
             user_msg = f"""
             Given the following trail descriptions, please provide a list of detailed trail recommendations, that includes 
             location, difficulty and detailed feature descriptions for each trail. 
@@ -195,26 +223,21 @@ class PineConeRAGLoader:
 
             Prompt: {query}
             """
-            
-            x = user_msg + "\n" + """
-            
-            ${gr.complete_json_suffix_v2} 
-            """ 
-            
+ 
             # create the messages to send
             messages = [
                 {"role": "system", "content": system_msg},
                 {"role": "user", "content": user_msg}
             ]
-            
+ 
             # generate the RAG client completions (0.7 could be too high) 
             stream = self.client.chat.completions.create(
                 model=openai_model_id,
                 messages=messages,
-                temperature=0.7,
-                max_tokens=650,
+                temperature=0.6,
+                max_tokens=550,
                 stream=True)
-            
+ 
             # show the results from the RAG response using Stream 
             result_holder = st.empty() 
             with result_holder.container(): 

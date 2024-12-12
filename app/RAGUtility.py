@@ -77,8 +77,12 @@ class RAGUtility:
         orderedTrailMap = {}
         missingTrails = []
         similarityMap = {} 
+        print("Trail ids = " + str(len(trailIds)))
+        print(trailIds)
+        print("\n") 
         for trailId in trailIds:
-            matching = [aiTrail for aiTrail in openAITrails if re.sub('[^A-Za-z0-9]+', '', trailId) in re.sub('[^A-Za-z0-9]+', '', aiTrail)]
+            matching = [aiTrail for aiTrail in openAITrails if re.sub('[^A-Za-z0-9]+', '', trailId)
+                        in re.sub('[^A-Za-z0-9]+', '', aiTrail)]
             if len(matching) == 1: 
                 match = matching[0] 
                 
@@ -103,6 +107,11 @@ class RAGUtility:
                 # get the index of the non-mathing elem
                 missingTrails.append(trailMap.pop(trailId));
 
+        print("Missing trails len = " + str(len(missingTrails)))
+        for trail in missingTrails:
+            print("missing trail id = " + trail["_id"]) 
+        print("\n")
+        
         # update the ordered map with max items in similarity map
         for (key, val) in similarityMap.items():
             maxItemId = max(val, key=val.get)
@@ -121,5 +130,12 @@ class RAGUtility:
         end = mapLen+len(missingTrails)+1
         for i in range(start, end):
             orderedTrailMap[i] = missingTrails.pop(0)
-
+        
+        # if we are missing certain trail ids we need to ensure to remove
+        print("Ordered trail map len = " + str(len(orderedTrailMap)))
+        for (key, val) in orderedTrailMap.items():
+            print("key = " + str(key))
+            print("val route name = " + val["route_name"])
+            print("\n")
+        
         return orderedTrailMap 

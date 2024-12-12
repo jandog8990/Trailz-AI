@@ -337,13 +337,14 @@ if st.session_state["stream_output"] != "":
 if len(st.session_state["trail_map"]) > 0: 
     with st.container():
         st.header("Trail Details", divider='rainbow')
-        defaultImg = load_default_img() 
-        
-        for i in range(1, trail_map_len+1, 2): 
+        defaultImg = load_default_img()
+        mapKeys = list(trail_map.keys())
+        mapKeysLen = len(mapKeys)
+        for i in range(0, mapKeysLen+1, 2): 
             # get the data from ith object
             # need: route name, trail rating, trail dist/elev,
             # trail summary, trail image
-            key1 = str(i)
+            key1 = mapKeys[i] 
             val1 = trail_map[key1]
             id1 = val1['_id'] 
             url1 = val1['trail_url'] 
@@ -361,8 +362,8 @@ if len(st.session_state["trail_map"]) > 0:
             
             # get the data from i+1th object
             route_name2 = None 
-            if (i+1) < trail_map_len+1:
-                key2 = str(i+1)
+            if (i+1) < mapKeysLen:
+                key2 = mapKeys[i+1] 
                 val2 = trail_map[key2]
                 id2 = val2['_id'] 
                 url2 = val2['trail_url'] 
