@@ -338,9 +338,10 @@ if len(st.session_state["trail_map"]) > 0:
     with st.container():
         st.header("Trail Details", divider='rainbow')
         defaultImg = load_default_img()
-        mapKeys = list(trail_map.keys())
+        mapKeys = list(trail_map.keys()) if len(trail_map) != 0 else list() 
+        mapKeys.sort(key = int)
         mapKeysLen = len(mapKeys)
-        for i in range(0, mapKeysLen+1, 2): 
+        for i in range(0, mapKeysLen, 2): 
             # get the data from ith object
             # need: route name, trail rating, trail dist/elev,
             # trail summary, trail image

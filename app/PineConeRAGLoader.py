@@ -203,10 +203,6 @@ class PineConeRAGLoader:
         trail_list = trail_tuple[1]
         context_str = "\n".join(contexts)
 
-        print("Context string:")
-        print(context_str)
-        print("\n")
-
         if len(trail_list) == 0:
             stream_output = "No trailz found."
         else:
@@ -235,7 +231,7 @@ class PineConeRAGLoader:
                 model=openai_model_id,
                 messages=messages,
                 temperature=0.6,
-                max_tokens=550,
+                max_tokens=600,
                 stream=True)
  
             # show the results from the RAG response using Stream 
