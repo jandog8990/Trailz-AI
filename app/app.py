@@ -1,7 +1,6 @@
 import streamlit as st
 import streamlit.components.v1 as components
 import time
-from dotenv import dotenv_values
 import re
 import asyncio
 import json
@@ -22,7 +21,7 @@ def load_search_data():
     print("Initialize VectorDB and RAG...") 
     data_loader = PineConeRAGLoader()
     data_loader.load_pinecone_index()
-    data_loader.load_openai_client()
+    data_loader.load_hugging_face_client()
     data_loader.load_encoder()
     data_loader.load_guardrails() 
     print("VectorDB and RAG initialized!")
@@ -246,15 +245,14 @@ if st.session_state.search_click:
             try: 
                 # validate the user query based on guardrails 
                 valid_query = data_loader.validate_query(query)
-
+                
                 # run the PineCone retrieval method for getting relevant trailz 
                 trail_tuple = asyncio.run(data_loader.retrieve(valid_query, cond_json)) 
             
                 # run the OpenAI RAG method for generating recommended trailz 
-                resp = asyncio.run(data_loader.rag(valid_query, trail_tuple))  
-                
-                # set the trail content to show the user 
-                trail_content = resp
+                trail_content = "" 
+                if trail_tuple: 
+                    trail_content = asyncio.run(data_loader.rag(valid_query, trail_tuple))  
             except Exception as e:
                 trail_content = None 
                 print("Loader Exception: ", e) 
@@ -299,6 +297,15 @@ if st.session_state.search_click:
                     err_msg = st.error(trail_content)
                     time.sleep(6)
                     err_msg.empty()
+        else:
+            with st.container():
+                st.header("Trail Recommendations", divider='rainbow') 
+                userMessage = '''
+                Sorry, I couldn't find any specific trailz for you.
+                Please try another location or description, I'm still
+                learning how to find and recommend mtb trails.
+                '''
+                st.markdown(userMessage)
 
 # --------------------------------------------------------
 # Results container for the stream output and trail map 

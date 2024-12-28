@@ -1,12 +1,11 @@
-from semantic_router.encoders import OpenAIEncoder
 from sentence_transformers import SentenceTransformer
 import os
 
 EMBED_MODEL_ID = os.environ["EMBED_MODEL_ID"]
 ENCODER_ID = os.environ["ENCODER_ID"]
-ENCODER_ID = "sangmini/msmarco-cotmae-MiniLM-L12_en-ko-ja"
+TRANSFORMER_ID = "sangmini/msmarco-cotmae-MiniLM-L12_en-ko-ja"
 #model = SentenceTransformer("sangmini/msmarco-cotmae-MiniLM-L12_en-ko-ja")
-model = SentenceTransformer(ENCODER_ID)
+model = SentenceTransformer(TRANSFORMER_ID)
 #encoder = OpenAIEncoder(name=ENCODER_ID)
 print("Model:")
 print(model)

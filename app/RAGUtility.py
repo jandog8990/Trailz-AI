@@ -112,14 +112,17 @@ class RAGUtility:
                 rank = int(re.findall(r'\d+', key)[0])
                 orderedTrailMap[rank] = trailMap.pop(maxItemId)
 
+        # order the trail map and get the last key to process missing trails
+        orderedTrailMap = dict(sorted(orderedTrailMap.items()))
+        lastKey = list(orderedTrailMap.keys())[-1]
+        
         # left over trail map values will be added to missing list
         for trailObj in trailMap.values():
             missingTrails.insert(0, trailObj)
-
+        
         # The missing trails will need to be appended in order to the map 
-        mapLen = len(orderedTrailMap) 
-        start = mapLen+1
-        end = mapLen+len(missingTrails)+1
+        start = lastKey+1
+        end = lastKey+len(missingTrails)+1
         for i in range(start, end):
             orderedTrailMap[i] = missingTrails.pop(0)
         

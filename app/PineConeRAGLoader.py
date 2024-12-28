@@ -1,14 +1,14 @@
-import streamlit as st
 from pinecone import Pinecone
+from RAGUtility import RAGUtility
+from models.TrailSummary import TrailSummary 
 import json
 import base64
 import os
-from openai import OpenAI
+import streamlit as st
 from semantic_router.encoders import OpenAIEncoder
-from RAGUtility import RAGUtility
 from guardrails import Guard
 from guardrails.hub import ToxicLanguage, SensitiveTopic 
-from models.TrailSummary import TrailSummary 
+from huggingface_hub import InferenceClient
 
 # Loads all necessary objects for PineCone and RAG
 class PineConeRAGLoader:
@@ -32,10 +32,10 @@ class PineConeRAGLoader:
         _self.encoder = OpenAIEncoder(name=encoder_id) 
         
     @st.cache_resource
-    def load_openai_client(_self):
-        print("Loading OpenAI client...") 
-        openai_api_key = os.environ["OPENAI_API_KEY"]
-        _self.client = OpenAI(api_key=openai_api_key)
+    def load_hugging_face_client(_self):
+        print("Loading HuggingFace client...") 
+        hf_token = os.environ["HUGGING_FACE_TOKEN"]
+        _self.client = InferenceClient(token=hf_token) 
          
     @st.cache_resource
     def load_pinecone_index(_self):
@@ -162,18 +162,17 @@ class PineConeRAGLoader:
         # retrieve from PineCone using encoded query
         cond_dict = json.loads(conditions) 
         encoded_query = self.encoder([query])[0] 
-
+        
         # issue query to PC to get context vectors
-        # include_metadata=True 
         if not cond_dict:
             results = self.index.query(
                 vector=encoded_query,
-                top_k=12,
+                top_k=15,
                 include_metadata=True)
         else:
             results = self.index.query(
                 vector=encoded_query,
-                top_k=12,
+                top_k=15,
                 filter=cond_dict,
                 include_metadata=True)
         
@@ -181,23 +180,22 @@ class PineConeRAGLoader:
         matches = results['matches'] 
         trail_metadata = [trail['metadata'] for trail in matches] 
         trail_ids = self.create_trail_ids(trail_metadata)
-        
-        # create trail contexts for the open ai model
-        contexts = self.create_trail_contexts(trail_metadata)
-        
-        # returns a tuple of contexts and trail data 
-        trail_list = self.ragUtility.query_trail_list(trail_ids)
- 
+      
+        # create the trail tuples using queries 
+        trailTuple = () 
+        if trail_ids: 
+            # create trail contexts and trail list for the open ai model
+            contexts = self.create_trail_contexts(trail_metadata)
+            trail_list = self.ragUtility.query_trail_list(trail_ids)
+            trailTuple = (contexts, trail_list)
+            
         self.md_obj.empty()
-         
-        return (contexts, trail_list)
+        return trailTuple 
 
-    # NOTE: The rag() method takes the query from the messages, and the (contexts, trail_list)
-    # tuple from the retrieve() method in order to call the LLM
-    # rag function taht receives context from PC and 
-    # queries user query from open ai model
+    # The rag() method takes the query from the messages, and the (contexts, trail_list)
+    # tuple from the retrieve() method in order to call the LLM rag function 
     async def rag(self, query: str, trail_tuple: tuple): #-> (str, list):
-        openai_model_id = os.environ["OPENAI_MODEL_ID"]
+        llama_model_id = os.environ["LLAMA_MODEL_ID"]
 
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
@@ -205,6 +203,7 @@ class PineConeRAGLoader:
 
         if len(trail_list) == 0:
             stream_output = "No trailz found."
+            sortedTrailMap = {} 
         else:
             # place the user query and contexts into RAG prompt
             self.md_obj.markdown(self.load_rag_markdown(), unsafe_allow_html=True)
@@ -228,7 +227,7 @@ class PineConeRAGLoader:
  
             # generate the RAG client completions (0.7 could be too high) 
             stream = self.client.chat.completions.create(
-                model=openai_model_id,
+                model=llama_model_id,
                 messages=messages,
                 temperature=0.6,
                 max_tokens=600,
@@ -242,8 +241,8 @@ class PineConeRAGLoader:
                 self.md_obj.empty()
             result_holder.empty()
 
-        # sort the stream output into a hashmap
-        sortedTrailMap = self.ragUtility.sort_trail_map(trail_list, stream_output); 
+            # sort the stream output into a hashmap
+            sortedTrailMap = self.ragUtility.sort_trail_map(trail_list, stream_output); 
         
         # return the trail list from the PineCone query and RAG output 
         bot_answer = {
