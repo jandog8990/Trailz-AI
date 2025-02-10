@@ -13,14 +13,14 @@ $ streamlit run --client.showSidebarNavigation=False app.py --server.port 8080
 
 1. docker build -t trailzai .
 2. docker run --env-file ./env.list -p 8080:8080 trailzai 
-3. docker build -t trailzai --build-arg GUARDRAILS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJnb29nbGUtb2F1dGgyfDEwMTUxMTI2ODc1MTEwOTMxNDUxNCIsImFwaUtleUlkIjoiZWJkMDg4OGEtY2RjYS00ZTJhLTgxYzItODljNzkzZjRiNjc3IiwiaWF0IjoxNzI4NTMxODg2LCJleHAiOjE3MzYzMDc4ODZ9.MghnOti4s8EtRByVxeAwv_oHY6qoEP4h2awg08s7Q5o .
+3. docker build -t trailzai --build-arg GUARDRAILS_TOKEN=<your-token> .
 
 ### General Gcloud commands
 
 1. gcloud auth list
-2. gcloud config set account jandog8990
+2. gcloud config set account <your-account>
 3. gcloud projects list
-4. gcloud config set project trailz-finder
+4. gcloud config set project <your-project>
 
 ### Docker deployment commands
 
@@ -29,34 +29,34 @@ $ gcloud config list
 
 2. Set the project in google cloud
 $ gcloud projects list
-$ gcloud config set project trailz-finder
+$ gcloud config set project <your-project>
 
 3.  List/set the gcloud configurations for project
 $ gcloud config configurations list
-$ gcloud config configurations describe trailz-finder
-$ gcloud config configurations activate trailz-finder
+$ gcloud config configurations describe <your-project>
+$ gcloud config configurations activate <your-project>
 
 4.  Create the remote repository in the "Artifact Repository"
 $ gcloud artifacts repositories list
-$ gcloud artifacts repositories create trailz-docker-repo --repository-format=docker --location=us-central1 --description="Trailz finder Docker repo"
-$ gcloud config get-value trailz-finder
+$ gcloud artifacts repositories create <your-docker-repo> --repository-format=docker --location=us-central1 --description="Trailz finder Docker repo"
+$ gcloud config get-value <your-project>
 
 5. Deploy the Docker app to the Cloud Run repo
     * Without a docker config file use this: 
-    $ gcloud builds submit --region=us-central1 --tag us-central1-docker.pkg.dev/trailz-finder/trailz-docker-repo/trailz-image:tag1
+    $ gcloud builds submit --region=us-central1 --tag us-central1-docker.pkg.dev/<your-project>/<your-docker-repo>/<your-image>:tag1
     * With a cloudbuild.yaml containing docker config and build use this:
     $ gcloud builds submit --region=us-west2 --config cloudbuild.yaml
 
 6. Check the installation in the Artifact Registry
-https://console.cloud.google.com/artifacts?referrer=search&hl=en&project=trailz-finder
+https://console.cloud.google.com/artifacts?referrer=search&hl=en&project=<your-project>
 
 ### Mapping Custom Domains in Cloud Run
 
-1. Cloud Run location: https://console.cloud.google.com/run?project=trailz-finder 
+1. Cloud Run location: https://console.cloud.google.com/run?project=<your-project>
 2. Click Manage Custom Domains (top right) -> Add Mapping
-3. Select the created Docker service (trailz-finder)
+3. Select the created Docker service
 4. Select the Cloud Run Domain Mappings section -> Follow url and directions
-5. Open SiteGround.com -> selection trailzai.com -> open DNS settings
+5. Open SiteGround.com -> selection <your-custom-url> -> open DNS settings
 6. Add the DNS settings given in the Cloud Run Domain Mappings
-7. Let the DN records propagate, check the trailzai.com site 
+7. Let the DN records propagate, check your custom site 
 
