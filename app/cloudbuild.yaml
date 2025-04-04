@@ -1,7 +1,0 @@
-steps:
-- name: 'gcr.io/cloud-builders/docker'
-  script: |
-    docker build -t us-central1-docker.pkg.dev/trailz-finder/trailz-docker-repo/trailz-image:tag12 --build-arg GUARDRAILS_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJnb29nbGUtb2F1dGgyfDEwMTUxMTI2ODc1MTEwOTMxNDUxNCIsImFwaUtleUlkIjoiNTFhNGViYWItMGM5YS00N2MzLWIwNzEtOTk0ZGQ3ZWM3NWY4Iiwic2NvcGUiOiJyZWFkOnBhY2thZ2VzIiwicGVybWlzc2lvbnMiOltdLCJpYXQiOjE3Mzg1OTU5NTUsImV4cCI6NDg5MjE5NTk1NX0.3IgfStxTJsRGCgKy65QpQy-TZqXYxB64f-Niz8uRq-I .
-  automapSubstitutions: true
-images:
-- 'us-central1-docker.pkg.dev/trailz-finder/trailz-docker-repo/trailz-image:tag13'
