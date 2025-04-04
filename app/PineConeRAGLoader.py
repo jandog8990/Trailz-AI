@@ -30,13 +30,13 @@ class PineConeRAGLoader:
         # create the embedding transformer
         encoder_id = os.environ["ENCODER_ID"] 
         _self.encoder = OpenAIEncoder(name=encoder_id) 
-        
+
     @st.cache_resource
     def load_hugging_face_client(_self):
         print("Loading HuggingFace client...") 
         hf_token = os.environ["HUGGING_FACE_TOKEN"]
         _self.client = InferenceClient(token=hf_token) 
-         
+ 
     @st.cache_resource
     def load_pinecone_index(_self):
         # connect to the pine cone api
@@ -48,7 +48,7 @@ class PineConeRAGLoader:
         pc = Pinecone(
             api_key=api_key
         )
-         
+
         # create pinecone index for searching trailz ai
         #pinecone.create_index(name="trailz-ai", metric="cosine", dimension=768)
         _self.index = pc.Index(pc_index_name)
@@ -65,9 +65,9 @@ class PineConeRAGLoader:
             ToxicLanguage(disable_classifier=False,
                 disable_llm=False,
                 on_fail="exception")
-        ) 
+        )
         _self.llm_guard = Guard().for_pydantic(output_class=TrailSummary)
-    
+
     def load_retrieve_markdown(self):
         load_txt = '<span style="font-size:20px;color: #32CD32;">  Finding your trailz...</span>'
         return self.hack_gif+load_txt
@@ -151,6 +151,7 @@ class PineConeRAGLoader:
             rawQuery, validQuery, *restQuery = self.input_guard.parse(query)
             return validQuery 
         except Exception as e:
+            print("Validate query exception: ", e) 
             raise e 
     
     # retrieve data from PC index using query and conditions from user input 
@@ -175,7 +176,7 @@ class PineConeRAGLoader:
                 top_k=15,
                 filter=cond_dict,
                 include_metadata=True)
-        
+
         # from the result matches create the trail meta 
         matches = results['matches'] 
         trail_metadata = [trail['metadata'] for trail in matches] 
@@ -196,7 +197,6 @@ class PineConeRAGLoader:
     # tuple from the retrieve() method in order to call the LLM rag function 
     async def rag(self, query: str, trail_tuple: tuple): #-> (str, list):
         llama_model_id = os.environ["LLAMA_MODEL_ID"]
-
         contexts = trail_tuple[0]
         trail_list = trail_tuple[1]
         context_str = "\n".join(contexts)
@@ -243,7 +243,7 @@ class PineConeRAGLoader:
 
             # sort the stream output into a hashmap
             sortedTrailMap = self.ragUtility.sort_trail_map(trail_list, stream_output); 
-        
+ 
         # return the trail list from the PineCone query and RAG output 
         bot_answer = {
             'trail_map': sortedTrailMap, 

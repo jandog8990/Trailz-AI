@@ -53,13 +53,13 @@ class RAGUtility:
     def sort_trail_map(self, trail_list, stream_output):
         # split the stream output based on new lines 
         streamList = stream_output.splitlines()
-     
+
         # create the trail map from the trail list 
         trailMap = {obj["route_name"] : obj for obj in trail_list} 
 
         # extract the trail ids
         trailIds = list(trailMap.keys()) 
- 
+
         # create the recommended trail list
         openAITrails = []
         for line in streamList:
@@ -80,6 +80,7 @@ class RAGUtility:
         for trailId in trailIds:
             matching = [aiTrail for aiTrail in openAITrails if re.sub('[^A-Za-z0-9]+', '', trailId)
                         in re.sub('[^A-Za-z0-9]+', '', aiTrail)]
+
             if len(matching) == 1: 
                 match = matching[0] 
                 
@@ -103,7 +104,10 @@ class RAGUtility:
             else:
                 # get the index of the non-mathing elem
                 missingTrails.append(trailMap.pop(trailId));
-        
+
+        if len(missingTrails) == len(trailIds):
+            return trailMap 
+
         # update the ordered map with max items in similarity map
         for (key, val) in similarityMap.items():
             maxItemId = max(val, key=val.get)

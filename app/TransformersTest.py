@@ -7,9 +7,6 @@ TRANSFORMER_ID = "sangmini/msmarco-cotmae-MiniLM-L12_en-ko-ja"
 #model = SentenceTransformer("sangmini/msmarco-cotmae-MiniLM-L12_en-ko-ja")
 model = SentenceTransformer(TRANSFORMER_ID)
 #encoder = OpenAIEncoder(name=ENCODER_ID)
-print("Model:")
-print(model)
-print("\n")
 
 sentences = [
     "Steep gnarly trails with drops and jumps" 

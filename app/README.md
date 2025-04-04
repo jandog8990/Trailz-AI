@@ -9,11 +9,12 @@
 3. Expose your port using `EXPOSE 8080`
 4. Create entry point that runs the streamlit app
 
-### Build Docker image
+### Build Docker Image (Legacy)
 
 1. docker build -t trailzai .
 2. docker run --env-file ./env.list -p 8080:8080 trailzai 
 3. docker build -t trailzai --build-arg GUARDRAILS_TOKEN=<your-token> .
+4. docker run --env-file ./env.list -p 8080:8080 trailzai 
 
 ### General Gcloud commands
 
