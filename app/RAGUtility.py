@@ -49,6 +49,8 @@ class RAGUtility:
          
         return trail_list
 
+    # TODO: This is way too complex - re-run data parser/loader and make objects unique
+    # --------
     # sort the incoming trail list using stream output
     def sort_trail_map(self, trail_list, stream_output):
         # split the stream output based on new lines 
